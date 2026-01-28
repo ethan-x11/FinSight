@@ -19,7 +19,7 @@ async def list_users(
 
 @router.get("/user/me", response_model=UserPublic)
 async def get_me(current_user: UserInDB = Depends(get_current_user)) -> UserPublic:
-    return UserPublic.model_validate(current_user)
+    return UserPublic.model_validate(current_user.model_dump())
 
 
 @router.patch("/user/me", response_model=UserPublic)
