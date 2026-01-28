@@ -65,7 +65,9 @@ class IngestionService:
             self.sessions_repo.upsert_session(session)
 
             doc_result = self.doc_service.analyze_document(blob_url)
-            steps["tablesExtracted"] = True
+            steps["dataExtracted"] = True
+            status["steps"] = steps
+            self.sessions_repo.update_status(session_id, status)
 
             text_content = doc_result.get("text", "")
             chunk_idx = 0
@@ -88,9 +90,13 @@ class IngestionService:
             for chunk_batch in tqdm(chunk_batches, desc="Ingesting Batches", unit="batch"):
                 any_chunks = True
                 steps["chunksGenerated"] = True
+                status["steps"] = steps
+                self.sessions_repo.update_status(session_id, status)
 
                 embeddings = self.chat_service.embed_texts(chunk_batch)
                 steps["embeddingsGenerated"] = True
+                status["steps"] = steps
+                self.sessions_repo.update_status(session_id, status)
 
                 documents: List[Dict[str, Any]] = []
                 for batch_idx, chunk in enumerate(chunk_batch):
@@ -113,6 +119,8 @@ class IngestionService:
                 raise ValueError("Document contained no extractable text to ingest")
 
             steps["searchIndexed"] = True
+            status["steps"] = steps
+            self.sessions_repo.update_status(session_id, status)
 
             status["overallStatus"] = "completed"
             session["systemStatus"] = {"overallStatus": "completed", "steps": steps}

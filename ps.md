@@ -148,7 +148,7 @@ This schema is designed for a **NoSQL (Document)** approach, where a single JSON
     "overallStatus": "completed", // pending, processing, completed, failed
     "steps": {
       "docIntelligenceTriggered": true,
-      "tablesExtracted": true,
+      "dataExtracted": true,
       "contentChunked": true,
       "embeddingsGenerated": true
     }
@@ -281,7 +281,7 @@ export interface ProcessingStatus {
   // Progress indicators for the UI visualization
   steps: {
     docIntelligenceTriggered: boolean;
-    tablesExtracted: boolean;
+    dataExtracted: boolean;
     contentChunked: boolean;
     embeddingsGenerated: boolean;
   };
@@ -399,7 +399,7 @@ export const initialSessionState: AnalysisSession = {
     overallStatus: 'pending',
     steps: {
       docIntelligenceTriggered: false,
-      tablesExtracted: false,
+      dataExtracted: false,
       contentChunked: false,
       embeddingsGenerated: false
     }

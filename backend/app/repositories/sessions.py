@@ -27,7 +27,7 @@ class SessionsRepository:
                 "overallStatus": "pending",
                 "steps": {
                     "docIntelligenceTriggered": False,
-                    "tablesExtracted": False,
+                    "dataExtracted": False,
                     "chunksGenerated": False,
                     "embeddingsGenerated": False,
                     "searchIndexed": False,

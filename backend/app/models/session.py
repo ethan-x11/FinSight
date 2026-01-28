@@ -11,7 +11,7 @@ ProcessStage = Literal["pending", "processing", "completed", "failed"]
 
 class ProcessingSteps(BaseModel):
     docIntelligenceTriggered: bool = False
-    tablesExtracted: bool = False
+    dataExtracted: bool = False
     chunksGenerated: bool = False
     embeddingsGenerated: bool = False
     searchIndexed: bool = False
