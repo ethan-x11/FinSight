@@ -106,8 +106,7 @@ class IngestionService:
                             "embedding": embeddings[batch_idx],
                         }
                     )
-                self.search_service.upload_chunks(documents)
-                
+                self.search_service.upload_chunks(session_id, documents)
             print("Total chunks ingested:", chunk_idx)
 
             if not any_chunks:

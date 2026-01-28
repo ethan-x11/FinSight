@@ -31,7 +31,7 @@ async def ask_question(
     search_service = SearchService()
     chat_service = ChatService()
 
-    results = search_service.search(payload.question, top=payload.top_k, filter_session=session_id)
+    results = search_service.search(session_id, payload.question, top=payload.top_k)
     answer_payload = chat_service.generate_answer(
         payload.question,
         results,
