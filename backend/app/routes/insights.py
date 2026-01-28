@@ -30,48 +30,13 @@ async def get_insights(
     risks = analysis.get("identifiedRisks") or []
     structured_tables = analysis.get("structuredTables") or []
 
-    generated = False
-    if not key_insights:
-        if structured_tables:
-            key_insights = [
-                KeyInsight(id=uuid4().hex, category="Total Revenue", value="$45.2M", trend="+12.5% vs prev", confidenceScore=0.85).model_dump(),
-                KeyInsight(id=uuid4().hex, category="Net Income", value="$8.4M", trend=None, confidenceScore=0.82).model_dump(),
-                KeyInsight(id=uuid4().hex, category="Expenses", value="$36.8M", trend=None, confidenceScore=0.78).model_dump(),
-            ]
-            risks = [
-                RiskFactor(severity="Medium", description="Supply chain disruptions in Q2.", sourcePage=None).model_dump(),
-                RiskFactor(severity="High", description="Significant investment in AI R&D.", sourcePage=None).model_dump(),
-            ]
-            generated = True
-        else:
-            risks = [
-                RiskFactor(severity="Medium", description="Cybersecurity threats increasing.", sourcePage=None).model_dump(),
-                RiskFactor(severity="Medium", description="Regulatory compliance changes.", sourcePage=None).model_dump(),
-            ]
-            generated = True
-
-    if not structured_tables and generated:
-        structured_tables = [
-            FinancialTable(
-                tableId="summary-1",
-                title="Consolidated Statement of Operations",
-                pageNumber=1,
-                layoutType="horizontal",
-                rows=[
-                    {"Category": "Revenue", "2023": "45.2", "2022": "40.1"},
-                    {"Category": "Net Income", "2023": "8.4", "2022": "6.8"},
-                ],
-            ).model_dump()
-        ]
-
     # Persist generated insights so subsequent calls return the same payload
-    if generated:
-        updated_analysis = AnalysisOutput(
-            keyInsights=[KeyInsight(**item) for item in key_insights],
-            identifiedRisks=[RiskFactor(**item) for item in risks],
-            structuredTables=[FinancialTable(**item) for item in structured_tables],
-        ).model_dump()
-        sessions_repo.update_analysis(session_id, updated_analysis)
+    updated_analysis = AnalysisOutput(
+        keyInsights=[KeyInsight(**item) for item in key_insights],
+        identifiedRisks=[RiskFactor(**item) for item in risks],
+        structuredTables=[FinancialTable(**item) for item in structured_tables],
+    ).model_dump()
+    sessions_repo.update_analysis(session_id, updated_analysis)
 
     return InsightsResponse(
         sessionId=session_id,

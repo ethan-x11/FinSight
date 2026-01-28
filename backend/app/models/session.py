@@ -38,9 +38,9 @@ class SourceDocument(BaseModel):
 
 
 class Citation(BaseModel):
-    label: str
-    snippet: str
-    pageIndex: int
+    label: Optional[str] = None
+    snippet: Optional[str] = None
+    pageIndex: Optional[int] = None
 
 
 class FeedbackData(BaseModel):
