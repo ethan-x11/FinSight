@@ -70,6 +70,13 @@ class IngestionService:
             self.sessions_repo.update_status(session_id, status)
 
             text_content = doc_result.get("text", "")
+            page_spans = [
+                span
+                for span in doc_result.get("pageSpans") or []
+                if span.get("startOffset") is not None and span.get("endOffset") is not None
+            ]
+            page_spans.sort(key=lambda entry: entry.get("startOffset", 0))
+
             chunk_idx = 0
             any_chunks = False
 
@@ -86,30 +93,91 @@ class IngestionService:
                 semantic_chunk_text(text_content, chunk_size=target_chunk_size, overlap=chunk_overlap),
                 CHUNK_BATCH_SIZE,
             )
-            
+
+            def resolve_page(offset: int) -> int | None:
+                if not page_spans:
+                    return None
+
+                for entry in page_spans:
+                    start_offset = entry["startOffset"]
+                    end_offset = entry["endOffset"]
+                    if start_offset <= offset < end_offset:
+                        return entry["pageNumber"]
+
+                if offset < page_spans[0]["startOffset"]:
+                    return page_spans[0]["pageNumber"]
+                if offset >= page_spans[-1]["endOffset"]:
+                    return page_spans[-1]["pageNumber"]
+                return None
+
+            def compute_page_range(start_offset: int, end_offset: int) -> str | None:
+                start_page = resolve_page(start_offset)
+                end_page = resolve_page(max(end_offset - 1, start_offset))
+                if start_page is None and end_page is None:
+                    return None
+                if start_page is None:
+                    start_page = end_page
+                if end_page is None:
+                    end_page = start_page
+                if start_page == end_page:
+                    return str(start_page)
+                return f"{start_page}-{end_page}"
             steps["chunksGenerated"] = True
             status["steps"] = steps
             self.sessions_repo.update_status(session_id, status)
 
+            offset_cursor = 0
             for chunk_batch in tqdm(chunk_batches, desc="Ingesting Batches", unit="batch"):
+                chunk_infos: List[Dict[str, Any]] = []
+                local_cursor = max(offset_cursor, 0)
+                for chunk in chunk_batch:
+                    if not chunk:
+                        continue
+
+                    start_offset = text_content.find(chunk, local_cursor)
+                    if start_offset == -1:
+                        start_offset = text_content.find(chunk)
+                    if start_offset == -1:
+                        start_offset = local_cursor
+
+                    end_offset = start_offset + len(chunk)
+                    local_cursor = end_offset
+
+                    while local_cursor < len(text_content) and text_content[local_cursor] in "\r\n \t":
+                        local_cursor += 1
+
+                    page_range = compute_page_range(start_offset, end_offset)
+                    chunk_infos.append(
+                        {
+                            "content": chunk,
+                            "startOffset": start_offset,
+                            "endOffset": end_offset,
+                            "pageRange": page_range,
+                        }
+                    )
+
+                if not chunk_infos:
+                    continue
+
+                offset_cursor = local_cursor
                 any_chunks = True
 
-                embeddings = self.chat_service.embed_texts(chunk_batch)
+                embeddings = self.chat_service.embed_texts([info["content"] for info in chunk_infos])
                 steps["embeddingsGenerated"] = True
                 # status["steps"] = steps
                 # self.sessions_repo.update_status(session_id, status)
 
                 documents: List[Dict[str, Any]] = []
-                for batch_idx, chunk in enumerate(chunk_batch):
+                for batch_idx, chunk_info in enumerate(chunk_infos):
                     chunk_idx += 1
                     documents.append(
                         {
                             "id": f"{session_id}-chunk-{chunk_idx}",
                             "sessionId": session_id,
                             "chunkId": f"chunk-{chunk_idx}",
-                            "content": chunk,
+                            "content": chunk_info["content"],
                             "sourcefile": filename,
-                            "pageRange": None,
+                            "pageRange": chunk_info["pageRange"],
                             "embedding": embeddings[batch_idx],
                         }
                     )

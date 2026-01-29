@@ -41,6 +41,7 @@ class DocumentIntelligenceService:
 
         text_content = result.content or ""
         tables: List[Dict[str, Any]] = []
+        page_spans: List[Dict[str, int]] = []
 
         for table in result.tables or []:
             rows: List[Dict[str, Any]] = []
@@ -62,4 +63,23 @@ class DocumentIntelligenceService:
                 }
             )
 
-        return {"text": text_content, "tables": tables}
+        for page in result.pages or []:
+            if not page.spans:
+                continue
+
+            valid_spans = [span for span in page.spans if span.length]
+            if not valid_spans:
+                continue
+
+            start_offset = min(span.offset for span in valid_spans)
+            end_offset = max(span.offset + span.length for span in valid_spans)
+            page_spans.append(
+                {
+                    "pageNumber": page.page_number,
+                    "startOffset": start_offset,
+                    "endOffset": end_offset,
+                }
+            )
+
+        page_spans.sort(key=lambda entry: entry["startOffset"])
+        return {"text": text_content, "tables": tables, "pageSpans": page_spans}
