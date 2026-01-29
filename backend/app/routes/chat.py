@@ -16,7 +16,7 @@ router = APIRouter(tags=["chat"], dependencies=[Depends(get_current_user)])
 
 
 @router.post("/chat/{session_id}", response_model=AskResponse)
-async def ask_question(
+async def chat_flow(
     session_id: str,
     payload: AskRequest,
     current_user: UserInDB = Depends(get_current_user),
