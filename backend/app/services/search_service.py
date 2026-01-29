@@ -111,13 +111,14 @@ class SearchService:
         return self._search_clients[index_name]
 
     def upload_chunks(self, session_id: str, documents: Iterable[Dict[str, Any]]) -> None:
-        index_name = self._build_index_name(session_id)
+        # index_name = self._build_index_name(session_id)
+        index_name = self.index_base_name
         self._ensure_index(index_name)
         search_client = self._get_search_client(index_name)
         search_client.upload_documents(list(documents))
 
     def search(self, session_id: str, query: str, top: int = 5) -> List[Dict[str, Any]]:
-        index_name = self._build_index_name(session_id)
+        index_name = self.index_base_name
         self._ensure_index(index_name)
         search_client = self._get_search_client(index_name)
         results = search_client.search(search_text=query, query_type="semantic", top=top)
