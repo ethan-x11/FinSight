@@ -6,10 +6,13 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class UploadResponse(BaseModel):
-    sessionId: str
+class BlobMeta(BaseModel):
     blobName: str
     blobUrl: str
+
+class UploadResponse(BaseModel):
+    sessionId: str
+    blobData: list[BlobMeta]
     indexerRunStarted: bool
     createdAt: datetime
 

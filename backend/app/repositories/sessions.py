@@ -99,6 +99,17 @@ class SessionsRepository:
         self.container.upsert_item(session)
         return session
 
+    def append_source_document(self, session_id: str, source_document: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        session = self.get_by_id(session_id)
+        if not session:
+            return None
+        sources = session.get("sourceDocument", [])
+        sources.append(source_document)
+        session["sourceDocument"] = sources
+        session["timestamp"] = datetime.now(timezone.utc).isoformat()
+        self.container.upsert_item(session)
+        return session
+
 
 def get_sessions_repository() -> SessionsRepository:
     return SessionsRepository()

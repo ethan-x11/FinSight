@@ -104,13 +104,13 @@ class SessionCreate(BaseModel):
     id: Optional[str] = None
     userId: str
     metadata: SessionMetadata
-    sourceDocument: SourceDocument
+    sourceDocument: List[SourceDocument]
     analysisOutput: Optional[AnalysisOutput] = None
 
 
 class SessionUpdate(BaseModel):
     metadata: Optional[SessionMetadata] = None
-    sourceDocument: Optional[SourceDocument] = None
+    sourceDocument: Optional[List[SourceDocument]] = None
     systemStatus: Optional[ProcessingStatus] = None
     analysisOutput: Optional[AnalysisOutput] = None
     chatHistory: Optional[List[ChatMessage]] = None
