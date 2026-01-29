@@ -46,9 +46,15 @@ class IngestionService:
         return f"{self.index_base_name}{sanitized}"
     
     
-    def compute_page_range(self, start_offset: int, end_offset: int, page_spans) -> str | None:
-        start_page = self.resolve_page(start_offset, page_spans)
-        end_page = self.resolve_page(max(end_offset - 1, start_offset), page_spans)
+    def compute_page_range(
+        self,
+        start_offset: int,
+        end_offset: int,
+        page_spans,
+        page_markers: List[Dict[str, int]] | None = None,
+    ) -> str | None:
+        start_page = self.resolve_page(start_offset, page_spans, page_markers)
+        end_page = self.resolve_page(max(end_offset - 1, start_offset), page_spans, page_markers)
         if start_page is None and end_page is None:
             return None
         if start_page is None:
@@ -59,7 +65,27 @@ class IngestionService:
             return str(start_page)
         return f"{start_page}-{end_page}"
     
-    def resolve_page(self, offset: int, page_spans) -> int | None:
+    def resolve_page(
+        self,
+        offset: int,
+        page_spans,
+        page_markers: List[Dict[str, int]] | None = None,
+    ) -> int | None:
+        if page_markers:
+            for idx, marker in enumerate(page_markers):
+                start = marker["offset"]
+                end = page_markers[idx + 1]["offset"] if idx + 1 < len(page_markers) else None
+                if end is None:
+                    if offset >= start:
+                        return marker["pageNumber"]
+                else:
+                    if start <= offset < end:
+                        return marker["pageNumber"]
+
+            if offset < page_markers[0]["offset"]:
+                return page_markers[0]["pageNumber"]
+            return page_markers[-1]["pageNumber"]
+
         if not page_spans:
             return None
 
@@ -146,6 +172,7 @@ class IngestionService:
             self.sessions_repo.update_status(session_id, status)
 
             text_content = doc_result.get("text", "")
+            page_markers = self._extract_page_markers(text_content)
             page_spans = [
                 span
                 for span in doc_result.get("pageSpans") or []
@@ -194,7 +221,7 @@ class IngestionService:
                     while local_cursor < len(text_content) and text_content[local_cursor] in "\r\n \t":
                         local_cursor += 1
 
-                    page_range = self.compute_page_range(start_offset, end_offset, page_spans)
+                    page_range = self.compute_page_range(start_offset, end_offset, page_spans, page_markers)
                     chunk_infos.append(
                         {
                             "content": chunk,
@@ -274,3 +301,22 @@ class IngestionService:
             if not batch:
                 break
             yield batch
+
+    @staticmethod
+    def _extract_page_markers(text: str) -> List[Dict[str, int]]:
+        """Parse Document Intelligence markdown comments like <!-- PageNumber="206" --> to map offsets to pages."""
+
+        if not text:
+            return []
+
+        pattern = re.compile(r"<!--\s*PageNumber=\"(?P<num>\d+)\"\s*-->", re.IGNORECASE)
+        markers: List[Dict[str, int]] = []
+        for match in pattern.finditer(text):
+            try:
+                page_number = int(match.group("num"))
+            except ValueError:
+                continue
+            markers.append({"offset": match.start(), "pageNumber": page_number})
+
+        markers.sort(key=lambda entry: entry["offset"])
+        return markers
