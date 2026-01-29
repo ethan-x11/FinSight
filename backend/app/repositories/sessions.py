@@ -109,6 +109,35 @@ class SessionsRepository:
         session["timestamp"] = datetime.now(timezone.utc).isoformat()
         self.container.upsert_item(session)
         return session
+    
+    def update_document_index(self, session_id: str, fileName: str, index_name: str) -> Optional[Dict[str, Any]]:
+        session = self.get_by_id(session_id)
+        # print("Updating document index for session:", session_id, " fileName:", fileName, " index_name:", index_name)
+        if not session:
+            # print("Session not found for session_id:", session_id)
+            return None
+        sources = session.get("sourceDocument", [])
+        if not sources:
+            # print("No source documents found in session:", session_id)
+            return None
+        for source in sources:
+            if source.get("fileName") == fileName:
+                # print("Updating indexName for file:", fileName)
+                source["indexName"] = index_name
+                break
+        session["sourceDocument"] = sources
+        session["timestamp"] = datetime.now(timezone.utc).isoformat()
+        # with open("debug_session_update.json", "w") as f:
+        #     import json
+        #     json.dump(session, f, indent=2)
+        self.container.upsert_item(session)
+        return session
+    
+    def get_document_data(self, session_id: str) -> List[Dict[str, Any]]:
+        session = self.get_by_id(session_id)
+        if not session:
+            return []
+        return session.get("sourceDocument", [])
 
 
 def get_sessions_repository() -> SessionsRepository:

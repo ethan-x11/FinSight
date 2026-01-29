@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from typing import Any, Dict, Iterable, List, Set
 
 from azure.core.credentials import AzureKeyCredential
@@ -24,6 +23,7 @@ from azure.search.documents.indexes.models import (
 )
 
 from app.core.config import get_settings
+from app.repositories.sessions import SessionsRepository
 
 
 class SearchService:
@@ -32,23 +32,14 @@ class SearchService:
         if not settings.search_endpoint or not settings.search_admin_key:
             raise RuntimeError("Azure Search configuration missing")
         credential = AzureKeyCredential(settings.search_admin_key)
-        self.index_base_name = settings.search_index_name
         self._endpoint = settings.search_endpoint
         self.index_client = SearchIndexClient(endpoint=self._endpoint, credential=credential)
         self._credential = credential
         self._search_clients: Dict[str, SearchClient] = {}
         self._known_indices: Set[str] = set()
         self.embed_dims = settings.azure_openai_embed_dims
+        self.sessions_repo = SessionsRepository()
 
-    def _build_index_name(self, session_id: str) -> str:
-        sanitized = session_id.strip().lower()
-        sanitized = re.sub(r"[^a-z0-9-]", "-", sanitized)
-        sanitized = sanitized.lstrip("-") or "session"
-        max_suffix = 128 - len(self.index_base_name)
-        if max_suffix <= 0:
-            raise ValueError("Configured search index base name is too long to append session identifiers")
-        sanitized = sanitized[:max_suffix]
-        return f"{self.index_base_name}{sanitized}"
 
     def _ensure_index(self, index_name: str) -> None:
         if index_name in self._known_indices:
@@ -110,19 +101,24 @@ class SearchService:
             )
         return self._search_clients[index_name]
 
-    def upload_chunks(self, session_id: str, documents: Iterable[Dict[str, Any]]) -> None:
-        # index_name = self._build_index_name(session_id)
-        index_name = self.index_base_name
+    def upload_chunks(self, index_name: str, documents: Iterable[Dict[str, Any]]) -> None:
+        # index_name = self._build_index_name(session_id + filename)
         self._ensure_index(index_name)
+        # self.sessions_repo.update_document_index(session_id, filename, index_name)
         search_client = self._get_search_client(index_name)
         search_client.upload_documents(list(documents))
 
     def search(self, session_id: str, query: str, top: int = 5) -> List[Dict[str, Any]]:
-        index_name = self.index_base_name
-        self._ensure_index(index_name)
-        search_client = self._get_search_client(index_name)
-        results = search_client.search(search_text=query, query_type="semantic", top=top)
-        hits: List[Dict[str, Any]] = []
-        for item in results:
-            hits.append({"id": item["id"], "content": item["content"], "chunkId": item.get("chunkId"), "sourcefile": item.get("sourcefile"), "pageRange": item.get("pageRange")})
-        return hits
+        search_data: List[Dict[str, Any]] = []
+        documents = self.sessions_repo.get_document_data(session_id)
+        for doc in documents:
+            index_name = doc["indexName"]
+            print("Searching in file / index: ", doc["fileName"]," / ", index_name)
+            # self._ensure_index(index_name)
+            search_client = self._get_search_client(index_name)
+            results = search_client.search(search_text=query, query_type="semantic", top=top)
+            hits: List[Dict[str, Any]] = []
+            for item in results:
+                hits.append({"id": item["id"], "content": item["content"], "chunkId": item.get("chunkId"), "sourcefile": item.get("sourcefile"), "pageRange": item.get("pageRange")})
+            search_data.extend(hits)
+        return search_data

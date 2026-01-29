@@ -14,6 +14,8 @@ from app.services.chat_service import ChatService
 from app.services.doc_int_service import DocumentIntelligenceService
 from app.services.search_service import SearchService
 from app.utils.chunking import semantic_chunk_text
+from app.core.config import get_settings
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +27,53 @@ MAX_CHUNKS_PER_DOCUMENT = 220
 
 class IngestionService:
     def __init__(self) -> None:
+        settings = get_settings()
         self.sessions_repo = SessionsRepository()
         self.blob_service = BlobService()
         self.doc_service = DocumentIntelligenceService()
         self.search_service = SearchService()
         self.chat_service = ChatService()
+        self.index_base_name = settings.search_index_name
+        
+    def _build_index_name(self, name: str) -> str:
+        sanitized = name.strip().lower()
+        sanitized = re.sub(r"[^a-z0-9-]", "-", sanitized)
+        sanitized = sanitized.lstrip("-") or "session"
+        max_suffix = 128 - len(self.index_base_name)
+        if max_suffix <= 0:
+            raise ValueError("Configured search index base name is too long to append session identifiers")
+        sanitized = sanitized[:max_suffix]
+        return f"{self.index_base_name}{sanitized}"
+    
+    
+    def compute_page_range(self, start_offset: int, end_offset: int, page_spans) -> str | None:
+        start_page = self.resolve_page(start_offset, page_spans)
+        end_page = self.resolve_page(max(end_offset - 1, start_offset), page_spans)
+        if start_page is None and end_page is None:
+            return None
+        if start_page is None:
+            start_page = end_page
+        if end_page is None:
+            end_page = start_page
+        if start_page == end_page:
+            return str(start_page)
+        return f"{start_page}-{end_page}"
+    
+    def resolve_page(self, offset: int, page_spans) -> int | None:
+        if not page_spans:
+            return None
+
+        for entry in page_spans:
+            start_offset = entry["startOffset"]
+            end_offset = entry["endOffset"]
+            if start_offset <= offset < end_offset:
+                return entry["pageNumber"]
+
+        if offset < page_spans[0]["startOffset"]:
+            return page_spans[0]["pageNumber"]
+        if offset >= page_spans[-1]["endOffset"]:
+            return page_spans[-1]["pageNumber"]
+        return None
 
     def run(
         self,
@@ -41,6 +85,7 @@ class IngestionService:
         blob_name: str | None = None,
     ) -> None:
         session = self.sessions_repo.get_by_id(session_id)
+        index_name = self._build_index_name(session_id + filename)
         if not session:
             logger.error("Session %s not found for ingestion", session_id)
             return
@@ -91,6 +136,7 @@ class IngestionService:
             target_doc["blobPath"] = blob_name or target_doc.get("blobPath", "")
             target_doc["blobContainer"] = self.blob_service.container_name
             target_doc["blobUrl"] = blob_url
+            target_doc["indexName"] = index_name
             session["sourceDocument"] = source_documents
             self.sessions_repo.upsert_session(session)
 
@@ -124,34 +170,6 @@ class IngestionService:
                 CHUNK_BATCH_SIZE,
             )
 
-            def resolve_page(offset: int) -> int | None:
-                if not page_spans:
-                    return None
-
-                for entry in page_spans:
-                    start_offset = entry["startOffset"]
-                    end_offset = entry["endOffset"]
-                    if start_offset <= offset < end_offset:
-                        return entry["pageNumber"]
-
-                if offset < page_spans[0]["startOffset"]:
-                    return page_spans[0]["pageNumber"]
-                if offset >= page_spans[-1]["endOffset"]:
-                    return page_spans[-1]["pageNumber"]
-                return None
-
-            def compute_page_range(start_offset: int, end_offset: int) -> str | None:
-                start_page = resolve_page(start_offset)
-                end_page = resolve_page(max(end_offset - 1, start_offset))
-                if start_page is None and end_page is None:
-                    return None
-                if start_page is None:
-                    start_page = end_page
-                if end_page is None:
-                    end_page = start_page
-                if start_page == end_page:
-                    return str(start_page)
-                return f"{start_page}-{end_page}"
             steps["chunksGenerated"] = True
             status["steps"] = steps
             self.sessions_repo.update_status(session_id, status)
@@ -176,7 +194,7 @@ class IngestionService:
                     while local_cursor < len(text_content) and text_content[local_cursor] in "\r\n \t":
                         local_cursor += 1
 
-                    page_range = compute_page_range(start_offset, end_offset)
+                    page_range = self.compute_page_range(start_offset, end_offset, page_spans)
                     chunk_infos.append(
                         {
                             "content": chunk,
@@ -211,7 +229,7 @@ class IngestionService:
                             "embedding": embeddings[batch_idx],
                         }
                     )
-                self.search_service.upload_chunks(session_id, documents)
+                self.search_service.upload_chunks(index_name, documents)
             print("Total chunks ingested:", chunk_idx)
 
             if not any_chunks:

@@ -35,6 +35,7 @@ class SourceDocument(BaseModel):
     fileSize: str
     blobPath: str
     blobContainer: str
+    indexName: Optional[str] = None
 
 
 class Citation(BaseModel):
