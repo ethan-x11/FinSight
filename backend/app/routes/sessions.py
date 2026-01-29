@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from app.core.auth import get_current_user
 from app.repositories.sessions import SessionsRepository, get_sessions_repository
 from app.repositories.users import UsersRepository, get_users_repository
-from app.models.session import AnalysisSession, SessionCreate, SessionUpdate
+from app.models.session import AnalysisSession, ProcessingStatus, SessionCreate, SessionUpdate
 from app.models.user import UserInDB
 
 router = APIRouter(tags=["sessions"], dependencies=[Depends(get_current_user)])
@@ -66,3 +66,18 @@ async def update_session(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
     updated = repo.upsert_session({**record, **payload.dict(exclude_unset=True)})
     return AnalysisSession.model_validate(updated)
+
+
+@router.get("/session/{session_id}/status", response_model=ProcessingStatus)
+async def get_session_status(
+    session_id: str,
+    current_user: UserInDB = Depends(get_current_user),
+    repo: SessionsRepository = Depends(get_sessions_repository),
+) -> ProcessingStatus:
+    record = repo.get_by_id(session_id)
+    if not record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+    if not current_user.isAdmin and record["userId"] != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    status_payload = record.get("systemStatus") or {}
+    return ProcessingStatus.model_validate(status_payload)

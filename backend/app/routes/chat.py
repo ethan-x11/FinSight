@@ -15,7 +15,7 @@ from app.services.search_service import SearchService
 router = APIRouter(tags=["chat"], dependencies=[Depends(get_current_user)])
 
 
-@router.post("/chat/{session_id}", response_model=AskResponse)
+@router.post("/session/{session_id}/chat", response_model=AskResponse)
 async def chat_flow(
     session_id: str,
     payload: AskRequest,
