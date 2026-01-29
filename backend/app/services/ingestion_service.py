@@ -86,17 +86,18 @@ class IngestionService:
                 semantic_chunk_text(text_content, chunk_size=target_chunk_size, overlap=chunk_overlap),
                 CHUNK_BATCH_SIZE,
             )
+            
+            steps["chunksGenerated"] = True
+            status["steps"] = steps
+            self.sessions_repo.update_status(session_id, status)
 
             for chunk_batch in tqdm(chunk_batches, desc="Ingesting Batches", unit="batch"):
                 any_chunks = True
-                steps["chunksGenerated"] = True
-                status["steps"] = steps
-                self.sessions_repo.update_status(session_id, status)
 
                 embeddings = self.chat_service.embed_texts(chunk_batch)
                 steps["embeddingsGenerated"] = True
-                status["steps"] = steps
-                self.sessions_repo.update_status(session_id, status)
+                # status["steps"] = steps
+                # self.sessions_repo.update_status(session_id, status)
 
                 documents: List[Dict[str, Any]] = []
                 for batch_idx, chunk in enumerate(chunk_batch):
