@@ -30,7 +30,6 @@ async def upload_financial_doc(
     blob_service = BlobService()
     ingestion_service = IngestionService()
 
-    sources = []
     session_id = ""
     blob_data: list[BlobMeta] = []
     
@@ -52,19 +51,19 @@ async def upload_financial_doc(
             blobUrl=blob_url,
         ))
         
-        sources.append(SourceDocument(
+        sourceDocument = SourceDocument(
             fileName=f"{file.filename}",
             fileSize=f"{len(file_bytes) / 1024:.2f}KB",
             blobPath=blob_name,
             blobContainer=blob_service.container_name,
-        ))
+        )
 
         if not session_id:
-            session_payload = SessionCreate(userId=current_user.id, metadata=metadata, sourceDocument=sources)
+            session_payload = SessionCreate(userId=current_user.id, metadata=metadata, sourceDocument=[sourceDocument])
             session_record = sessions_repo.create_session(session_payload.model_dump(mode="json"))
             session_id = session_record["id"]
         else:
-            session_payload = SessionUpdate(sourceDocument=sources)
+            session_payload = SessionUpdate(sourceDocument=[sourceDocument])
             sessions_repo.append_source_document(session_id, session_payload.model_dump(mode="json")["sourceDocument"])
 
         background_tasks.add_task(

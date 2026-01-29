@@ -94,7 +94,7 @@ class AnalysisSession(BaseModel):
     type: Literal["analysis_session"] = "analysis_session"
     version: str = "1.0"
     metadata: SessionMetadata
-    sourceDocument: SourceDocument
+    sourceDocument: List[SourceDocument]
     systemStatus: ProcessingStatus
     analysisOutput: Optional[AnalysisOutput] = None
     chatHistory: List[ChatMessage] = Field(default_factory=list)

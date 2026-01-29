@@ -35,6 +35,7 @@ async def get_session(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
     if not current_user.isAdmin and record["userId"] != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    
     return AnalysisSession.model_validate(record)
 
 

@@ -59,9 +59,39 @@ class IngestionService:
                     raise ValueError("file_bytes is required when blob_url is not provided")
                 blob_name, blob_url = self.blob_service.upload_file(filename, file_bytes, content_type)
 
-            session["sourceDocument"]["blobPath"] = blob_name or session["sourceDocument"].get("blobPath", "")
-            session["sourceDocument"]["blobContainer"] = self.blob_service.container_name
-            session["sourceDocument"]["blobUrl"] = blob_url
+            # Normalize sourceDocument to a flat list of dicts
+            raw_sources = session.get("sourceDocument") or []
+            if isinstance(raw_sources, dict):
+                source_documents = [raw_sources]
+            else:
+                source_documents = []
+                for entry in raw_sources if isinstance(raw_sources, list) else []:
+                    if isinstance(entry, dict):
+                        source_documents.append(entry)
+                    elif isinstance(entry, list):
+                        source_documents.extend([e for e in entry if isinstance(e, dict)])
+
+            target_doc = None
+            if blob_name:
+                for doc in source_documents:
+                    if doc.get("blobPath") == blob_name or doc.get("fileName") == filename:
+                        target_doc = doc
+                        break
+
+            if target_doc is None and source_documents:
+                target_doc = source_documents[-1]
+
+            if target_doc is None:
+                target_doc = {
+                    "fileName": filename,
+                    "fileSize": f"{(len(file_bytes) or 0) / 1024:.2f}KB" if file_bytes else "",
+                }
+                source_documents.append(target_doc)
+
+            target_doc["blobPath"] = blob_name or target_doc.get("blobPath", "")
+            target_doc["blobContainer"] = self.blob_service.container_name
+            target_doc["blobUrl"] = blob_url
+            session["sourceDocument"] = source_documents
             self.sessions_repo.upsert_session(session)
 
             doc_result = self.doc_service.analyze_document(blob_url)
