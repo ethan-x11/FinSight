@@ -1,1 +1,41 @@
 @import "tailwindcss";
+
+:root {
+	/* Dashboard-derived palette for reuse */
+	--color-primary: #4f46e5; /* indigo-600 */
+	--color-primary-hover: #4338ca; /* indigo-700 */
+	--color-accent: #0ea5e9; /* cyan-500 */
+	--color-accent-hover: #0891b2; /* cyan-600 */
+	--color-surface: #ffffff;
+	--color-surface-muted: #f8fafc; /* slate-50 */
+	--color-border: #e2e8f0; /* slate-200 */
+	--color-border-strong: #cbd5e1; /* slate-300 */
+	--color-text: #0f172a; /* slate-900 */
+	--color-text-muted: #475569; /* slate-600 */
+	--color-info: #2563eb; /* blue-600 */
+	--color-success: #22c55e; /* green-500 */
+	--color-warning: #f97316; /* orange-500 */
+	--color-danger: #ef4444; /* red-500 */
+	--color-focus: #818cf8; /* indigo-400 */
+	--gradient-hero: linear-gradient(135deg, #eef2ff 0%, #e0f2fe 50%, #f8fafc 100%);
+}
+
+.bg-surface {
+	background-color: var(--color-surface);
+}
+
+.bg-surface-muted {
+	background-color: var(--color-surface-muted);
+}
+
+.border-default {
+	border-color: var(--color-border);
+}
+
+.text-muted {
+	color: var(--color-text-muted);
+}
+
+.bg-hero-gradient {
+	background: var(--gradient-hero);
+}
