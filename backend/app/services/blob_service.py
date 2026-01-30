@@ -51,7 +51,7 @@ class BlobService:
             blob_name=blob_name,
             account_key=account_key,
             permission=BlobSasPermissions(read=True),
-            expiry=datetime.now(timezone.utc) + timedelta(hours=1),
+            expiry=datetime.now(timezone.utc) + timedelta(days=3650),
         )
 
         sas_url = f"{blob_client.url}?{sas_token}"
