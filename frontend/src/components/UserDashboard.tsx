@@ -25,6 +25,9 @@ import {
   Lock,
   Inbox,
   FileSearch,
+  Pencil,
+  Check,
+  Trash2,
 } from "lucide-react";
 import {
   askChatQuestion,
@@ -35,10 +38,13 @@ import {
   type AnalysisOutput,
   type AnalysisSession,
   type ApiUser,
+  type SourceDocument,
   type ChatMessage,
   type KeyInsight,
   type RiskFactor,
   uploadDocuments,
+  updateSession,
+  deleteSession,
 } from "../utils/dataHandlerAPI";
 import { marked } from "marked";
 import { Button } from "./ui/button";
@@ -80,6 +86,8 @@ const STATUS_STEPS: { key: keyof AnalysisSession["systemStatus"]["steps"]; label
   { key: "embeddingsGenerated", label: "Embeddings" },
   { key: "searchIndexed", label: "Search Indexed" },
 ];
+
+const getDocumentId = (doc: SourceDocument, idx: number) => doc.fileName || doc.blobPath || doc.blobUrl || doc.blobContainer || `doc-${idx}`;
 
 const Sidebar = ({
   sessions,
@@ -175,11 +183,10 @@ const Sidebar = ({
                 onSwitchSession(session.id);
                 onClose();
               }}
-              className={`w-full text-left px-3 py-2.5 rounded-lg transition-all group border ${
-                currentSessionId === session.id
-                  ? "bg-slate-800 border-slate-700 text-white shadow-sm"
-                  : "bg-transparent border-transparent text-slate-400 hover:bg-slate-800/30 hover:text-slate-200"
-              }`}
+              className={`w-full text-left px-3 py-2.5 rounded-lg transition-all group border ${currentSessionId === session.id
+                ? "bg-slate-800 border-slate-700 text-white shadow-sm"
+                : "bg-transparent border-transparent text-slate-400 hover:bg-slate-800/30 hover:text-slate-200"
+                }`}
             >
               <div className="font-medium text-sm truncate">{session.metadata?.title || "Untitled session"}</div>
               <div className="text-[10px] text-slate-500 mt-0.5 flex items-center">
@@ -289,9 +296,8 @@ const DocumentUploader = ({ onUpload }: { onUpload: (files: FileList) => Promise
           {steps.map((text, idx) => (
             <div
               key={text}
-              className={`flex items-center space-x-3 transition-all duration-300 ${
-                idx === processingStep ? "opacity-100 scale-105" : idx < processingStep ? "opacity-70" : "opacity-30"
-              }`}
+              className={`flex items-center space-x-3 transition-all duration-300 ${idx === processingStep ? "opacity-100 scale-105" : idx < processingStep ? "opacity-70" : "opacity-30"
+                }`}
             >
               {idx < processingStep ? (
                 <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
@@ -326,7 +332,10 @@ const DocumentList = ({
   <div className="w-full md:w-72 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col md:h-full overflow-hidden shrink-0">
     <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
       <div>
-        <h3 className="font-semibold text-slate-700 text-sm uppercase tracking-wide mb-1">Documents</h3>
+        <div className="flex flex-row items-center gap-2 mb-0.5">
+          <Inbox className="w-4 h-4 text-blue-600" />
+          <h3 className="font-semibold text-slate-700 text-sm uppercase tracking-wide mb-1">Documents</h3>
+        </div>
         <p className="text-[10px] text-slate-500">Blob Storage Container</p>
       </div>
       <span className="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold">{documents.length}</span>
@@ -336,15 +345,13 @@ const DocumentList = ({
         <button
           key={doc.id}
           onClick={() => onSelect(doc.id)}
-          className={`w-full text-left p-3 rounded-lg border transition-all group ${
-            activeDocId === doc.id ? "bg-blue-50 border-blue-200 shadow-sm" : "bg-white border-transparent hover:bg-slate-50 hover:border-slate-200"
-          }`}
+          className={`w-full text-left p-3 rounded-lg border transition-all group ${activeDocId === doc.id ? "bg-blue-50 border-blue-200 shadow-sm" : "bg-white border-transparent hover:bg-slate-50 hover:border-slate-200"
+            }`}
         >
           <div className="flex items-start space-x-3">
             <div
-              className={`p-2 rounded-lg ${
-                activeDocId === doc.id ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-500 group-hover:bg-white group-hover:shadow-sm"
-              }`}
+              className={`p-2 rounded-lg ${activeDocId === doc.id ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-500 group-hover:bg-white group-hover:shadow-sm"
+                }`}
             >
               <FileText className="w-5 h-5" />
             </div>
@@ -439,7 +446,7 @@ const InsightsPanel = ({ insights }: { insights: AnalysisOutput | null }) => {
         </div>
       )}
 
-      {tables.length > 0 && (
+      {/* {tables.length > 0 && (
         <div className="space-y-4">
           {tables.map((table) => (
             <div key={table.tableId} className="bg-white rounded-xl border border-slate-200 shadow-sm">
@@ -469,7 +476,42 @@ const InsightsPanel = ({ insights }: { insights: AnalysisOutput | null }) => {
             </div>
           ))}
         </div>
-      )}
+      )} */}
+    </div>
+  );
+};
+
+const DocumentPreview = ({ document }: { document: SourceDocument | null }) => {
+  if (!document) return <div className="text-sm text-slate-500">Select a document to preview.</div>;
+
+  const url = document.blobUrl;
+  console.log("Document preview URL:", url);
+  if (!url) return <div className="text-sm text-slate-500">No blob URL available for this document.</div>;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-semibold text-slate-800">{document.fileName || "Document"}</p>
+          {document.fileType && <p className="text-xs text-slate-500">{document.fileType}</p>}
+        </div>
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="text-xs font-semibold text-blue-600 hover:text-blue-500"
+        >
+          Open in new tab
+        </a>
+      </div>
+      <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
+        <iframe
+          src={url}
+          title={`preview-${document.fileName || "document"}`}
+          className="w-full min-h-[520px] no-scrollbar"
+          scrolling="no"
+        />
+      </div>
     </div>
   );
 };
@@ -565,20 +607,46 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   const [showProfile, setShowProfile] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [activeDocId, setActiveDocId] = useState<string | null>(null);
+  const [refreshedInsightsSessions, setRefreshedInsightsSessions] = useState<Record<string, boolean>>({});
+  const [dashboardView, setDashboardView] = useState<"overview" | "preview">("overview");
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
+  const [savingTitle, setSavingTitle] = useState(false);
+
+  const sessionsRef = useRef<AnalysisSession[]>([]);
+  const refreshedInsightsRef = useRef<Record<string, boolean>>({});
 
   const currentSession = useMemo(() => sessions.find((s) => s.id === currentSessionId) || null, [sessions, currentSessionId]);
   const canChat = currentSession?.systemStatus?.overallStatus === "completed";
 
+  useEffect(() => {
+    setTitleDraft(currentSession?.metadata?.title || "");
+    setEditingTitle(false);
+  }, [currentSession]);
+
   const documentEntries = useMemo(
     () =>
       (currentSession?.sourceDocument || []).map((doc, idx) => ({
-        id: doc.fileName || `doc-${idx}`,
+        id: getDocumentId(doc, idx),
         name: doc.fileName || `Document ${idx + 1}`,
-        type: doc.contentType || "Document",
+        type: doc.fileType || (doc as any).contentType || "Document",
         path: doc.blobPath || doc.blobUrl || doc.blobContainer,
       })),
     [currentSession]
   );
+
+  const activeSourceDocument = useMemo(() => {
+    if (!currentSession?.sourceDocument) return null;
+    return currentSession.sourceDocument.find((doc, idx) => getDocumentId(doc, idx) === activeDocId) || null;
+  }, [currentSession, activeDocId]);
+
+  useEffect(() => {
+    sessionsRef.current = sessions;
+  }, [sessions]);
+
+  useEffect(() => {
+    refreshedInsightsRef.current = refreshedInsightsSessions;
+  }, [refreshedInsightsSessions]);
 
   useEffect(() => {
     const load = async () => {
@@ -613,6 +681,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
           setMessages(mapped);
         }
         setInsights(detail.analysisOutput || null);
+        setRefreshedInsightsSessions((prev) => ({ ...prev, [detail.id]: Boolean(detail.analysisOutput) }));
       } catch (err: any) {
         toast.error(err?.message || "Failed to load session");
       } finally {
@@ -625,10 +694,12 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   useEffect(() => {
     if (!currentSession) {
       setActiveDocId(null);
+      setDashboardView("overview");
       return;
     }
     const firstDoc = currentSession.sourceDocument?.[0];
-    setActiveDocId(firstDoc ? firstDoc.fileName || firstDoc.blobPath || firstDoc.blobUrl || firstDoc.blobContainer || null : null);
+    setActiveDocId(firstDoc ? getDocumentId(firstDoc, 0) : null);
+    setDashboardView("overview");
   }, [currentSession]);
 
   useEffect(() => {
@@ -646,6 +717,59 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     };
     syncStatus();
   }, [currentSessionId]);
+
+  const updateStatusAndMaybeInsights = useMemo(
+    () =>
+      async () => {
+        if (!currentSessionId) return;
+        const current = sessionsRef.current.find((s) => s.id === currentSessionId);
+        if (!current) return;
+        const overall = current.systemStatus?.overallStatus;
+
+        if (overall === "processing") {
+          try {
+            const status = await fetchSessionStatus(currentSessionId);
+            setSessions((prev) => prev.map((s) => (s.id === currentSessionId ? { ...s, systemStatus: status } : s)));
+          } catch (err) {
+            console.error("Auto status refresh failed", err);
+          }
+          return;
+        }
+
+        if (overall === "completed") {
+          const alreadyRefreshed = refreshedInsightsRef.current[currentSessionId];
+          if (!alreadyRefreshed) {
+            try {
+              const refreshed = await fetchInsights(currentSessionId);
+              setInsights(refreshed || null);
+              setRefreshedInsightsSessions((prev) => ({ ...prev, [currentSessionId]: true }));
+            } catch (err) {
+              console.error("Auto insights refresh failed", err);
+            }
+          }
+        }
+      },
+    [currentSessionId]
+  );
+
+  useEffect(() => {
+    if (!currentSessionId) return;
+    if (activeTab !== "dashboard") return;
+    let cancelled = false;
+
+    const tick = async () => {
+      if (cancelled) return;
+      await updateStatusAndMaybeInsights();
+    };
+
+    tick();
+    const intervalId = setInterval(tick, 10000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [activeTab, currentSessionId, updateStatusAndMaybeInsights]);
 
   const mapChat = (chat: ChatMessage[]): SimpleMessage[] =>
     chat.map((c) => ({
@@ -670,6 +794,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
       const refreshed = await fetchInsights(currentSessionId);
       setInsights(refreshed || null);
       toast.success("Insights refreshed");
+      setRefreshedInsightsSessions((prev) => ({ ...prev, [currentSessionId]: true }));
     } catch (err: any) {
       toast.error(err?.message || "Failed to refresh insights");
     }
@@ -683,6 +808,35 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
       toast.success("Status updated");
     } catch (err: any) {
       toast.error(err?.message || "Failed to refresh status");
+    }
+  };
+
+  const handleDeleteSession = async () => {
+    if (!currentSessionId) return;
+    const confirmed = window.confirm("Delete this session and its blobs/index entries?");
+    if (!confirmed) return;
+    try {
+      await deleteSession(currentSessionId);
+      toast.success("Session deleted");
+
+      setSessions((prev) => {
+        const filtered = prev.filter((s) => s.id !== currentSessionId);
+        const nextId = filtered[0]?.id || null;
+        setCurrentSessionId(nextId);
+        if (!nextId) {
+          setMessages([]);
+          setInsights(null);
+        }
+        return filtered;
+      });
+
+      setRefreshedInsightsSessions((prev) => {
+        const copy = { ...prev };
+        delete copy[currentSessionId];
+        return copy;
+      });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete session");
     }
   };
 
@@ -708,6 +862,37 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
       toast.error(err?.message || "Failed to send message");
     } finally {
       setIsTyping(false);
+    }
+  };
+
+  const handleSaveTitle = async () => {
+    if (!currentSessionId) return;
+    const trimmed = titleDraft.trim();
+    if (!trimmed) {
+      toast.error("Title cannot be empty");
+      return;
+    }
+    setSavingTitle(true);
+    try {
+      const updated = await updateSession(currentSessionId, { metadata: { ...currentSession?.metadata, title: trimmed } as any });
+      setSessions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+      toast.success("Session title updated");
+      setEditingTitle(false);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update title");
+    } finally {
+      setSavingTitle(false);
+    }
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSaveTitle();
+    }
+    if (e.key === "Escape") {
+      setTitleDraft(currentSession?.metadata?.title || "");
+      setEditingTitle(false);
     }
   };
 
@@ -756,11 +941,11 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
               <Lock className="w-4 h-4 mr-1" />
               Password
             </Button>
-            <Button variant="outline" size="sm" onClick={onGoHome}>
+            {/* <Button variant="outline" size="sm" onClick={onGoHome}>
               <Inbox className="w-4 h-4 mr-1" />
               Home
-            </Button>
-            <Button variant="destructive" size="sm" onClick={onLogout}>
+            </Button> */}
+            <Button variant="outline" size="sm" onClick={onLogout}>
               <LogOut className="w-4 h-4 mr-1" />
               Logout
             </Button>
@@ -784,7 +969,36 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                       <div className="w-full md:w-auto">
                         <div className="flex items-center justify-between md:justify-start space-x-2">
                           <h2 className="text-lg font-bold text-slate-800 truncate max-w-[220px] md:max-w-xs">
-                            {currentSession.metadata?.title || "Session"}
+                            {editingTitle ? (
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  value={titleDraft}
+                                  onChange={(e) => setTitleDraft(e.target.value)}
+                                  onKeyDown={handleTitleKeyDown}
+                                  className="h-8 text-sm"
+                                  autoFocus
+                                />
+                                <button
+                                  onClick={handleSaveTitle}
+                                  disabled={savingTitle}
+                                  className="p-2 rounded-md bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-60 disabled:cursor-not-allowed"
+                                  title="Save title"
+                                >
+                                  <Check className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span className="truncate max-w-[180px] md:max-w-[220px]">{currentSession.metadata?.title || "Session"}</span>
+                                <button
+                                  onClick={() => setEditingTitle(true)}
+                                  className="p-2 rounded-md hover:bg-slate-100 text-slate-600"
+                                  title="Edit title"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                              </div>
+                            )}
                           </h2>
                           {currentSession.systemStatus?.overallStatus && (
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 border border-green-200 shrink-0">
@@ -792,51 +1006,65 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                             </span>
                           )}
                         </div>
-                        <p className="text-slate-500 text-xs mt-1 truncate">
-                          <span className="font-medium text-slate-600">Source:</span> Azure Blob Storage
+                        <p className="flex flex-col text-slate-500 text-xs mt-1 truncate">
+                          <div className="flex flex-row gap-1">
+                            <span className="font-medium text-slate-600">SessionId:</span> {currentSession.id}
+                          </div>
+                          <div className="flex flex-row gap-1">
+                            <span className="font-medium text-slate-600">Source:</span> Azure Blob Storage
+                          </div>
                         </p>
                       </div>
                       <div className="flex w-full md:w-auto bg-slate-100 p-1 rounded-lg overflow-x-auto no-scrollbar">
                         <button
-                          onClick={handleCheckStatus}
-                          className="flex-1 md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap bg-white text-slate-900 shadow-sm"
+                          onClick={() => setDashboardView("overview")}
+                          className={`flex-1 md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${dashboardView === "overview" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                         >
-                          <PieChart className="w-3 h-3 mr-1 inline" /> Refresh Status
+                          <PieChart className="w-3 h-3 mr-1 inline" /> Overview
                         </button>
                         <button
-                          onClick={handleRefreshInsights}
-                          className="flex-1 md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap text-slate-500 hover:text-slate-700"
+                          onClick={() => setDashboardView("preview")}
+                          className={`flex-1 md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${dashboardView === "preview" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                         >
-                          <RefreshCcw className="w-3 h-3 mr-1 inline" /> Refresh Insights
+                          <FileSearch className="w-3 h-3 mr-1 inline" /> Preview
                         </button>
                       </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/50">
+                    <div className={`flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/50 ${dashboardView === "preview" ? "no-scrollbar" : ""}`}>
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                         <div className="lg:col-span-2 space-y-4">
-                          <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-                            <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                              <FileText className="w-4 h-4 text-blue-600" /> Insights &amp; Data
-                            </h3>
-                            <InsightsPanel insights={insights} />
-                          </div>
+                          {dashboardView === "overview" ? (
+                            <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+                              <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-blue-600" /> Insights &amp; Data
+                              </h3>
+                              <InsightsPanel insights={insights} />
+                            </div>
+                          ) : (
+                            <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+                              <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                                <FileSearch className="w-4 h-4 text-blue-600" /> Document Preview
+                              </h3>
+                              <DocumentPreview document={activeSourceDocument} />
+                            </div>
+                          )}
                         </div>
-                        <div className="space-y-4">
+                        <div className="space-y-4 lg:sticky lg:top-4 self-start">
                           <SessionStatus session={currentSession} />
-                          <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-sm space-y-2">
-                            <div className="flex items-center gap-2 text-slate-700">
-                              <Inbox className="w-4 h-4 text-blue-600" />
-                              Documents
-                            </div>
-                            <div className="space-y-2">
-                              {(currentSession.sourceDocument || []).map((doc, idx) => (
-                                <div key={doc.fileName || idx} className="p-3 rounded-lg border border-slate-200 bg-slate-50">
-                                  <p className="text-sm font-semibold text-slate-800">{doc.fileName || `Document ${idx + 1}`}</p>
-                                  <p className="text-[11px] text-slate-500">{doc.blobPath || doc.blobUrl || doc.blobContainer}</p>
-                                </div>
-                              ))}
-                            </div>
+                          <div className="flex flex-col gap-2">
+                            <button
+                              onClick={handleCheckStatus}
+                              className="flex w-full md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap bg-white text-slate-500 shadow-sm hover:text-slate-900 justify-center text-center"
+                            >
+                              <RefreshCcw className="w-3 h-3 mr-1 inline" /> Refresh Status
+                            </button>
+                            <button
+                              onClick={handleDeleteSession}
+                              className="flex w-full md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap bg-white text-red-500 shadow-sm hover:text-slate-900 justify-center text-center"
+                            >
+                              <Trash2 className="w-3 h-3 mr-1 inline" /> Delete Session
+                            </button>
                           </div>
                         </div>
                       </div>

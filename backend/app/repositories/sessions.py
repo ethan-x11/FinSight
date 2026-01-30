@@ -4,6 +4,10 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from azure.cosmos import exceptions as cosmos_exceptions  # type: ignore[import]
+
+CosmosResourceNotFoundError = cosmos_exceptions.CosmosResourceNotFoundError
+
 from app.core.config import get_settings
 from app.db.cosmos import get_container
 
@@ -12,6 +16,17 @@ class SessionsRepository:
     def __init__(self) -> None:
         settings = get_settings()
         self.container = get_container(settings.sessions_container)
+
+    @staticmethod
+    def _normalize_datetimes(payload: Any) -> Any:
+        """Recursively convert datetime objects to ISO strings for Cosmos DB storage."""
+        if isinstance(payload, datetime):
+            return payload.isoformat()
+        if isinstance(payload, list):
+            return [SessionsRepository._normalize_datetimes(item) for item in payload]
+        if isinstance(payload, dict):
+            return {key: SessionsRepository._normalize_datetimes(value) for key, value in payload.items()}
+        return payload
 
     def create_session(self, session_data: Dict[str, Any]) -> Dict[str, Any]:
         now = datetime.now(timezone.utc).isoformat()
@@ -37,14 +52,16 @@ class SessionsRepository:
             "chatHistory": session_data.get("chatHistory", []),
             "timestamp": session_data.get("timestamp", now),
         }
-        self.container.create_item(item)
-        return item
+        normalized = self._normalize_datetimes(item)
+        self.container.create_item(normalized)
+        return normalized
 
     def upsert_session(self, session_data: Dict[str, Any]) -> Dict[str, Any]:
         session_data.setdefault("id", uuid4().hex)
         session_data.setdefault("timestamp", datetime.now(timezone.utc).isoformat())
-        self.container.upsert_item(session_data)
-        return session_data
+        normalized = self._normalize_datetimes(session_data)
+        self.container.upsert_item(normalized)
+        return normalized
 
     def get_by_id(self, session_id: str) -> Optional[Dict[str, Any]]:
         query = "SELECT * FROM c WHERE c.id = @id"
@@ -70,6 +87,13 @@ class SessionsRepository:
     def list_sessions(self) -> List[Dict[str, Any]]:
         return list(self.container.read_all_items())
 
+    def delete_session(self, session_id: str, user_id: str) -> bool:
+        try:
+            self.container.delete_item(session_id, partition_key=user_id)
+            return True
+        except CosmosResourceNotFoundError:
+            return False
+
     def append_chat_message(self, session_id: str, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         session = self.get_by_id(session_id)
         if not session:
@@ -78,8 +102,9 @@ class SessionsRepository:
         history.append(message)
         session["chatHistory"] = history
         session["timestamp"] = datetime.now(timezone.utc).isoformat()
-        self.container.upsert_item(session)
-        return session
+        normalized = self._normalize_datetimes(session)
+        self.container.upsert_item(normalized)
+        return normalized
 
     def update_status(self, session_id: str, status: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         session = self.get_by_id(session_id)
@@ -87,8 +112,9 @@ class SessionsRepository:
             return None
         session["systemStatus"] = status
         session["timestamp"] = datetime.now(timezone.utc).isoformat()
-        self.container.upsert_item(session)
-        return session
+        normalized = self._normalize_datetimes(session)
+        self.container.upsert_item(normalized)
+        return normalized
 
     def update_analysis(self, session_id: str, analysis_output: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         session = self.get_by_id(session_id)
@@ -96,8 +122,9 @@ class SessionsRepository:
             return None
         session["analysisOutput"] = analysis_output
         session["timestamp"] = datetime.now(timezone.utc).isoformat()
-        self.container.upsert_item(session)
-        return session
+        normalized = self._normalize_datetimes(session)
+        self.container.upsert_item(normalized)
+        return normalized
 
     def append_source_document(self, session_id: str, source_document: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         session = self.get_by_id(session_id)
@@ -107,8 +134,9 @@ class SessionsRepository:
         sources.append(source_document)
         session["sourceDocument"] = sources
         session["timestamp"] = datetime.now(timezone.utc).isoformat()
-        self.container.upsert_item(session)
-        return session
+        normalized = self._normalize_datetimes(session)
+        self.container.upsert_item(normalized)
+        return normalized
     
     def update_document_index(self, session_id: str, fileName: str, index_name: str) -> Optional[Dict[str, Any]]:
         session = self.get_by_id(session_id)
@@ -130,8 +158,9 @@ class SessionsRepository:
         # with open("debug_session_update.json", "w") as f:
         #     import json
         #     json.dump(session, f, indent=2)
-        self.container.upsert_item(session)
-        return session
+        normalized = self._normalize_datetimes(session)
+        self.container.upsert_item(normalized)
+        return normalized
     
     def get_document_data(self, session_id: str) -> List[Dict[str, Any]]:
         session = self.get_by_id(session_id)

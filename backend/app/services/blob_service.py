@@ -10,6 +10,7 @@ from azure.storage.blob import (
     ContentSettings,
     generate_blob_sas,
 )
+from azure.core.exceptions import ResourceNotFoundError
 
 from app.core.config import get_settings
 
@@ -55,3 +56,15 @@ class BlobService:
 
         sas_url = f"{blob_client.url}?{sas_token}"
         return blob_name, sas_url
+
+    def delete_blob(self, blob_path: str) -> bool:
+        """Delete a blob by path from the configured container. Returns True if deleted or not found."""
+        blob_client = self.container.get_blob_client(blob_path)
+        try:
+            blob_client.delete_blob(delete_snapshots="include")
+            return True
+        except ResourceNotFoundError:
+            return True
+        except Exception:
+            # Bubble unexpected errors
+            raise

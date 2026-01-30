@@ -7,6 +7,8 @@ from app.repositories.sessions import SessionsRepository, get_sessions_repositor
 from app.repositories.users import UsersRepository, get_users_repository
 from app.models.session import AnalysisSession, ProcessingStatus, SessionCreate, SessionUpdate
 from app.models.user import UserInDB
+from app.services.blob_service import BlobService
+from app.services.search_service import SearchService
 
 router = APIRouter(tags=["sessions"], dependencies=[Depends(get_current_user)])
 
@@ -65,7 +67,7 @@ async def update_session(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
     if not current_user.isAdmin and record["userId"] != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
-    updated = repo.upsert_session({**record, **payload.dict(exclude_unset=True)})
+    updated = repo.upsert_session({**record, **payload.model_dump(exclude_unset=True)})
     return AnalysisSession.model_validate(updated)
 
 
@@ -82,3 +84,32 @@ async def get_session_status(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
     status_payload = record.get("systemStatus") or {}
     return ProcessingStatus.model_validate(status_payload)
+
+
+@router.delete("/session/{session_id}")
+async def delete_session(
+    session_id: str,
+    current_user: UserInDB = Depends(get_current_user),
+    repo: SessionsRepository = Depends(get_sessions_repository),
+):
+    record = repo.get_by_id(session_id)
+    if not record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+    if not current_user.isAdmin and record["userId"] != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+
+    documents = record.get("sourceDocument") or []
+    index_names = [doc.get("indexName") for doc in documents if doc.get("indexName")]
+    blob_paths = [doc.get("blobPath") for doc in documents if doc.get("blobPath")]
+
+    search_service = SearchService()
+    blob_service = BlobService()
+
+    deleted_indices = search_service.delete_indices(index_names)
+    deleted_blobs = []
+    for blob_path in blob_paths:
+        blob_service.delete_blob(blob_path)
+        deleted_blobs.append(blob_path)
+
+    repo.delete_session(session_id, record["userId"])
+    return {"message": "Session deleted", "deletedIndices": deleted_indices, "deletedBlobs": deleted_blobs}

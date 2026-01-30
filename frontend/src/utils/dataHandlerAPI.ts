@@ -310,6 +310,13 @@ export async function updateSession(sessionId: string, updates: Partial<Analysis
 	});
 }
 
+export async function deleteSession(sessionId: string): Promise<{ message: string; deletedIndices?: string[]; deletedBlobs?: string[] }> {
+	return request<{ message: string; deletedIndices?: string[]; deletedBlobs?: string[] }>(`/session/${sessionId}`, {
+		method: "DELETE",
+		authenticated: true,
+	});
+}
+
 export async function fetchSessionStatus(sessionId: string): Promise<ProcessingStatus> {
 	return request<ProcessingStatus>(`/session/${sessionId}/status`, { authenticated: true });
 }

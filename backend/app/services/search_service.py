@@ -116,6 +116,21 @@ class SearchService:
                 continue
         return deleted
 
+    def delete_indices(self, index_names: Iterable[str]) -> List[str]:
+        """Delete specific indexes by name, returning the names successfully processed."""
+        deleted: List[str] = []
+        for name in set(index_names):
+            if not name:
+                continue
+            try:
+                self.index_client.delete_index(name)
+                deleted.append(name)
+                self._known_indices.discard(name)
+                self._search_clients.pop(name, None)
+            except ResourceNotFoundError:
+                deleted.append(name)
+        return deleted
+
     def upload_chunks(self, index_name: str, documents: Iterable[Dict[str, Any]]) -> None:
         # index_name = self._build_index_name(session_id + filename)
         self._ensure_index(index_name)

@@ -35,6 +35,7 @@ class SourceDocument(BaseModel):
     fileSize: str
     blobPath: str
     blobContainer: str
+    blobUrl: Optional[str] = None
     indexName: Optional[str] = None
 
 

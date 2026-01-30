@@ -50,6 +50,7 @@ class ChatService:
         "unless that information is explicitly in the context.\n"
         "    * If the context does not contain the answer, state clearly: *\"The provided documents do not contain "
         "information regarding [Topic].\"* Do not guess or hallucinate figures.\n\n"
+        "Include additional explanations of how the answer if derived from the context.\n\n"
 
         "2.  **Citation Requirement:**\n"
         "    * Every financial figure, risk factor, or qualitative statement you output must include a citation.\n"
@@ -88,7 +89,6 @@ class ChatService:
         "### **Output Format**\n"
         "Use Markdown for the entire response, including any tables or lists.\n"
         "Mandatorily include citation for every piece of information derived from the context.[PDF Name, Page Number, Chunk Number] (Example: [10-K_2023.pdf, Page 12, Chunk 3])\n"
-        "Include additional explanations of how the answer if derived from the context."
     )
         
         history_messages: List[Dict[str, str]] = []
