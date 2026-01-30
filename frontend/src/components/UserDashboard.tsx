@@ -1013,7 +1013,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                           <div className="flex flex-row gap-1">
                             <span className="font-medium text-slate-600">Source:</span> Azure Blob Storage
                           </div>
-                        </p>
+                        </div>
                       </div>
                       <div className="flex w-full md:w-auto bg-slate-100 p-1 rounded-lg overflow-x-auto no-scrollbar">
                         <button
