@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.core.auth import get_current_user
 from app.repositories.sessions import SessionsRepository, get_sessions_repository
 from app.models.insights import InsightsResponse
-from app.models.session import AnalysisOutput, KeyInsight, RiskFactor, FinancialTable
+from app.models.session import AnalysisOutput, KeyInsight, RiskFactor
 from app.models.user import UserInDB
 
 router = APIRouter(tags=["insights"], dependencies=[Depends(get_current_user)])
@@ -34,7 +34,7 @@ async def get_insights(
     updated_analysis = AnalysisOutput(
         keyInsights=[KeyInsight(**item) for item in key_insights],
         identifiedRisks=[RiskFactor(**item) for item in risks],
-        structuredTables=[FinancialTable(**item) for item in structured_tables],
+        # structuredTables=[FinancialTable(**item) for item in structured_tables],
     ).model_dump()
     sessions_repo.update_analysis(session_id, updated_analysis)
 
@@ -42,6 +42,6 @@ async def get_insights(
         sessionId=session_id,
         keyInsights=[KeyInsight(**item) for item in key_insights],
         risks=[RiskFactor(**item) for item in risks],
-        structuredTables=[FinancialTable(**item) for item in structured_tables],
+        # structuredTables=[FinancialTable(**item) for item in structured_tables],
         notes=None if structured_tables else "Qualitative document - no summary metrics extracted.",
     )

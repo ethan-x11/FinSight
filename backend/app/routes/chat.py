@@ -55,4 +55,4 @@ async def chat_flow(
     }
     sessions_repo.append_chat_message(session_id, assistant_message)
 
-    return AskResponse(answer=answer_payload["answer"], sources=answer_payload["sources"])
+    return AskResponse(answer=answer_payload["answer"], citations=answer_payload["sources"])

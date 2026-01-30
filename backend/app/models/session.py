@@ -75,19 +75,19 @@ class RiskFactor(BaseModel):
     sourcePage: Optional[int] = None
 
 
-class FinancialTable(BaseModel):
-    tableId: str
-    title: str
-    pageNumber: int
-    layoutType: Literal["horizontal", "top-bottom", "matrix"]
-    dataRef: Optional[str] = None
-    rows: Optional[List[dict]] = None
+# class FinancialTable(BaseModel):
+#     tableId: str
+#     title: str
+#     pageNumber: int
+#     layoutType: Literal["horizontal", "top-bottom", "matrix"]
+#     dataRef: Optional[str] = None
+#     rows: Optional[List[dict]] = None
 
 
 class AnalysisOutput(BaseModel):
     keyInsights: List[KeyInsight] = Field(default_factory=list)
     identifiedRisks: List[RiskFactor] = Field(default_factory=list)
-    structuredTables: List[FinancialTable] = Field(default_factory=list)
+    # structuredTables: List[FinancialTable] = Field(default_factory=list)
 
 
 class AnalysisSession(BaseModel):

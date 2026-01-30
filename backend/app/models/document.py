@@ -32,4 +32,4 @@ class SourceSnippet(BaseModel):
 
 class AskResponse(BaseModel):
     answer: str
-    sources: list[SourceSnippet]
+    citations: list[SourceSnippet]
