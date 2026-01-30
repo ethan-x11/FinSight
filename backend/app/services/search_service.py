@@ -101,6 +101,21 @@ class SearchService:
             )
         return self._search_clients[index_name]
 
+    def delete_indices_with_prefix(self, index_base_name: str) -> List[str]:
+        """Delete all search indexes whose names start with the given base and return the deleted names."""
+        index_names = [name for name in self.index_client.list_index_names() if name.startswith(index_base_name)]
+        deleted: List[str] = []
+        for name in index_names:
+            try:
+                self.index_client.delete_index(name)
+                deleted.append(name)
+                self._known_indices.discard(name)
+                self._search_clients.pop(name, None)
+            except ResourceNotFoundError:
+                # Another process may have removed the index; continue gracefully.
+                continue
+        return deleted
+
     def upload_chunks(self, index_name: str, documents: Iterable[Dict[str, Any]]) -> None:
         # index_name = self._build_index_name(session_id + filename)
         self._ensure_index(index_name)
@@ -122,3 +137,10 @@ class SearchService:
                 hits.append({"id": item["id"], "content": item["content"], "chunkId": item.get("chunkId"), "sourcefile": item.get("sourcefile"), "pageRange": item.get("pageRange")})
             search_data.extend(hits)
         return search_data
+
+
+if __name__ == "__main__":
+    service = SearchService()
+    #delete all indexes with prefix "test-index-"
+    deleted = service.delete_indices_with_prefix("financial")
+    print("Deleted indexes: ", deleted)

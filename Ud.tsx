@@ -543,7 +543,7 @@ const ChatInterface = ({ messages, onSendMessage, isTyping }) => {
 
 // --- Main App Logic ---
 
-export default function App() {
+export default function UserDashboard() {
   const [sessions, setSessions] = useState(MOCK_HISTORICAL_SESSIONS);
   const [currentSessionId, setCurrentSessionId] = useState(null); // null means "New Session" mode
   const [activeTab, setActiveTab] = useState('dashboard');

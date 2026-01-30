@@ -87,6 +87,7 @@ class ChatService:
         "Do not add extra commentery."
         "### **Output Format**\n"
         "Use Markdown for the entire response, including any tables or lists.\n"
+        "Include citation for every piece of information derived from the context.[Chunk Name, Page Number, Chunk Number]"
     )
         
         history_messages: List[Dict[str, str]] = []
