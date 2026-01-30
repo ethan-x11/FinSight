@@ -1006,7 +1006,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                             </span>
                           )}
                         </div>
-                        <p className="flex flex-col text-slate-500 text-xs mt-1 truncate">
+                        <div className="flex flex-col text-slate-500 text-xs mt-1 truncate">
                           <div className="flex flex-row gap-1">
                             <span className="font-medium text-slate-600">SessionId:</span> {currentSession.id}
                           </div>
