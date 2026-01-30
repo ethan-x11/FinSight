@@ -117,32 +117,34 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center p-6">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-      
-      {/* Header */}
+    <div className="relative min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center p-6 overflow-hidden">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-24 -top-24 h-64 w-64 rounded-full bg-indigo-200 blur-3xl opacity-50" />
+        <div className="absolute -right-20 bottom-0 h-64 w-64 rounded-full bg-cyan-200 blur-3xl opacity-40" />
+      </div>
+
       <div className="absolute top-6 left-6">
-        <button 
+        <button
           onClick={onBackToHome}
-          className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          className="flex items-center gap-3 hover:opacity-90 transition-opacity"
         >
-          <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-200/70">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
-          <h2 className="text-primary">{APP_BRAND_NAME}</h2>
+          <h2 className="text-lg font-semibold text-slate-800">{APP_BRAND_NAME}</h2>
         </button>
       </div>
 
-      {/* Login/Signup Card */}
       {!showForgotPassword && (
-        <Card className="w-full max-w-md shadow-2xl border-2 relative z-10">
+        <Card className="w-full max-w-md shadow-2xl border border-slate-200/80 bg-white/90 backdrop-blur relative z-10">
           <CardHeader className="space-y-1">
-            <CardTitle>{showSignup ? "Create Account" : "Welcome Back"}</CardTitle>
-            <CardDescription>
-              {showSignup 
-                ? "Sign up to start accelerating your research" 
-                : "Login to access your AI research assistant"}
+            <CardTitle className="text-2xl font-semibold text-slate-900">
+              {showSignup ? "Create Account" : "Welcome Back"}
+            </CardTitle>
+            <CardDescription className="text-slate-500">
+              {showSignup
+                ? "Sign up to start accelerating your research"
+                : `Login to access ${APP_BRAND_NAME} workspace`}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -156,7 +158,7 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="bg-input-background border-2 border-border focus:border-primary"
+                  className="bg-white/70 border border-slate-200 focus-visible:ring-indigo-500"
                 />
               </div>
             )}
@@ -169,7 +171,7 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="bg-input-background border-2 border-border focus:border-primary"
+                className="bg-white/70 border border-slate-200 focus-visible:ring-indigo-500"
               />
             </div>
             {showSignup && (
@@ -182,7 +184,7 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="bg-input-background border-2 border-border focus:border-primary"
+                  className="bg-white/70 border border-slate-200 focus-visible:ring-indigo-500"
                 />
               </div>
             )}
@@ -195,24 +197,24 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="bg-input-background border-2 border-border focus:border-primary"
+                className="bg-white/70 border border-slate-200 focus-visible:ring-indigo-500"
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
             {showSignup ? (
               <>
-                <Button 
+                <Button
                   onClick={handleSignup}
-                  className="w-full bg-primary hover:bg-primary/90"
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white"
                   disabled={isSubmitting === "signup"}
                 >
                   {isSubmitting === "signup" ? "Signing up..." : "Sign Up"}
                 </Button>
-                <Button 
+                <Button
                   onClick={() => setShowSignup(false)}
                   variant="outline"
-                  className="w-full border-2"
+                  className="w-full border border-slate-200"
                   disabled={isSubmitting !== null}
                 >
                   Back to Login
@@ -220,26 +222,26 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
               </>
             ) : (
               <>
-                <Button 
+                <Button
                   onClick={handleLogin}
-                  className="w-full bg-primary hover:bg-primary/90"
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white"
                   disabled={isSubmitting === "login"}
                 >
                   {isSubmitting === "login" ? "Logging in..." : "Login"}
                 </Button>
                 <div className="flex gap-2 w-full">
-                  <Button 
+                  <Button
                     onClick={() => setShowSignup(true)}
                     variant="outline"
-                    className="flex-1 border-2 border-secondary text-secondary hover:bg-secondary/5"
+                    className="flex-1 border border-indigo-200 text-indigo-700 hover:bg-indigo-50"
                     disabled={isSubmitting !== null}
                   >
                     Sign Up
                   </Button>
-                  <Button 
+                  <Button
                     onClick={() => setShowForgotPassword(true)}
                     variant="outline"
-                    className="flex-1 border-2"
+                    className="flex-1 border border-slate-200"
                     disabled={isSubmitting !== null}
                   >
                     Forgot Password
@@ -251,12 +253,11 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
         </Card>
       )}
 
-      {/* Forgot Password Card */}
       {showForgotPassword && (
-        <Card className="w-full max-w-md shadow-2xl border-2 relative z-10">
+        <Card className="w-full max-w-md shadow-2xl border border-slate-200/80 bg-white/90 backdrop-blur relative z-10">
           <CardHeader className="space-y-1">
-            <CardTitle>Reset Password</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl font-semibold text-slate-900">Reset Password</CardTitle>
+            <CardDescription className="text-slate-500">
               Enter your email to receive a password reset link
             </CardDescription>
           </CardHeader>
@@ -269,21 +270,21 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-input-background border-2 border-border focus:border-primary"
+                className="bg-white/70 border border-slate-200 focus-visible:ring-indigo-500"
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
-            <Button 
+            <Button
               onClick={handleForgotPassword}
-              className="w-full bg-primary hover:bg-primary/90"
+              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white"
             >
               Send Reset Link
             </Button>
-            <Button 
+            <Button
               onClick={() => setShowForgotPassword(false)}
               variant="outline"
-              className="w-full border-2"
+              className="w-full border border-slate-200"
             >
               Back to Login
             </Button>

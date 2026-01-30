@@ -96,13 +96,13 @@ export function PasswordChangeDialog({ open, onClose }: PasswordChangeDialogProp
 
   return (
     <Dialog open={open} onOpenChange={handleCancel}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md w-1/3 bg-white rounded-xl p-6 shadow-xl border border-slate-200">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Lock className="w-5 h-5 text-primary" />
+          <DialogTitle className="flex items-center gap-2 text-slate-900">
+            <Lock className="w-5 h-5 text-indigo-600" />
             Change Password
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-slate-500">
             Enter your current password and choose a new secure password
           </DialogDescription>
         </DialogHeader>
@@ -118,12 +118,12 @@ export function PasswordChangeDialog({ open, onClose }: PasswordChangeDialogProp
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 placeholder="Enter current password"
-                className="border-2 pr-10"
+                className="border border-slate-200 pr-10 focus-visible:ring-indigo-500 focus-visible:border-indigo-300"
               />
               <button
                 type="button"
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
               >
                 {showCurrentPassword ? (
                   <EyeOff className="w-4 h-4" />
@@ -144,12 +144,12 @@ export function PasswordChangeDialog({ open, onClose }: PasswordChangeDialogProp
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter new password"
-                className="border-2 pr-10"
+                className="border border-slate-200 pr-10 focus-visible:ring-indigo-500 focus-visible:border-indigo-300"
               />
               <button
                 type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
               >
                 {showNewPassword ? (
                   <EyeOff className="w-4 h-4" />
@@ -170,12 +170,12 @@ export function PasswordChangeDialog({ open, onClose }: PasswordChangeDialogProp
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm new password"
-                className="border-2 pr-10"
+                className="border border-slate-200 pr-10 focus-visible:ring-indigo-500 focus-visible:border-indigo-300"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
               >
                 {showConfirmPassword ? (
                   <EyeOff className="w-4 h-4" />
@@ -188,7 +188,7 @@ export function PasswordChangeDialog({ open, onClose }: PasswordChangeDialogProp
 
           {/* Password Requirements */}
           {newPassword && (
-            <Alert className="border-2">
+            <Alert className="border border-slate-200 bg-slate-50">
               <AlertDescription>
                 <p className="text-sm mb-2">Password requirements:</p>
                 <ul className="space-y-1">
@@ -200,9 +200,9 @@ export function PasswordChangeDialog({ open, onClose }: PasswordChangeDialogProp
                       {req.met ? (
                         <CheckCircle2 className="w-4 h-4 text-green-500" />
                       ) : (
-                        <XCircle className="w-4 h-4 text-muted-foreground" />
+                        <XCircle className="w-4 h-4 text-slate-400" />
                       )}
-                      <span className={req.met ? "text-green-600" : "text-muted-foreground"}>
+                      <span className={req.met ? "text-green-600" : "text-slate-500"}>
                         {req.text}
                       </span>
                     </li>
@@ -214,11 +214,11 @@ export function PasswordChangeDialog({ open, onClose }: PasswordChangeDialogProp
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 mt-6 pt-4 border-t">
+        <div className="flex gap-3 mt-6 pt-4 border-t border-slate-200">
           <Button
             onClick={handleCancel}
             variant="outline"
-            className="flex-1 border-2"
+            className="flex-1 border border-slate-200"
             disabled={isChanging}
           >
             Cancel
@@ -226,7 +226,7 @@ export function PasswordChangeDialog({ open, onClose }: PasswordChangeDialogProp
           <Button
             onClick={handleChangePassword}
             disabled={isChanging || !passwordRequirements.every(req => req.met)}
-            className="flex-1 bg-primary hover:bg-primary/90"
+            className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white"
           >
             {isChanging ? "Changing..." : "Change Password"}
           </Button>
