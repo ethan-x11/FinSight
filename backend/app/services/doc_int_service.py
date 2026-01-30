@@ -52,11 +52,13 @@ class DocumentIntelligenceService:
                 rows.append(row_cells)
 
             page_number = table.bounding_regions[0].page_number if table.bounding_regions else 1
+            caption = getattr(table, "caption", None)
+            caption_text = caption.content if caption and getattr(caption, "content", None) else ""
 
             tables.append(
                 {
                     "tableId": f"table-{page_number}-{len(tables)+1}",
-                    "title": table.caption or f"Table {len(tables)+1}",
+                    "title": caption_text or f"Table {len(tables)+1}",
                     "pageNumber": page_number,
                     "layoutType": "horizontal",
                     "rows": rows,

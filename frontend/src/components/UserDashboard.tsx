@@ -66,6 +66,13 @@ type SimpleMessage = {
 
 marked.setOptions({ breaks: true });
 
+const WELCOME_MESSAGES: string[] = [
+  "Hi there! Ask me anything about your uploaded documents and I'll cite my sources.",
+  "Ready to dig in. What would you like to know about this session?",
+  "Hello! I can summarize, compare, or extract details from your files—what should we explore first?",
+  "I'm synced with your documents. Ask a question, or request a summary to get started.",
+];
+
 const STATUS_STEPS: { key: keyof AnalysisSession["systemStatus"]["steps"]; label: string }[] = [
   { key: "docIntelligenceTriggered", label: "Document Intelligence" },
   { key: "dataExtracted", label: "Data Extracted" },
@@ -598,7 +605,13 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
       try {
         const detail = await fetchSession(currentSessionId);
         setSessions((prev) => prev.map((s) => (s.id === detail.id ? detail : s)));
-        setMessages(mapChat(detail.chatHistory || []));
+        const mapped = mapChat(detail.chatHistory || []);
+        if (mapped.length === 0) {
+          const welcome = WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)];
+          setMessages([{ id: `welcome-${detail.id}`, role: "assistant", text: welcome }]);
+        } else {
+          setMessages(mapped);
+        }
         setInsights(detail.analysisOutput || null);
       } catch (err: any) {
         toast.error(err?.message || "Failed to load session");
