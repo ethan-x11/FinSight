@@ -51,8 +51,8 @@ async def chat_flow(
         "role": "assistant",
         "content": answer_payload["answer"],
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "citations": answer_payload.get("sources"),
+        "citations": answer_payload.get("citations"),
     }
     sessions_repo.append_chat_message(session_id, assistant_message)
 
-    return AskResponse(answer=answer_payload["answer"], citations=answer_payload["sources"])
+    return AskResponse(answer=answer_payload["answer"], citations=answer_payload["citations"])

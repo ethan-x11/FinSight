@@ -176,7 +176,7 @@ export interface UploadDocumentsResponse {
 
 export interface ChatResponse {
 	answer: string;
-	sources: {
+	citations: {
 		sourcefile: string;
 		page_range?: string;
 		content?: string;

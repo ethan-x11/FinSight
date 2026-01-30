@@ -28,6 +28,7 @@ import {
   Pencil,
   Check,
   Trash2,
+  Search,
 } from "lucide-react";
 import {
   askChatQuestion,
@@ -73,7 +74,7 @@ type SimpleMessage = {
 marked.setOptions({ breaks: true });
 
 const WELCOME_MESSAGES: string[] = [
-  "Hi there! Ask me anything about your uploaded documents and I'll cite my sources.",
+  "Hi there! Ask me anything about your uploaded documents.",
   "Ready to dig in. What would you like to know about this session?",
   "Hello! I can summarize, compare, or extract details from your files—what should we explore first?",
   "I'm synced with your documents. Ask a question, or request a summary to get started.",
@@ -213,6 +214,13 @@ const Sidebar = ({
             <div className="flex items-center space-x-1.5">
               <Cloud className="w-3 h-3 text-blue-400" />
               <span>Blob Storage</span>
+            </div>
+            <span className="text-green-500">Active</span>
+          </div>
+          <div className="flex items-center justify-between text-[10px] text-slate-400">
+            <div className="flex items-center space-x-1.5">
+              <Search className="w-3 h-3 text-blue-400" />
+              <span>Azure AI Search</span>
             </div>
             <span className="text-green-500">Active</span>
           </div>
@@ -552,6 +560,7 @@ const ChatInterface = ({
                 className="text-sm text-slate-800 whitespace-pre-wrap prose prose-slate max-w-none"
                 dangerouslySetInnerHTML={{ __html: marked.parse(msg.text || "") }}
               />
+              {msg.text}
               {msg.sources && msg.sources.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
                   {msg.sources.map((src, i) => (
@@ -937,10 +946,10 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
               <User className="w-4 h-4 mr-1" />
               {user.name}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setShowPasswordChange(true)}>
+            {/* <Button variant="ghost" size="sm" onClick={() => setShowPasswordChange(true)}>
               <Lock className="w-4 h-4 mr-1" />
               Password
-            </Button>
+            </Button> */}
             {/* <Button variant="outline" size="sm" onClick={onGoHome}>
               <Inbox className="w-4 h-4 mr-1" />
               Home

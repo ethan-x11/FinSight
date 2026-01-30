@@ -112,7 +112,7 @@ class ChatService:
             # temperature=0.2
         )
         answer = completion.choices[0].message.content if completion.choices else ""
-        sources = [
+        citations = [
             {
                 "sourcefile": doc.get("sourcefile"),
                 "chunk_id": doc.get("chunkId"),
@@ -122,4 +122,4 @@ class ChatService:
             }
             for doc in context_docs
         ]
-        return {"answer": answer, "sources": sources}
+        return {"answer": answer, "citations": citations}
