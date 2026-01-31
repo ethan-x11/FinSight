@@ -64,7 +64,7 @@ class ChatService:
         "in a Markdown table.\n"
         "    * **Lists:** Use bullet points for qualitative summaries like \"Risk Factors\" or \"Key Strategic Initiatives\".\n\n"
         "    * **Number Format:** Numbers in brackets are treated as negative number in most of the financial statements.\n\n"
-        "    * **Spacing Format:** Ensure proper spacing between paragraphs, lists, and between table column/row items for readability.\n\n"
+        "    * **Spacing Format:** Ensure proper spacing between paragraphs, lists, and items for readability. Ensure extra space between table rows for better readability.\n\n"
 
         "4.  **Tone & Style:**\n"
         "    * Professional, objective, and concise.\n"
