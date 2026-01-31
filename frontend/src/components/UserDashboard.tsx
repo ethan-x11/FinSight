@@ -945,7 +945,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
         id: crypto.randomUUID(),
         role: "assistant",
         text: resp.answer,
-        citations: resp.citations?.map((s) => `${s.sourcefile}${s.page_range ? `, page- ${s.page_range},` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`) || [],
+        citations: resp.citations?.map((s) => `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`) || [],
       };
       setMessages((prev) => [...prev, botMsg]);
     } catch (err: any) {
