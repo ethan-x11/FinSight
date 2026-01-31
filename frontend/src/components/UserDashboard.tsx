@@ -68,7 +68,7 @@ type SimpleMessage = {
   id: string;
   role: "user" | "assistant";
   text: string;
-  sources?: string[];
+  citations?: (string | undefined)[];
 };
 
 marked.setOptions({ breaks: true });
@@ -560,10 +560,11 @@ const ChatInterface = ({
                 className="text-sm text-slate-800 whitespace-pre-wrap prose prose-slate max-w-none"
                 dangerouslySetInnerHTML={{ __html: marked.parse(msg.text || "") }}
               />
-              {msg.text}
-              {msg.sources && msg.sources.length > 0 && (
+              {/* {msg.text} */}
+              {/* test loc */}
+              {msg.citations && msg.citations.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
-                  {msg.sources.map((src, i) => (
+                  {msg.citations.map((src, i) => (
                     <span key={`${src}-${i}`} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
                       {src}
                     </span>
@@ -682,7 +683,10 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
       try {
         const detail = await fetchSession(currentSessionId);
         setSessions((prev) => prev.map((s) => (s.id === detail.id ? detail : s)));
+        {/* Test Area */}
+        console.log("Loaded session detail:", detail);
         const mapped = mapChat(detail.chatHistory || []);
+        console.log("Mapped chat messages:", mapped);
         if (mapped.length === 0) {
           const welcome = WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)];
           setMessages([{ id: `welcome-${detail.id}`, role: "assistant", text: welcome }]);
@@ -785,7 +789,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
       id: c.messageId,
       role: c.role === "assistant" ? "assistant" : "user",
       text: c.content,
-      sources: c.citations?.map((c) => c.label) || [],
+      citations: c.citations?.map((s) => `${s.sourcefile}${s.page_range ? `, page- ${s.page_range},` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`) || [],
     }));
 
   const handleUpload = async (files: FileList) => {
@@ -864,7 +868,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
         id: crypto.randomUUID(),
         role: "assistant",
         text: resp.answer,
-        sources: resp.sources?.map((s) => `${s.sourcefile}${s.page_range ? ` p.${s.page_range}` : ""}`) || [],
+        citations: resp.citations?.map((s) => `${s.sourcefile}${s.page_range ? `, page- ${s.page_range},` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`) || [],
       };
       setMessages((prev) => [...prev, botMsg]);
     } catch (err: any) {

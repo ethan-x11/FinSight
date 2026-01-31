@@ -40,9 +40,11 @@ class SourceDocument(BaseModel):
 
 
 class Citation(BaseModel):
-    label: Optional[str] = None
-    snippet: Optional[str] = None
-    pageIndex: Optional[int] = None
+    sourcefile: Optional[str] = None
+    chunk_id: Optional[str] = None
+    heading: Optional[str] = None
+    page_range: Optional[str] = None
+    content: Optional[str] = None
 
 
 class FeedbackData(BaseModel):

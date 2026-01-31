@@ -142,9 +142,11 @@ export interface ChatMessage {
 	content: string;
 	timestamp: string;
 	citations?: {
-		label: string;
 		sourcefile?: string;
+		chunk_id?: string;
+		heading?: string;
 		page_range?: string;
+		content?: string;
 	}[];
 	userFeedback?: {
 		thumbRating: "up" | "down";
@@ -178,8 +180,10 @@ export interface ChatResponse {
 	answer: string;
 	citations: {
 		sourcefile: string;
-		page_range?: string;
-		content?: string;
+		chunk_id: string;
+		heading: string;
+		page_range: string;
+		content: string;
 	}[];
 }
 
