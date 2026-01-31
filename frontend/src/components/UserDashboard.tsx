@@ -48,6 +48,14 @@ import {
   deleteSession,
 } from "../utils/dataHandlerAPI";
 import { marked } from "marked";
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { dark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import rehypeKatex from 'rehype-katex';
+import rehypeRaw from 'rehype-raw';
+import remarkMath from 'remark-math';
+import 'katex/dist/katex.min.css';
 import { Button } from "./ui/button";
 import { toast } from "sonner";
 import { Input } from "./ui/input";
@@ -575,10 +583,37 @@ const ChatInterface = ({
                     {isUser ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
                     <span>{isUser ? "You" : "Assistant"}</span>
                   </div>
-                  <div
+                  {/* <div
                     className={`text-sm leading-relaxed mt-1 whitespace-pre-wrap [&>*]:mb-2 [&>*:last-child]:mb-0 [&>ul]:list-disc [&>ul]:ml-5 [&>ol]:list-decimal [&>ol]:ml-5 ${isUser ? "text-white" : "text-slate-800"}`}
                     dangerouslySetInnerHTML={{ __html: marked.parse(msg.text || "") }}
+                  /> */}
+                  <div
+                  className={`text-sm leading-relaxed mt-1 [&>*]:mb-2 [&>*:last-child]:mb-0 [&>ul]:list-disc [&>ul]:ml-5 [&>ol]:list-decimal [&>ol]:ml-5 ${isUser ? "text-white" : "text-slate-800"}`}
+                  >
+                  <Markdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]}
+                    children={msg.text || ""}
+                    components={{
+                      code(props) {
+                        const { children, className } = props
+                        const match = /language-(\w+)/.exec(className || '')
+                        return match ? (
+                          <SyntaxHighlighter
+                            PreTag="div"
+                            language={match[1]}
+                          // style={dark}
+                          >
+                            {String(children).replace(/\n$/, '')}
+                          </SyntaxHighlighter>
+                        ) : (
+                          <code className={className}>
+                            {children}
+                          </code>
+                        )
+                      }
+                    }}
                   />
+                  </div>
+                  {/* {msg.text || ""}</Markdown> */}
                   {msg.citations && msg.citations.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {msg.citations.map((src, i) => (
@@ -809,7 +844,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
       id: c.messageId,
       role: c.role === "assistant" ? "assistant" : "user",
       text: c.content,
-      citations: c.citations?.map((s) => `${s.sourcefile}${s.page_range ? `, page- ${s.page_range},` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`) || [],
+      citations: c.citations?.map((s) => `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`) || [],
     }));
 
   const handleUpload = async (files: FileList) => {
