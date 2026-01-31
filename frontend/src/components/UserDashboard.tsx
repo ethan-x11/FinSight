@@ -543,15 +543,27 @@ const ChatInterface = ({
 }) => {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
+  const syncHeight = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    const nextHeight = Math.min(200, Math.max(44, el.scrollHeight));
+    el.style.height = `${nextHeight}px`;
+  };
+
   const handleSend = () => {
     if (!input.trim()) return;
     onSendMessage(input.trim());
     setInput("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "44px";
+    }
   };
 
   return (
@@ -644,12 +656,22 @@ const ChatInterface = ({
       </div>
       <div className="p-4 md:p-5 bg-white/90 border-t border-default shadow-inner backdrop-blur-sm">
         <div className="flex gap-2 max-w-4xl mx-auto">
-          <Input
+          <textarea
+            ref={textareaRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              syncHeight();
+            }}
             placeholder="Ask a question about this session"
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            className="h-11 bg-slate-50 border-default focus-visible:ring-2 focus-visible:ring-blue-500"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            rows={1}
+            className="h-11 w-full resize-none rounded-md border border-default bg-slate-50 px-3 py-2 text-sm text-slate-900 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           />
           <Button onClick={handleSend} disabled={!input.trim()} className="h-11 px-4">
             <Send className="w-4 h-4 mr-2" />
