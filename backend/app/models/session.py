@@ -89,8 +89,9 @@ class RiskFactor(BaseModel):
 
 class AnalysisOutput(BaseModel):
     keyInsights: List[KeyInsight] = Field(default_factory=list)
-    identifiedRisks: List[RiskFactor] = Field(default_factory=list)
+    risks: List[RiskFactor] = Field(default_factory=list)
     # structuredTables: List[FinancialTable] = Field(default_factory=list)
+    notes: Optional[str] = None
 
 
 class AnalysisSession(BaseModel):

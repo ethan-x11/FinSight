@@ -27,14 +27,16 @@ async def get_insights(
 
     analysis = session.get("analysisOutput") or {}
     key_insights = analysis.get("keyInsights") or []
-    risks = analysis.get("identifiedRisks") or []
+    risks = analysis.get("risks") or []
     structured_tables = analysis.get("structuredTables") or []
+    notes = analysis.get("notes") or None
 
     # Persist generated insights so subsequent calls return the same payload
     updated_analysis = AnalysisOutput(
         keyInsights=[KeyInsight(**item) for item in key_insights],
-        identifiedRisks=[RiskFactor(**item) for item in risks],
+        risks=[RiskFactor(**item) for item in risks],
         # structuredTables=[FinancialTable(**item) for item in structured_tables],
+        notes = notes,
     ).model_dump()
     sessions_repo.update_analysis(session_id, updated_analysis)
 
@@ -43,5 +45,5 @@ async def get_insights(
         keyInsights=[KeyInsight(**item) for item in key_insights],
         risks=[RiskFactor(**item) for item in risks],
         # structuredTables=[FinancialTable(**item) for item in structured_tables],
-        notes=None if structured_tables else "Qualitative document - no summary metrics extracted.",
+        notes= notes if notes else "Qualitative document - no summary metrics extracted.",
     )

@@ -152,6 +152,16 @@ class SearchService:
                 hits.append({"id": item["id"], "content": item["content"], "chunkId": item.get("chunkId"), "sourcefile": item.get("sourcefile"), "pageRange": item.get("pageRange")})
             search_data.extend(hits)
         return search_data
+    
+    def search_single(self, index_name: str, query: str, top: int = 5) -> List[Dict[str, Any]]:
+        search_data: List[Dict[str, Any]] = []
+        search_client = self._get_search_client(index_name)
+        results = search_client.search(search_text=query, query_type="semantic", top=top)
+        hits: List[Dict[str, Any]] = []
+        for item in results:
+            hits.append({"id": item["id"], "content": item["content"], "chunkId": item.get("chunkId"), "sourcefile": item.get("sourcefile"), "pageRange": item.get("pageRange")})
+        search_data.extend(hits)
+        return search_data
 
 
 if __name__ == "__main__":

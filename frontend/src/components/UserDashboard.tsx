@@ -421,8 +421,8 @@ const SessionStatus = ({ session }: { session: AnalysisSession }) => {
 const InsightsPanel = ({ insights }: { insights: AnalysisOutput | null }) => {
   if (!insights) return <div className="text-sm text-slate-500">No insights available yet.</div>;
 
-  const tables = insights.structuredTables || [];
-  const risks = insights.identifiedRisks || [];
+  // const tables = insights.structuredTables || [];
+  const risks = insights.risks || [];
   const keyInsights = insights.keyInsights || [];
 
   return (
@@ -432,7 +432,7 @@ const InsightsPanel = ({ insights }: { insights: AnalysisOutput | null }) => {
           {keyInsights.map((item: KeyInsight) => (
             <div key={item.id} className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
               <p className="text-xs text-slate-500 uppercase font-semibold">{item.category || "Insight"}</p>
-              <p className="text-lg font-semibold text-slate-900 mt-1">{item.value}</p>
+              <p className="text-md font-semibold text-slate-900 mt-1">{item.value}</p>
               {item.trend && <p className="text-xs text-slate-500">Trend: {item.trend}</p>}
               {typeof item.confidenceScore === "number" && (
                 <div className="text-xs text-slate-500 mt-1">Confidence: {(item.confidenceScore * 100).toFixed(0)}%</div>
@@ -494,6 +494,23 @@ const InsightsPanel = ({ insights }: { insights: AnalysisOutput | null }) => {
           ))}
         </div>
       )} */}
+    </div>
+  );
+};
+
+const InsightsNotesPanel = ({ notes }: { notes?: string | null }) => {
+  if (!notes || !notes.trim()) return null;
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-3">
+      <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+        <FileText className="w-4 h-4 text-blue-600" /> Auto Analysis Notes
+      </div>
+      <div className="text-sm leading-relaxed text-slate-700 [&>*]:mb-2 [&>*:last-child]:mb-0 [&>ul]:list-disc [&>ul]:ml-5 [&>ol]:list-decimal [&>ol]:ml-5">
+        <Markdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]}>
+          {notes}
+        </Markdown>
+      </div>
     </div>
   );
 };
@@ -1125,11 +1142,14 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                         <div className="lg:col-span-2 space-y-4">
                           {dashboardView === "overview" ? (
-                            <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-                              <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                                <FileText className="w-4 h-4 text-blue-600" /> Insights &amp; Data
-                              </h3>
-                              <InsightsPanel insights={insights} />
+                            <div className="space-y-4">
+                              <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+                                <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                                  <FileText className="w-4 h-4 text-blue-600" /> Insights &amp; Data
+                                </h3>
+                                <InsightsPanel insights={insights} />
+                              </div>
+                              <InsightsNotesPanel notes={insights?.notes} />
                             </div>
                           ) : (
                             <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">

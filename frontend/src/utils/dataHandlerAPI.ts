@@ -129,7 +129,7 @@ export interface FinancialTable {
 
 export interface AnalysisOutput {
 	keyInsights?: KeyInsight[];
-	identifiedRisks?: RiskFactor[];
+	risks?: RiskFactor[];
 	structuredTables?: FinancialTable[];
 	notes?: string;
 }

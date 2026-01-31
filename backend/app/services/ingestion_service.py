@@ -13,6 +13,7 @@ from app.services.blob_service import BlobService
 from app.services.chat_service import ChatService
 from app.services.doc_int_service import DocumentIntelligenceService
 from app.services.search_service import SearchService
+from app.services.analysis_service import AnalysisService
 from app.utils.chunking import semantic_chunk_text
 from app.core.config import get_settings
 import re
@@ -33,6 +34,7 @@ class IngestionService:
         self.doc_service = DocumentIntelligenceService()
         self.search_service = SearchService()
         self.chat_service = ChatService()
+        self.analysis_service = AnalysisService()
         self.index_base_name = settings.search_index_name
         
     def _build_index_name(self, name: str) -> str:
@@ -272,20 +274,12 @@ class IngestionService:
 
             status["overallStatus"] = "completed"
             session["systemStatus"] = {"overallStatus": "completed", "steps": steps}
-            if doc_result.get("tables"):
-                session["analysisOutput"] = {
-                    "keyInsights": [
-                        {
-                            "id": uuid4().hex,
-                            "category": "Auto Insight",
-                            "value": "Document processed",
-                            "trend": None,
-                            "confidenceScore": 0.6,
-                        }
-                    ],
-                    "identifiedRisks": [],
-                    "structuredTables": doc_result.get("tables"),
-                }
+            # if doc_result.get("tables"):
+            
+            insights = self.analysis_service.generate_insights(index_name)
+            
+            session["analysisOutput"] = insights.model_dump()
+            
             session["timestamp"] = datetime.now(timezone.utc).isoformat()
             self.sessions_repo.upsert_session(session)
         except Exception as exc:  # pragma: no cover
