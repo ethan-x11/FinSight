@@ -547,53 +547,65 @@ const ChatInterface = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50">
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[90%] md:max-w-[80%] px-4 py-3 rounded-2xl border shadow-sm ${msg.role === "user" ? "bg-white rounded-tr-none" : "bg-white rounded-tl-none"}`}>
-              <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
-                {msg.role === "user" ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
-                <span className="uppercase tracking-wide">{msg.role === "user" ? "You" : "Assistant"}</span>
-              </div>
-              <div
-                className="text-sm text-slate-800 whitespace-pre-wrap prose prose-slate max-w-none"
-                dangerouslySetInnerHTML={{ __html: marked.parse(msg.text || "") }}
-              />
-              {/* {msg.text} */}
-              {/* test loc */}
-              {msg.citations && msg.citations.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {msg.citations.map((src, i) => (
-                    <span key={`${src}-${i}`} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
-                      {src}
-                    </span>
-                  ))}
+    <div className="flex h-full flex-col bg-surface">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="space-y-4">
+          {messages.map((msg) => {
+            const isUser = msg.role === "user";
+            return (
+              <div key={msg.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-[92%] md:max-w-[78%] px-4 py-3 rounded-2xl border shadow-sm transition-all ${isUser
+                    ? "bg-blue-400 text-white border-blue-600 shadow-blue-200/60"
+                    : "bg-white text-slate-800 border-default"}
+                  ${isUser ? "rounded-tr-none" : "rounded-tl-none"}`}
+                >
+                  <div className={`flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] font-semibold ${isUser ? "text-white/80" : "text-slate-500"}`}>
+                    {isUser ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
+                    <span>{isUser ? "You" : "Assistant"}</span>
+                  </div>
+                  <div
+                    className={`text-sm leading-relaxed mt-1 whitespace-pre-wrap [&>*]:mb-2 [&>*:last-child]:mb-0 [&>ul]:list-disc [&>ul]:ml-5 [&>ol]:list-decimal [&>ol]:ml-5 ${isUser ? "text-white" : "text-slate-800"}`}
+                    dangerouslySetInnerHTML={{ __html: marked.parse(msg.text || "") }}
+                  />
+                  {msg.citations && msg.citations.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {msg.citations.map((src, i) => (
+                        <span
+                          key={`${src}-${i}`}
+                          className={`text-[11px] font-semibold px-2 py-1 rounded-full border ${isUser ? "bg-white/15 text-white border-white/30" : "bg-blue-50 text-blue-700 border-blue-200"}`}
+                        >
+                          {src}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+            );
+          })}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-white border border-default px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex items-center space-x-2">
+                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
             </div>
-          </div>
-        ))}
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="bg-white border border-slate-200 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex items-center space-x-1">
-              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
-              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
+          )}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
-      <div className="p-4 bg-white border-t border-slate-200">
+      <div className="p-4 md:p-5 bg-white/90 border-t border-default shadow-inner backdrop-blur-sm">
         <div className="flex gap-2 max-w-4xl mx-auto">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask a question about this session"
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            className="h-11 bg-slate-50 border-default focus-visible:ring-2 focus-visible:ring-blue-500"
           />
-          <Button onClick={handleSend} disabled={!input.trim()}>
+          <Button onClick={handleSend} disabled={!input.trim()} className="h-11 px-4">
             <Send className="w-4 h-4 mr-2" />
             Send
           </Button>
