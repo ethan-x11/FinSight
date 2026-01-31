@@ -44,7 +44,12 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
       }
       onLogin(resp.user);
     } catch (err: any) {
-      toast.error(err?.message || "Invalid credentials. Please try again.");
+      const errstatus = err?.response?.status ?? err?.status
+      if (errstatus === 401 || "401") {
+        toast.error("Invalid credentials. Please try again.");
+      } else {
+        toast.error(err?.message || "Something went wrong. Please try again.");
+      }
     } finally {
       setIsSubmitting(null);
     }
@@ -95,8 +100,13 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
         console.warn("Failed to persist userId to localStorage", e);
       }
       onLogin(resp.user);
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to create account");
+        } catch (err: any) {
+          const errstatus = err?.response?.status ?? err?.status
+      if (errstatus === 409 || "409") {
+        toast.error("User ID or Email already exists. Please try again.");
+      } else {
+        toast.error(err?.message || "Failed to create account");
+      }
     } finally {
       setIsSubmitting(null);
     }

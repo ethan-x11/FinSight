@@ -1,14 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { fetchUsers, fetchSessions, type ApiUser, type AnalysisSession } from "../utils/dataHandlerAPI";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { toast } from "sonner";
-import { RefreshCcw, Users, FolderGit2, Shield, LogOut, Inbox } from "lucide-react";
+import { RefreshCcw, Users, FolderGit2, Shield, LogOut, Inbox, User, Activity, BarChart3 } from "lucide-react";
+import { ProfileDialog } from "./ProfileDialog";
+import { PasswordChangeDialog } from "./PasswordChangeDialog";
+import { APP_BRAND_NAME, APP_TAGLINE } from "../config/appConfig";
 
 interface AdminDashboardProps {
 	user: ApiUser;
+	sessions: AnalysisSession[];
 	onLogout: () => void;
 	onGoHome: () => void;
 }
@@ -17,6 +21,26 @@ export default function AdminDashboard({ user, onLogout, onGoHome }: AdminDashbo
 	const [users, setUsers] = useState<ApiUser[]>([]);
 	const [sessions, setSessions] = useState<AnalysisSession[]>([]);
 	const [loading, setLoading] = useState(false);
+	const [showProfile, setShowProfile] = useState(false);
+	const [showPasswordChange, setShowPasswordChange] = useState(false);
+
+	const recentActiveCount = useMemo(() => {
+		const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+		return users.reduce((count, u) => {
+			if (!u.lastActive) return count;
+			const ts = new Date(u.lastActive).getTime();
+			return Number.isNaN(ts) || ts < cutoff ? count : count + 1;
+		}, 0);
+	}, [users]);
+
+	const sessionCountByUser = useMemo(() => {
+		const counts: Record<string, number> = {};
+		sessions.forEach((s) => {
+			if (!s.userId) return;
+			counts[s.userId] = (counts[s.userId] || 0) + 1;
+		});
+		return counts;
+	}, [sessions]);
 
 	const loadData = async () => {
 		setLoading(true);
@@ -37,18 +61,29 @@ export default function AdminDashboard({ user, onLogout, onGoHome }: AdminDashbo
 
 	return (
 		<div className="min-h-screen bg-slate-50">
-			<header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shadow-sm">
+			<header className="sticky top-0 h-16 border-b border-slate-200/70 bg-white/60 backdrop-blur-sm supports-[backdrop-filter]:bg-white/60 flex items-center justify-between px-6 shadow-sm">
 				<div className="flex items-center gap-3">
-					<Shield className="w-5 h-5 text-amber-600" />
-					<span className="font-semibold">Admin Console</span>
-					<Badge variant="outline">{user.email}</Badge>
+					<div className="flex items-center space-x-2">
+						<div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-900/50">
+							<BarChart3 className="w-5 h-5 text-white" />
+						</div>
+						<span className="font-bold text-lg tracking-tight">{APP_BRAND_NAME}</span>
+					</div>
+					<Badge variant="outline">Admin Console</Badge>
 				</div>
-				<div className="flex gap-2">
-					<Button variant="outline" size="sm" onClick={onGoHome}>
-						<Inbox className="w-4 h-4 mr-1" /> Home
+				<div className="flex items-center gap-2">
+					{user.isAdmin && (
+						<Badge variant="outline" className="flex items-center gap-1 text-amber-700 border-amber-200 bg-amber-50">
+							<Shield className="w-3 h-3" /> Admin
+						</Badge>
+					)}
+					<Button variant="ghost" size="sm" onClick={() => setShowProfile(true)}>
+						<User className="w-4 h-4 mr-1" />
+						{user.name}
 					</Button>
-					<Button variant="destructive" size="sm" onClick={onLogout}>
-						<LogOut className="w-4 h-4 mr-1" /> Logout
+					<Button variant="outline" size="sm" onClick={onLogout}>
+						<LogOut className="w-4 h-4 mr-1" />
+						Logout
 					</Button>
 				</div>
 			</header>
@@ -73,7 +108,7 @@ export default function AdminDashboard({ user, onLogout, onGoHome }: AdminDashbo
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<p className="text-3xl font-semibold">{users.length}</p>
+							<p className="text-3xl font-semibold">{(users.length > 1) ? users.length - 1 : 0}</p>
 						</CardContent>
 					</Card>
 					<Card>
@@ -89,11 +124,12 @@ export default function AdminDashboard({ user, onLogout, onGoHome }: AdminDashbo
 					<Card>
 						<CardHeader>
 							<CardTitle className="flex items-center gap-2 text-sm text-slate-600">
-								<Shield className="w-4 h-4 text-amber-600" /> Admin
+								<Activity className="w-4 h-4 text-amber-600" />Recent Active
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<p className="text-3xl font-semibold">{user.isAdmin ? "Yes" : "No"}</p>
+							<p className="text-3xl font-semibold">{(recentActiveCount > 1)? recentActiveCount - 1 : 0}</p>
+							<p className="text-xs text-slate-500 mt-1">Users active in last 24h</p>
 						</CardContent>
 					</Card>
 				</div>
@@ -112,6 +148,7 @@ export default function AdminDashboard({ user, onLogout, onGoHome }: AdminDashbo
 									<TableHead>User ID</TableHead>
 									<TableHead>Name</TableHead>
 									<TableHead>Email</TableHead>
+									<TableHead>Last Active</TableHead>
 									<TableHead>Sessions</TableHead>
 									<TableHead>Role</TableHead>
 								</TableRow>
@@ -122,7 +159,8 @@ export default function AdminDashboard({ user, onLogout, onGoHome }: AdminDashbo
 										<TableCell className="font-semibold">{u.id}</TableCell>
 										<TableCell>{u.name}</TableCell>
 										<TableCell>{u.email}</TableCell>
-										<TableCell>{u.sessionCount}</TableCell>
+										<TableCell>{u.lastActive ? new Date(u.lastActive).toLocaleString() : ""}</TableCell>
+										<TableCell>{sessionCountByUser[u.id] || 0}</TableCell>
 										<TableCell>
 											{u.isAdmin ? <Badge variant="outline">Admin</Badge> : <Badge variant="secondary">User</Badge>}
 										</TableCell>
@@ -168,6 +206,8 @@ export default function AdminDashboard({ user, onLogout, onGoHome }: AdminDashbo
 					</CardContent>
 				</Card>
 			</main>
+			{showProfile && <ProfileDialog open={showProfile} onClose={() => setShowProfile(false)} />}
+			{showPasswordChange && <PasswordChangeDialog open={showPasswordChange} onClose={() => setShowPasswordChange(false)} />}
 		</div>
 	);
 }

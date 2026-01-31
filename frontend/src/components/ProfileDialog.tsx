@@ -92,7 +92,7 @@ export function ProfileDialog({ open, onClose }: ProfileDialogProps) {
     <>
       {!showPasswordChange && (
         <Dialog open={true} onOpenChange={handleCancel}>
-          <DialogContent className="max-w-md w-1/2 bg-white rounded-xl p-6 shadow-xl border border-slate-200">
+          <DialogContent className="max-w-md w-1/2 bg-white rounded-xl p-6 pt-8 shadow-xl border border-slate-200">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-slate-900">
                 <User className="w-5 h-5 text-indigo-600" />

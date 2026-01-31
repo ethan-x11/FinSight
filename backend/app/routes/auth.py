@@ -32,7 +32,7 @@ def _build_token(user_id: str) -> Token:
 async def login(payload: LoginRequest, repo: UsersRepository = Depends(get_users_repository)) -> AuthenticatedResponse:
     user = repo.get_by_id(payload.userId)
     if not user or not verify_password(payload.password, user["password"]):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid credentials")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     repo.touch_last_active(user["id"])
     token = _build_token(user["id"])
     return AuthenticatedResponse(token=token, user=UserPublic.model_validate(user))
@@ -41,9 +41,9 @@ async def login(payload: LoginRequest, repo: UsersRepository = Depends(get_users
 @router.post("/auth/signup", response_model=AuthenticatedResponse, status_code=status.HTTP_201_CREATED)
 async def signup(payload: SignupRequest, repo: UsersRepository = Depends(get_users_repository)) -> AuthenticatedResponse:
     if repo.get_by_id(payload.userId):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User ID already exists")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User ID already exists")
     if repo.get_by_email(payload.email):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already exists")
 
     user = repo.create_user(
         {"id": payload.userId, "name": payload.name, "email": payload.email, "password": payload.password}
