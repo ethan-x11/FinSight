@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Sparkles } from "lucide-react";
+import { BarChart3, Sparkles } from "lucide-react";
 import { login, signup, forgotPassword, type ApiUser } from "../utils/dataHandlerAPI";
 import { toast } from "sonner";
 import { APP_BRAND_NAME } from "../config/appConfig";
@@ -128,8 +128,8 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
           onClick={onBackToHome}
           className="flex items-center gap-3 hover:opacity-90 transition-opacity"
         >
-          <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-200/70">
-            <Sparkles className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-200/70">
+            <BarChart3 className="w-6 h-6 text-white" />
           </div>
           <h2 className="text-lg font-semibold text-slate-800">{APP_BRAND_NAME}</h2>
         </button>

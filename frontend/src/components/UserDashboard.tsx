@@ -55,6 +55,7 @@ import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import { ProfileDialog } from "./ProfileDialog";
 import { PasswordChangeDialog } from "./PasswordChangeDialog";
+import { APP_BRAND_NAME, APP_TAGLINE } from "../config/appConfig";
 
 type DashboardTab = "dashboard" | "chat";
 
@@ -124,7 +125,7 @@ const Sidebar = ({
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-900/50">
             <BarChart3 className="w-5 h-5 text-white" />
           </div>
-          <span className="font-bold text-lg tracking-tight">FinSight AI</span>
+          <span className="font-bold text-lg tracking-tight">{APP_BRAND_NAME}</span>
         </div>
         <button onClick={onClose} className="md:hidden text-slate-400 hover:text-white">
           <X className="w-6 h-6" />
@@ -493,7 +494,6 @@ const DocumentPreview = ({ document }: { document: SourceDocument | null }) => {
   if (!document) return <div className="text-sm text-slate-500">Select a document to preview.</div>;
 
   const url = document.blobUrl;
-  console.log("Document preview URL:", url);
   if (!url) return <div className="text-sm text-slate-500">No blob URL available for this document.</div>;
 
   return (
@@ -695,10 +695,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
       try {
         const detail = await fetchSession(currentSessionId);
         setSessions((prev) => prev.map((s) => (s.id === detail.id ? detail : s)));
-        {/* Test Area */}
-        console.log("Loaded session detail:", detail);
         const mapped = mapChat(detail.chatHistory || []);
-        console.log("Mapped chat messages:", mapped);
         if (mapped.length === 0) {
           const welcome = WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)];
           setMessages([{ id: `welcome-${detail.id}`, role: "assistant", text: welcome }]);

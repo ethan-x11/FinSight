@@ -1,4 +1,4 @@
-import { ArrowRight, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowRight, BarChart3, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { APP_BRAND_NAME, APP_TAGLINE } from "../config/appConfig";
@@ -14,10 +14,10 @@ export function HomePage({ onNavigateToLogin }: HomePageProps) {
 				<header className="flex items-center justify-between mb-12">
 					<div className="flex items-center gap-3">
 						<div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg">
-							<Sparkles className="w-6 h-6" />
+							<BarChart3 className="w-6 h-6" />
 						</div>
 						<div>
-							<p className="text-xs uppercase tracking-widest text-slate-500">Financial AI</p>
+							<p className="text-xs uppercase tracking-widest text-slate-500">{APP_TAGLINE}</p>
 							<h1 className="text-xl font-semibold">{APP_BRAND_NAME}</h1>
 						</div>
 					</div>
@@ -36,7 +36,7 @@ export function HomePage({ onNavigateToLogin }: HomePageProps) {
 							Financial report analysis powered by trustworthy AI.
 						</h2>
 						<p className="text-lg text-slate-600">
-							Upload annual reports, filings, and memos. We ingest them with Azure Document Intelligence, enrich with embeddings, and expose a RAG assistant tuned for finance. {APP_TAGLINE}
+							Upload annual reports, filings, and memos. We ingest them with Azure Document Intelligence, enrich with embeddings, and expose a RAG assistant tuned for finance. Start getting insights in minutes with our secure, scalable platform.
 						</p>
 						<div className="flex flex-wrap gap-3">
 							<Button size="lg" onClick={onNavigateToLogin}>
@@ -83,7 +83,7 @@ export function HomePage({ onNavigateToLogin }: HomePageProps) {
 							</div>
 							<div className="flex items-center gap-2">
 								<div className="w-2 h-2 rounded-full bg-green-500" />
-								Vectorize and index for search
+								Vectorize and index for Azure AI Search
 							</div>
 							<div className="flex items-center gap-2">
 								<div className="w-2 h-2 rounded-full bg-green-500" />
