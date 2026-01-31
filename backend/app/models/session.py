@@ -4,9 +4,10 @@ from datetime import datetime
 from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
+from typing import Annotated
 
 
-ProcessStage = Literal["pending", "processing", "completed", "failed"]
+ProcessStage = Annotated[str, Field(pattern=r"^(pending|processing.*|completed|failed)$")]
 
 
 class ProcessingSteps(BaseModel):

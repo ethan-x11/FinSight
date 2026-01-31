@@ -33,7 +33,7 @@ async def upload_financial_doc(
     session_id = ""
     blob_data: list[BlobMeta] = []
     
-    for file in files:
+    for idx, file in enumerate(files):
         try:
             file_bytes = await file.read()
         finally:
@@ -74,6 +74,7 @@ async def upload_financial_doc(
             file.content_type,
             blob_url,
             blob_name,
+            file_index= f"{idx + 1}/{len(files)}",
         )
         
         print(f"Started ingestion for session {session_id} for file {file.filename}")

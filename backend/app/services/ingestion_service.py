@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from itertools import islice
 from datetime import datetime, timezone
-from typing import Any, Dict, Iterable, Iterator, List
+from typing import Any, Dict, Iterable, Iterator, List, Optional
 from uuid import uuid4
 
 from tqdm import tqdm
@@ -109,6 +109,7 @@ class IngestionService:
         content_type: str | None,
         blob_url: str | None = None,
         blob_name: str | None = None,
+        file_index: Optional[str] = "",
     ) -> None:
         session = self.sessions_repo.get_by_id(session_id)
         index_name = self._build_index_name(session_id + filename)
@@ -118,8 +119,11 @@ class IngestionService:
 
         status = session.get("systemStatus", {}) or {}
         steps = status.get("steps", {}) or {}
+        steps = {key: False for key in steps}
+        status["steps"] = steps
+        self.sessions_repo.update_status(session_id, status)
         try:
-            status["overallStatus"] = "processing"
+            status["overallStatus"] = "processing" + (" " + file_index if file_index else "")
             steps["docIntelligenceTriggered"] = True
             status["steps"] = steps
             self.sessions_repo.update_status(session_id, status)

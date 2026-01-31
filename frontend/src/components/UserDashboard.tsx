@@ -748,7 +748,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
         if (!current) return;
         const overall = current.systemStatus?.overallStatus;
 
-        if (overall === "processing") {
+        if (overall?.startsWith("processing")) {
           try {
             const status = await fetchSessionStatus(currentSessionId);
             setSessions((prev) => prev.map((s) => (s.id === currentSessionId ? { ...s, systemStatus: status } : s)));
