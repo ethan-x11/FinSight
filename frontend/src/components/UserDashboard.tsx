@@ -1147,9 +1147,9 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                                 <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
                                   <FileText className="w-4 h-4 text-blue-600" /> Insights &amp; Data
                                 </h3>
-                                <InsightsPanel insights={insights} />
+                                <InsightsPanel insights={insights?.find(insight => insight.fileName === activeDocId) ?? null} />
                               </div>
-                              <InsightsNotesPanel notes={insights?.notes} />
+                              <InsightsNotesPanel notes={(insights?.find(insight => insight.fileName === activeDocId) ?? null)?.notes ?? null} />
                             </div>
                           ) : (
                             <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
