@@ -128,6 +128,7 @@ export interface FinancialTable {
 }
 
 export interface AnalysisOutput {
+	fileName?: string;
 	keyInsights?: KeyInsight[];
 	risks?: RiskFactor[];
 	structuredTables?: FinancialTable[];
@@ -164,7 +165,7 @@ export interface AnalysisSession {
 	metadata: SessionMetadata;
 	sourceDocument: SourceDocument[];
 	systemStatus: ProcessingStatus;
-	analysisOutput: AnalysisOutput | null;
+	analysisOutput: AnalysisOutput[] | null;
 	chatHistory: ChatMessage[];
 	resultsCount?: number;
 }
@@ -344,7 +345,7 @@ export async function askChatQuestion(sessionId: string, question: string, topK 
 	});
 }
 
-export async function fetchInsights(sessionId: string): Promise<AnalysisOutput & { sessionId: string }> {
+export async function fetchInsights(sessionId: string): Promise<AnalysisOutput[]> {
 	return request(`/insights/${sessionId}`, { authenticated: true });
 }
 

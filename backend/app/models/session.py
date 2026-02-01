@@ -88,6 +88,7 @@ class RiskFactor(BaseModel):
 
 
 class AnalysisOutput(BaseModel):
+    fileName: str
     keyInsights: List[KeyInsight] = Field(default_factory=list)
     risks: List[RiskFactor] = Field(default_factory=list)
     # structuredTables: List[FinancialTable] = Field(default_factory=list)
@@ -102,7 +103,7 @@ class AnalysisSession(BaseModel):
     metadata: SessionMetadata
     sourceDocument: List[SourceDocument]
     systemStatus: ProcessingStatus
-    analysisOutput: Optional[AnalysisOutput] = None
+    analysisOutput: Optional[List[AnalysisOutput]] = Field(default_factory=list)
     chatHistory: List[ChatMessage] = Field(default_factory=list)
 
 
@@ -111,7 +112,6 @@ class SessionCreate(BaseModel):
     userId: str
     metadata: SessionMetadata
     sourceDocument: List[SourceDocument]
-    analysisOutput: Optional[AnalysisOutput] = None
 
 
 class SessionUpdate(BaseModel):

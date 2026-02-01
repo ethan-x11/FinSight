@@ -706,7 +706,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   const [activeTab, setActiveTab] = useState<DashboardTab>("dashboard");
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [insights, setInsights] = useState<AnalysisOutput | null>(null);
+  const [insights, setInsights] = useState<AnalysisOutput[] | null>(null);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [loadingSession, setLoadingSession] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState(false);

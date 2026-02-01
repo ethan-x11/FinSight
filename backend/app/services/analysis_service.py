@@ -9,7 +9,7 @@ class AnalysisService:
         self.chat_service = ChatService()
         self.search_service = SearchService()
         
-    def generate_insights(self, index_name: str) -> AnalysisOutput:
+    def generate_insights(self, file_name: str, index_name: str) -> AnalysisOutput:
         prompt = "Generate key insights and risk factors based on the analyzed document."
         chunks = self.search_service.search_single(index_name, prompt, top=8)
         insights = self.chat_service.generate_answer(
@@ -17,9 +17,10 @@ class AnalysisService:
             chunks,
         )
         
-        print("Generated Insights:", insights)
+        # print("Generated Insights:", insights)
         
         return AnalysisOutput(
+            fileName=file_name,
             keyInsights=[
                 KeyInsight(
                     id=uuid4().hex,

@@ -12,7 +12,7 @@ import { APP_BRAND_NAME, APP_TAGLINE } from "../config/appConfig";
 
 interface AdminDashboardProps {
 	user: ApiUser;
-	sessions: AnalysisSession[];
+	// sessions: AnalysisSession[];
 	onLogout: () => void;
 	onGoHome: () => void;
 }

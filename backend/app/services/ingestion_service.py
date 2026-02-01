@@ -20,7 +20,7 @@ import re
 
 logger = logging.getLogger(__name__)
 
-CHUNK_BATCH_SIZE = 24
+CHUNK_BATCH_SIZE = 50
 DEFAULT_CHUNK_SIZE = 1200
 DEFAULT_CHUNK_OVERLAP = 200
 MAX_CHUNKS_PER_DOCUMENT = 220
@@ -276,9 +276,12 @@ class IngestionService:
             session["systemStatus"] = {"overallStatus": "completed", "steps": steps}
             # if doc_result.get("tables"):
             
-            insights = self.analysis_service.generate_insights(index_name)
-            
-            session["analysisOutput"] = insights.model_dump()
+            insights = self.analysis_service.generate_insights(file_name=filename, index_name=index_name)
+             
+            if session["analysisOutput"] is None:
+                session["analysisOutput"] = [insights.model_dump()]
+            else:
+                session["analysisOutput"].append(insights.model_dump())
             
             session["timestamp"] = datetime.now(timezone.utc).isoformat()
             self.sessions_repo.upsert_session(session)
