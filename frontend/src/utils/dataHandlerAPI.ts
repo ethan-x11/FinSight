@@ -159,6 +159,7 @@ export interface ChatMessage {
 		page_range?: string;
 		document_url?: string;
 		content?: string;
+		pointer_url?: string;
 	}[];
 	linkedCitations?: SourcePointer[];
 	userFeedback?: {
@@ -199,8 +200,9 @@ export interface ChatResponse {
 		page_range: string;
 		document_url?: string;
 		content: string;
+		pointer_url?: string;
 	}[];
-	LinkedCitation?: SourcePointer[];
+	linkedCitations?: SourcePointer[];
 }
 
 export interface FeedbackResponse {

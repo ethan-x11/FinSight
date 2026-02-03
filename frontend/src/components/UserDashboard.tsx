@@ -736,9 +736,10 @@ const ChatInterface = ({
                     }}
                   />
                   </div>
-                  {/* {msg.text || ""}</Markdown> */}
+                  
                   {msg.citations && msg.citations.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
+                      Sources: 
                       {msg.citations.map((src, i) => (
                         <span
                           key={`${src}-${i}`}
@@ -1155,7 +1156,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
         id: botId,
         messageId: resp.messageId,
         role: "assistant",
-        text: linkifyRawCitations(resp.answer, resp.LinkedCitation),
+        text: linkifyRawCitations(resp.answer, resp.linkedCitations),
         citations: resp.citations?.map((s) => `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`) || [],
       };
       setMessages((prev) => [...prev, botMsg]);

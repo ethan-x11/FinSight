@@ -119,12 +119,17 @@ class ChatService:
         
         citations = [
             {
-                "sourcefile": doc.get("sourcefile"),
-                "chunk_id": doc.get("chunkId"),
-                "heading": None,
-                "page_range": doc.get("pageRange"),
-                "document_url": doc.get("documentUrl"),
-                "content": doc.get("content"),
+            "sourcefile": doc.get("sourcefile"),
+            "chunk_id": doc.get("chunkId"),
+            "heading": None,
+            "page_range": doc.get("pageRange"),
+            "document_url": doc.get("documentUrl"),
+            "content": doc.get("content"),
+            "pointer_url": self._build_citation_url(
+                doc.get("documentUrl"),
+                int(str(doc.get("pageRange") or "")[:1]) if str(doc.get("pageRange") or "") else None,
+                None,
+            ),
             }
             for doc in context_docs
         ]

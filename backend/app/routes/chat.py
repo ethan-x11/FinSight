@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.auth import get_current_user
 from app.repositories.sessions import SessionsRepository, get_sessions_repository
-from app.models.document import AskRequest, AskResponse
+from app.models.session import AskRequest, AskResponse
 from app.models.user import UserInDB
 from app.services.chat_service import ChatService
 from app.services.search_service import SearchService

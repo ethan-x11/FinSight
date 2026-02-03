@@ -6,7 +6,6 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel, Field
 from typing import Annotated
 
-from app.models.document import SourcePointer
 
 
 ProcessStage = Annotated[str, Field(pattern=r"^(pending|processing.*|completed|failed)$")]
@@ -41,7 +40,6 @@ class SourceDocument(BaseModel):
     blobUrl: Optional[str] = None
     indexName: Optional[str] = None
 
-
 class Citation(BaseModel):
     sourcefile: Optional[str] = None
     chunk_id: Optional[str] = None
@@ -49,7 +47,7 @@ class Citation(BaseModel):
     page_range: Optional[str] = None
     document_url: Optional[str] = None
     content: Optional[str] = None
-
+    pointer_url: Optional[str] = None
 
 class FeedbackData(BaseModel):
     thumbRating: Literal["up", "down"]
@@ -66,6 +64,30 @@ class ChatMessage(BaseModel):
     linkedCitations: Optional[List[SourcePointer]] = None
     userFeedback: Optional[FeedbackData] = None
     isStreaming: bool = False
+
+
+class AskRequest(BaseModel):
+    question: str
+    top_k: int = 8
+
+class AskResponse(BaseModel):
+    messageId: str
+    answer: str
+    citations: list[Citation]
+    linkedCitations: list[SourcePointer] = Field(default_factory=list, serialization_alias="LinkedCitation")
+
+
+
+
+class SourcePointer(BaseModel):
+    raw_cite: str
+    url: Optional[str] = None
+    sourcefile: Optional[str] = None
+    page_start: Optional[int] = None
+    page_end: Optional[int] = None
+    chunk_id: Optional[str] = None
+    text_snapshot: Optional[str] = None
+
 
 
 class KeyInsight(BaseModel):
@@ -124,3 +146,4 @@ class SessionUpdate(BaseModel):
     systemStatus: Optional[ProcessingStatus] = None
     analysisOutput: Optional[AnalysisOutput] = None
     chatHistory: Optional[List[ChatMessage]] = None
+
