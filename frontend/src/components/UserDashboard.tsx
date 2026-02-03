@@ -151,7 +151,6 @@ const linkifyRawCitations = (text: string, linkedCitations?: SourcePointer[]) =>
   let output = text;
   linkedCitations.forEach((pointer) => {
     if (!pointer?.raw_cite || !pointer?.url) return;
-    // const display = buildLinkLabel(pointer);
     const display = buildLinkLabel(pointer);
     const replacement = `[${display}](${pointer.url})`;
     output = output.split(pointer.raw_cite).join(replacement);
