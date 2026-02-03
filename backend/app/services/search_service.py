@@ -158,6 +158,7 @@ class SearchService:
                     "sourcefile": item.get("sourcefile"),
                     "pageRange": item.get("pageRange"),
                     "documentUrl": item.get("documentUrl"),
+                    "documentPageNumber": item.get("documentPageNumber"),
                 })
             search_data.extend(hits)
         return search_data
@@ -175,6 +176,7 @@ class SearchService:
                 "sourcefile": item.get("sourcefile"),
                 "pageRange": item.get("pageRange"),
                 "documentUrl": item.get("documentUrl"),
+                "documentPageNumber": item.get("documentPageNumber"),
             })
         search_data.extend(hits)
         return search_data

@@ -92,8 +92,9 @@ class ChatService:
         "### **Output Format**\n"
         "Use Markdown for the entire response, including any tables or lists.\n"
         "Mandatorily include citation for every piece of information derived from the context.[PDF Name, Page Number, Chunk Number, content_snapshot(exact text starting from the chunk)] (Example: [10-K_2023.pdf, Page 12, Chunk 3, \"starting text of the chunk.../\"])\n"
-    )
-        
+        "Citation should strictly follow the pattern - [PDF Name, Page Number, Chunk Number, content_snapshot(exact text starting from the chunk)] (Example: [10-K_2023.pdf, Page 12, Chunk 3, \"starting text of the chunk...\"])\n"
+        )
+                
         history_messages: List[Dict[str, str]] = []
         if history:
             recent_messages = list(history)[-10:]
