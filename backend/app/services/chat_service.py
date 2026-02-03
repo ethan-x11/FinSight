@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, Iterable, List, Optional, cast
+from urllib.parse import quote, urlsplit, urlunsplit
 
 from openai import AzureOpenAI
 from openai.types.chat import ChatCompletionMessageParam
@@ -89,7 +91,7 @@ class ChatService:
         "Do not add extra commentery."
         "### **Output Format**\n"
         "Use Markdown for the entire response, including any tables or lists.\n"
-        "Mandatorily include citation for every piece of information derived from the context.[PDF Name, Page Number, Chunk Number, content_snapshot(starting text of the chunk...)] (Example: [10-K_2023.pdf, Page 12, Chunk 3, \"starting text of the chunk.../\"])\n"
+        "Mandatorily include citation for every piece of information derived from the context.[PDF Name, Page Number, Chunk Number, content_snapshot(exact text starting from the chunk)] (Example: [10-K_2023.pdf, Page 12, Chunk 3, \"starting text of the chunk.../\"])\n"
     )
         
         history_messages: List[Dict[str, str]] = []
@@ -113,14 +115,86 @@ class ChatService:
             # temperature=0.2
         )
         answer = completion.choices[0].message.content if completion.choices else ""
+        linked_citations = self._build_linked_citations(answer or "", context_docs)
+        
         citations = [
             {
                 "sourcefile": doc.get("sourcefile"),
                 "chunk_id": doc.get("chunkId"),
                 "heading": None,
                 "page_range": doc.get("pageRange"),
+                "document_url": doc.get("documentUrl"),
                 "content": doc.get("content"),
             }
             for doc in context_docs
         ]
-        return {"answer": answer, "citations": citations}
+        return {"answer": answer, "citations": citations, "linkedCitations": linked_citations}
+
+    @staticmethod
+    def _build_citation_url(document_url: Optional[str], page_start: Optional[int], text_snapshot: Optional[str]) -> Optional[str]:
+        if not document_url:
+            return None
+        try:
+            parts = urlsplit(document_url)
+            fragment_parts: List[str] = []
+            if parts.fragment:
+                fragment_parts.append(parts.fragment)
+            if page_start:
+                fragment_parts.append(f"page={page_start}")
+            if text_snapshot:
+                fragment_parts.append(f"search={quote(text_snapshot)}")
+            fragment = "&".join([p for p in fragment_parts if p])
+            return urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, fragment))
+        except Exception:
+            return document_url
+
+    @classmethod
+    def _build_linked_citations(cls, answer: str, context_docs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        if not answer:
+            return []
+
+        citation_pattern = re.compile(
+            r"(?:chunk)?\[(?:Source:\s*)?(?P<sourcefile>[^,\]]+),\s*Page\s*(?P<page>[^,\]]+),\s*Chunk\s*(?P<chunk>[^,\]]+),\s*[\"\u201c]?(?P<snippet>.*?)[\"\u201d]?\]",
+            re.IGNORECASE | re.DOTALL,
+        )
+
+        url_lookup: Dict[str, Optional[str]] = {}
+        for doc in context_docs:
+            sourcefile = doc.get("sourcefile")
+            if isinstance(sourcefile, str) and sourcefile:
+                url_lookup[sourcefile.strip().lower()] = doc.get("documentUrl")
+
+        linked: List[Dict[str, Any]] = []
+        for match in citation_pattern.finditer(answer):
+            raw_cite = match.group(0)
+            sourcefile = match.group("sourcefile").strip()
+            page_raw = match.group("page").strip()
+            chunk_id = match.group("chunk").strip()
+            text_snapshot = match.group("snippet").strip()
+
+            page_nums = [int(num) for num in re.findall(r"\d+", page_raw)]
+            page_start = page_nums[0] if page_nums else None
+            page_end = page_nums[1] if len(page_nums) > 1 else page_start
+
+            document_url = url_lookup.get(sourcefile.lower())
+            if not document_url:
+                for doc in context_docs:
+                    doc_source = doc.get("sourcefile")
+                    if isinstance(doc_source, str) and doc_source.lower() in raw_cite.lower():
+                        document_url = doc.get("documentUrl")
+                        break
+
+            url = cls._build_citation_url(document_url, page_start, text_snapshot)
+            linked.append(
+                {
+                    "raw_cite": raw_cite,
+                    "url": url,
+                    "sourcefile": sourcefile,
+                    "page_start": page_start,
+                    "page_end": page_end,
+                    "chunk_id": chunk_id,
+                    "text_snapshot": text_snapshot,
+                }
+            )
+
+        return linked

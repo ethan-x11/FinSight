@@ -60,6 +60,7 @@ class SearchService:
             SimpleField(name="sessionId", type=SearchFieldDataType.String, filterable=True, sortable=True, facetable=True),
             SimpleField(name="chunkId", type=SearchFieldDataType.String, filterable=True),
             SimpleField(name="sourcefile", type=SearchFieldDataType.String, filterable=True),
+            SimpleField(name="documentUrl", type=SearchFieldDataType.String, filterable=True),
             SimpleField(name="pageRange", type=SearchFieldDataType.String, filterable=True),
             SearchField(name="embedding", type=SearchFieldDataType.Collection(SearchFieldDataType.Single), vector_search_dimensions=self.embed_dims, vector_search_profile_name="vector-profile"),
         ]
@@ -149,7 +150,14 @@ class SearchService:
             results = search_client.search(search_text=query, query_type="semantic", top=top)
             hits: List[Dict[str, Any]] = []
             for item in results:
-                hits.append({"id": item["id"], "content": item["content"], "chunkId": item.get("chunkId"), "sourcefile": item.get("sourcefile"), "pageRange": item.get("pageRange")})
+                hits.append({
+                    "id": item["id"],
+                    "content": item["content"],
+                    "chunkId": item.get("chunkId"),
+                    "sourcefile": item.get("sourcefile"),
+                    "pageRange": item.get("pageRange"),
+                    "documentUrl": item.get("documentUrl"),
+                })
             search_data.extend(hits)
         return search_data
     
@@ -159,7 +167,14 @@ class SearchService:
         results = search_client.search(search_text=query, query_type="semantic", top=top)
         hits: List[Dict[str, Any]] = []
         for item in results:
-            hits.append({"id": item["id"], "content": item["content"], "chunkId": item.get("chunkId"), "sourcefile": item.get("sourcefile"), "pageRange": item.get("pageRange")})
+            hits.append({
+                "id": item["id"],
+                "content": item["content"],
+                "chunkId": item.get("chunkId"),
+                "sourcefile": item.get("sourcefile"),
+                "pageRange": item.get("pageRange"),
+                "documentUrl": item.get("documentUrl"),
+            })
         search_data.extend(hits)
         return search_data
 

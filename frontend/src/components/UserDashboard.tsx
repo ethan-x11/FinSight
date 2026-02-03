@@ -45,6 +45,7 @@ import {
   type ChatMessage,
   type KeyInsight,
   type RiskFactor,
+  type SourcePointer,
   uploadDocuments,
   updateSession,
   deleteSession,
@@ -107,6 +108,55 @@ const STATUS_STEPS: { key: keyof AnalysisSession["systemStatus"]["steps"]; label
 ];
 
 const getDocumentId = (doc: SourceDocument, idx: number) => doc.fileName || doc.blobPath || doc.blobUrl || doc.blobContainer || `doc-${idx}`;
+
+const normalizeRawCitation = (raw: string) => {
+  let cleaned = raw.trim();
+  if (cleaned.toLowerCase().startsWith("chunk[")) {
+    cleaned = cleaned.slice(5);
+  }
+  if (cleaned.startsWith("[")) cleaned = cleaned.slice(1);
+  if (cleaned.endsWith("]")) cleaned = cleaned.slice(0, -1);
+  cleaned = cleaned.replace(/^Source:\s*/i, "");
+  return cleaned.trim();
+};
+
+const parseCitationLabel = (raw: string) => {
+  const cleaned = normalizeRawCitation(raw);
+  const match = cleaned.match(/^(?<source>[^,]+),\s*Page\s*(?<page>[^,]+),/i);
+  const source = match?.groups?.source?.trim();
+  const pageRaw = match?.groups?.page?.trim();
+  const pageNums = pageRaw ? pageRaw.match(/\d+/g)?.map((n) => Number(n)) ?? [] : [];
+  const pageStart = pageNums[0];
+  const pageEnd = pageNums.length > 1 ? pageNums[1] : pageStart;
+  return { source, pageStart, pageEnd };
+};
+
+const formatPageLabel = (start?: number, end?: number) => {
+  if (!start) return "";
+  if (end && end !== start) return `, Page ${start}–${end}`;
+  return `, Page ${start}`;
+};
+
+const buildLinkLabel = (pointer: SourcePointer) => {
+  const parsed = parseCitationLabel(pointer.raw_cite);
+  const sourcefile = pointer.sourcefile?.trim() || parsed.source;
+  const pageStart = pointer.page_start ?? parsed.pageStart;
+  const pageEnd = pointer.page_end ?? parsed.pageEnd;
+  if (!sourcefile) return normalizeRawCitation(pointer.raw_cite);
+  return `${sourcefile}${formatPageLabel(pageStart, pageEnd)}`;
+};
+
+const linkifyRawCitations = (text: string, linkedCitations?: SourcePointer[]) => {
+  if (!linkedCitations || linkedCitations.length === 0) return text;
+  let output = text;
+  linkedCitations.forEach((pointer) => {
+    if (!pointer?.raw_cite || !pointer?.url) return;
+    const display = buildLinkLabel(pointer);
+    const replacement = `[${display}](${pointer.url})`;
+    output = output.split(pointer.raw_cite).join(replacement);
+  });
+  return output;
+};
 
 const Sidebar = ({
   sessions,
@@ -653,6 +703,19 @@ const ChatInterface = ({
                   <Markdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]}
                     children={msg.text || ""}
                     components={{
+                      a(props) {
+                        const { href, children } = props;
+                        return (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:text-blue-500 hover:bg-slate-200"
+                          >
+                            {children}
+                          </a>
+                        );
+                      },
                       code(props) {
                         const { children, className } = props
                         const match = /language-(\w+)/.exec(className || '')
@@ -1005,7 +1068,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
         id: baseId,
         messageId: c.messageId || baseId,
         role: c.role === "assistant" ? "assistant" : "user",
-        text: c.content,
+        text: c.role === "assistant" ? linkifyRawCitations(c.content, c.linkedCitations) : c.content,
         citations:
           c.citations?.map(
             (s) => `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`
@@ -1092,7 +1155,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
         id: botId,
         messageId: resp.messageId,
         role: "assistant",
-        text: resp.answer,
+        text: linkifyRawCitations(resp.answer, resp.LinkedCitation),
         citations: resp.citations?.map((s) => `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`) || [],
       };
       setMessages((prev) => [...prev, botMsg]);

@@ -135,6 +135,16 @@ export interface AnalysisOutput {
 	notes?: string;
 }
 
+export interface SourcePointer {
+	raw_cite: string;
+	url?: string;
+	sourcefile?: string;
+	page_start?: number;
+	page_end?: number;
+	chunk_id?: string;
+	text_snapshot?: string;
+}
+
 export type ChatRole = "user" | "assistant" | "system";
 
 export interface ChatMessage {
@@ -147,8 +157,10 @@ export interface ChatMessage {
 		chunk_id?: string;
 		heading?: string;
 		page_range?: string;
+		document_url?: string;
 		content?: string;
 	}[];
+	linkedCitations?: SourcePointer[];
 	userFeedback?: {
 		thumbRating: "up" | "down";
 		comment?: string;
@@ -185,8 +197,10 @@ export interface ChatResponse {
 		chunk_id: string;
 		heading: string;
 		page_range: string;
+		document_url?: string;
 		content: string;
 	}[];
+	LinkedCitation?: SourcePointer[];
 }
 
 export interface FeedbackResponse {

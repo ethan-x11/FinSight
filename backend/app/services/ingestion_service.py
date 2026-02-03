@@ -298,6 +298,7 @@ class IngestionService:
                             "content": chunk_info["content"],
                             "sourcefile": filename,
                             "pageRange": chunk_info["pageRange"],
+                            "documentUrl": blob_url,
                             "embedding": embeddings[batch_idx],
                         }
                     )

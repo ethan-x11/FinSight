@@ -6,6 +6,8 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel, Field
 from typing import Annotated
 
+from app.models.document import SourcePointer
+
 
 ProcessStage = Annotated[str, Field(pattern=r"^(pending|processing.*|completed|failed)$")]
 
@@ -45,6 +47,7 @@ class Citation(BaseModel):
     chunk_id: Optional[str] = None
     heading: Optional[str] = None
     page_range: Optional[str] = None
+    document_url: Optional[str] = None
     content: Optional[str] = None
 
 
@@ -60,6 +63,7 @@ class ChatMessage(BaseModel):
     content: str
     timestamp: datetime
     citations: Optional[List[Citation]] = None
+    linkedCitations: Optional[List[SourcePointer]] = None
     userFeedback: Optional[FeedbackData] = None
     isStreaming: bool = False
 

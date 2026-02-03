@@ -52,7 +52,13 @@ async def chat_flow(
         "content": answer_payload["answer"],
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "citations": answer_payload.get("citations"),
+        "linkedCitations": answer_payload.get("linkedCitations", []),
     }
     sessions_repo.append_chat_message(session_id, assistant_message)
 
-    return AskResponse(messageId=assistant_message["messageId"], answer=answer_payload["answer"], citations=answer_payload["citations"])
+    return AskResponse(
+        messageId=assistant_message["messageId"],
+        answer=answer_payload["answer"],
+        citations=answer_payload["citations"],
+        linkedCitations=answer_payload.get("linkedCitations", []),
+    )
