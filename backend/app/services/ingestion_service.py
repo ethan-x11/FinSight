@@ -242,7 +242,8 @@ class IngestionService:
                         local_cursor += 1
 
                     page_range = self.compute_page_range(start_offset, end_offset, page_spans, page_markers)
-                    pages_for_chunk = self._pages_from_range(page_range)
+                    document_page_range = self.compute_page_range(start_offset, end_offset, page_spans, None)
+                    pages_for_chunk = self._pages_from_range(document_page_range)
 
                     # Collect notes: include table references and footnotes attached to pages
                     notes: List[str] = []
@@ -272,6 +273,7 @@ class IngestionService:
                             "startOffset": start_offset,
                             "endOffset": end_offset,
                             "pageRange": page_range,
+                            "documentPageNumber": document_page_range,
                             "notes": notes,
                         }
                     )
@@ -298,6 +300,7 @@ class IngestionService:
                             "content": chunk_info["content"],
                             "sourcefile": filename,
                             "pageRange": chunk_info["pageRange"],
+                            "documentPageNumber": chunk_info["documentPageNumber"],
                             "documentUrl": blob_url,
                             "embedding": embeddings[batch_idx],
                         }

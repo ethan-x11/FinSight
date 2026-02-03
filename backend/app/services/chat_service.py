@@ -127,7 +127,7 @@ class ChatService:
             "content": doc.get("content"),
             "pointer_url": self._build_citation_url(
                 doc.get("documentUrl"),
-                int(str(doc.get("pageRange") or "")[:1]) if str(doc.get("pageRange") or "") else None,
+                int(str(doc.get("documentPageNumber") or "").strip().split("-",1)[0]) if str(doc.get("documentPageNumber") or "") else None,
                 None,
             ),
             }

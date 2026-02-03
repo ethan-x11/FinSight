@@ -62,6 +62,7 @@ class SearchService:
             SimpleField(name="sourcefile", type=SearchFieldDataType.String, filterable=True),
             SimpleField(name="documentUrl", type=SearchFieldDataType.String, filterable=True),
             SimpleField(name="pageRange", type=SearchFieldDataType.String, filterable=True),
+            SimpleField(name="documentPageNumber", type=SearchFieldDataType.String, filterable=True),
             SearchField(name="embedding", type=SearchFieldDataType.Collection(SearchFieldDataType.Single), vector_search_dimensions=self.embed_dims, vector_search_profile_name="vector-profile"),
         ]
 
