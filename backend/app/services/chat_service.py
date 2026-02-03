@@ -148,7 +148,7 @@ class ChatService:
             if page_start:
                 fragment_parts.append(f"page={page_start}")
             if text_snapshot:
-                fragment_parts.append(f"search={quote(text_snapshot)}")
+                fragment_parts.append(f"search={quote(" ".join(text_snapshot.split()[:4]))}")
             fragment = "&".join([p for p in fragment_parts if p])
             return urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, fragment))
         except Exception:

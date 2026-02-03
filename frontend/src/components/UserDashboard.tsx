@@ -83,6 +83,7 @@ type SimpleMessage = {
   role: "user" | "assistant";
   text: string;
   citations?: { name: string; url?: string }[];
+  linkedCitations?: SourcePointer[];
   userFeedback?: {
     thumbRating: "up" | "down";
     comment?: string;
@@ -705,15 +706,29 @@ const ChatInterface = ({
                     components={{
                       a(props) {
                         const { href, children } = props;
+                        const pointer = msg.linkedCitations?.find((item) => item?.url && href && item.url === href);
+                        const snapshot = pointer?.text_snapshot?.trim();
                         return (
-                          <a
-                            href={href}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:text-blue-500 hover:bg-slate-200"
-                          >
-                            {children}
-                          </a>
+                          <span className="relative inline-flex items-center group">
+                            <a
+                              href={href}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:text-blue-500 hover:bg-slate-200"
+                            >
+                              {children}
+                            </a>
+                            {snapshot && (
+                              <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-72 -translate-x-1/2 rounded-lg border border-slate-200 bg-white p-3 text-[11px] text-slate-700 shadow-lg opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                                <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-1">
+                                  Citation preview
+                                </span>
+                                <span className="block max-h-40 overflow-auto whitespace-pre-wrap leading-relaxed">
+                                  {snapshot}
+                                </span>
+                              </span>
+                            )}
+                          </span>
                         );
                       },
                       code(props) {
@@ -1078,6 +1093,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
             name: `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`,
             url: s.pointer_url,
           })) || [],
+        linkedCitations: c.linkedCitations,
         userFeedback: c.userFeedback || undefined,
       };
     });
@@ -1165,6 +1181,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
           name: `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`,
           url: s.pointer_url,
         })) || [],
+        linkedCitations: resp.LinkedCitation,
       };
       setMessages((prev) => [...prev, botMsg]);
     } catch (err: any) {
