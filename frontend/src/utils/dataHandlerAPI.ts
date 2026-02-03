@@ -143,6 +143,7 @@ export interface SourcePointer {
 	page_end?: number;
 	chunk_id?: string;
 	text_snapshot?: string;
+	page_range?: string;
 }
 
 export type ChatRole = "user" | "assistant" | "system";

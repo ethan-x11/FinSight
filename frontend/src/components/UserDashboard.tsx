@@ -143,7 +143,7 @@ const buildLinkLabel = (pointer: SourcePointer) => {
   const pageStart = pointer.page_start ?? parsed.pageStart;
   const pageEnd = pointer.page_end ?? parsed.pageEnd;
   if (!sourcefile) return normalizeRawCitation(pointer.raw_cite);
-  return `${sourcefile}${formatPageLabel(pageStart, pageEnd)}`;
+  return `${sourcefile}${pointer.page_range ? `, Page - ${pointer.page_range}` : formatPageLabel(pageStart, pageEnd)}`;
 };
 
 const linkifyRawCitations = (text: string, linkedCitations?: SourcePointer[]) => {
@@ -151,6 +151,7 @@ const linkifyRawCitations = (text: string, linkedCitations?: SourcePointer[]) =>
   let output = text;
   linkedCitations.forEach((pointer) => {
     if (!pointer?.raw_cite || !pointer?.url) return;
+    // const display = buildLinkLabel(pointer);
     const display = buildLinkLabel(pointer);
     const replacement = `[${display}](${pointer.url})`;
     output = output.split(pointer.raw_cite).join(replacement);

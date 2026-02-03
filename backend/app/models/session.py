@@ -87,6 +87,7 @@ class SourcePointer(BaseModel):
     page_end: Optional[int] = None
     chunk_id: Optional[str] = None
     text_snapshot: Optional[str] = None
+    page_range: Optional[str] = None
 
 
 
