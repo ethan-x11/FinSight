@@ -16,193 +16,155 @@ import {
   X,
   File,
   Layout,
+  Search,
   Eye,
-  Plus,
-  History,
-  Database,
-  Cloud,
-  Save,
-  Menu,
-  MoreVertical
+  Table as TableIcon // Aliasing to avoid conflict with HTML table tag
 } from 'lucide-react';
 
-// --- Mock Data Factories ---
+// --- Mock Data ---
 
-const generateMockDocs = (idPrefix) => ({
-  [`${idPrefix}-1`]: {
-    id: `${idPrefix}-1`,
+// distinct data for different documents to show switching works
+const MOCK_DOCS_DATA = {
+  "doc-1": {
+    id: "doc-1",
     name: "Q3_2023_Financial_Report.pdf",
     type: "Financial Report",
-    summary: { revenue: "$45.2M", growth: "+12.5%", netIncome: "$8.4M", expenses: "$36.8M" },
-    tables: [
-      { title: "Consolidated Statement of Operations", headers: ["Category", "2023", "2022"], rows: [["Revenue", "45.2", "40.1"], ["Net Income", "8.4", "6.8"]] }
-    ],
-    risks: ["Supply chain disruptions in Q2.", "Significant investment in AI R&D."]
-  },
-  [`${idPrefix}-2`]: {
-    id: `${idPrefix}-2`,
-    name: "FY23_Risk_Assessment.docx",
-    type: "Internal Memo",
-    summary: { revenue: "N/A", growth: "N/A", netIncome: "N/A", expenses: "N/A" },
-    tables: [],
-    risks: ["Cybersecurity threats increasing.", "Regulatory compliance changes."]
-  }
-});
-
-const MOCK_HISTORICAL_SESSIONS = [
-  {
-    id: "session-hist-1",
-    title: "Q3 2023 Analysis",
-    date: "Oct 24, 2:30 PM",
-    documents: generateMockDocs("hist-1"),
-    activeDocId: "hist-1-1",
-    chatHistory: [
-      { id: 1, type: 'bot', text: 'Restored session context. I have access to the Q3 reports.', helpful: null },
-      { id: 2, type: 'user', text: 'What was the revenue growth?', helpful: null },
-      { id: 3, type: 'bot', text: 'Revenue grew by **+12.5%** year-over-year.', helpful: true, sources: ['Q3_Report.pdf'] }
-    ],
-    fileUploaded: true
-  },
-  {
-    id: "session-hist-2",
-    title: "Risk Assessment Review",
-    date: "Oct 22, 9:15 AM",
-    documents: {
-      "hist-2-1": {
-         id: "hist-2-1",
-         name: "Global_Risk_Memo_v2.pdf",
-         type: "Memo",
-         summary: { revenue: "N/A", growth: "N/A", netIncome: "N/A", expenses: "N/A" },
-         tables: [],
-         risks: ["Geopolitical instability in region A.", "Currency fluctuation exposure."]
-      }
+    summary: {
+      revenue: "$45.2M",
+      growth: "+12.5%",
+      netIncome: "$8.4M",
+      expenses: "$36.8M"
     },
-    activeDocId: "hist-2-1",
-    chatHistory: [
-       { id: 1, type: 'bot', text: 'Session restored. Focusing on Risk Memo v2.', helpful: null }
+    tables: [
+      {
+        title: "Consolidated Statement of Operations",
+        headers: ["Category", "2023 (M)", "2022 (M)", "Change"],
+        rows: [
+          ["Total Revenue", "$45.2", "$40.1", "+12.7%"],
+          ["Cost of Revenue", "$18.5", "$17.2", "+7.5%"],
+          ["Gross Profit", "$26.7", "$22.9", "+16.6%"],
+          ["Operating Expenses", "$15.2", "$14.0", "+8.5%"],
+          ["Net Income", "$8.4", "$6.8", "+23.5%"]
+        ]
+      },
+      {
+        title: "Balance Sheet Highlights",
+        headers: ["Item", "2023 (M)", "2022 (M)"],
+        rows: [
+          ["Cash & Equivalents", "$12.4", "$10.1"],
+          ["Total Assets", "$85.6", "$78.2"],
+          ["Total Liabilities", "$32.1", "$30.5"],
+          ["Shareholder Equity", "$53.5", "$47.7"]
+        ]
+      }
     ],
-    fileUploaded: true
+    risks: [
+      "Operating margin expanded by 200 bps due to cost rationalization initiatives in the APAC region.",
+      "Supply chain disruptions in Q2 slightly impacted inventory turnover, but recovery is expected in Q4.",
+      "Significant investment in AI R&D ($2.1M) aimed at automating backend financial workflows."
+    ]
+  },
+  "doc-2": {
+    id: "doc-2",
+    name: "Q2_2023_Financial_Report.pdf",
+    type: "Financial Report",
+    summary: {
+      revenue: "$40.1M",
+      growth: "+4.2%",
+      netIncome: "$6.8M",
+      expenses: "$33.3M"
+    },
+    tables: [
+      {
+        title: "Q2 Operating Results",
+        headers: ["Segment", "Q2 2023", "Q2 2022"],
+        rows: [
+          ["North America", "$20.5M", "$19.8M"],
+          ["Europe", "$12.1M", "$11.5M"],
+          ["Asia Pacific", "$7.5M", "$6.2M"]
+        ]
+      }
+    ],
+    risks: [
+      "Inflationary pressures in Eurozone impacted consumer discretionary spending.",
+      "Forex headwinds resulted in a $0.4M impact on bottom-line revenue."
+    ]
+  },
+  "doc-3": {
+    id: "doc-3",
+    name: "FY23_Risk_Assessment_Memo.docx",
+    type: "Internal Memo",
+    summary: {
+      revenue: "N/A",
+      growth: "N/A",
+      netIncome: "N/A",
+      expenses: "N/A"
+    },
+    tables: [],
+    risks: [
+      "Cybersecurity: Increased phishing attempts targeting finance department.",
+      "Regulatory: New compliance standards for ESG reporting coming into effect next fiscal year.",
+      "Talent: Higher than average turnover in data science teams."
+    ]
   }
-];
+};
 
-const SIMULATED_PIPELINE_STEPS = [
-  "Uploading to Azure Blob Storage...",
-  "Creating Session Entry in Cosmos DB...",
-  "Triggering Azure Document Intelligence...",
-  "Extracting Layouts & Tables...",
-  "Vectorizing Content (OpenAI Ada-002)...",
-  "Updating Session State..."
+const SIMULATED_RAG_STEPS = [
+  "Uploading 3 documents to blob storage...",
+  "Triggering Azure Document Intelligence batch...",
+  "Analyzing layout (prebuilt-layout model)...",
+  "Extracting tables, headers, and paragraphs...",
+  "Chunking content across multiple files...",
+  "Generating embeddings (text-embedding-ada-002)...",
+  "Indexing to Vector Store...",
+  "Knowledge Base Ready."
 ];
 
 // --- Components ---
 
-const Sidebar = ({ sessions, currentSessionId, onSwitchSession, onNewSession, activeTab, setActiveTab, isOpen, onClose }) => (
-  <>
-    {/* Overlay for mobile */}
-    {isOpen && (
-      <div 
-        className="fixed inset-0 bg-slate-900/50 z-40 md:hidden backdrop-blur-sm"
-        onClick={onClose}
-      />
-    )}
+const Sidebar = ({ activeTab, setActiveTab }) => (
+  <div className="w-64 bg-slate-900 text-white flex flex-col h-full border-r border-slate-800 flex-shrink-0">
+    <div className="p-6 flex items-center space-x-2 border-b border-slate-800">
+      <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+        <BarChart3 className="w-5 h-5 text-white" />
+      </div>
+      <span className="font-bold text-lg tracking-tight">FinSight AI</span>
+    </div>
     
-    {/* Sidebar Container */}
-    <div className={`
-      fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white flex flex-col border-r border-slate-800 transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:h-full md:flex-shrink-0
-      ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-    `}>
-      <div className="p-5 border-b border-slate-800 flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-900/50">
-            <BarChart3 className="w-5 h-5 text-white" />
-          </div>
-          <span className="font-bold text-lg tracking-tight">FinSight AI</span>
-        </div>
-        <button onClick={onClose} className="md:hidden text-slate-400 hover:text-white">
-          <X className="w-6 h-6" />
-        </button>
-      </div>
+    <nav className="flex-1 p-4 space-y-2">
+      <button 
+        onClick={() => setActiveTab('dashboard')}
+        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'dashboard' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+      >
+        <Layout className="w-5 h-5" />
+        <span className="font-medium">Analysis Dashboard</span>
+      </button>
+      <button 
+        onClick={() => setActiveTab('chat')}
+        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'chat' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+      >
+        <Bot className="w-5 h-5" />
+        <span className="font-medium">RAG Assistant</span>
+      </button>
+    </nav>
 
-      <div className="p-4">
-        <button 
-          onClick={() => { onNewSession(); onClose(); }}
-          className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2.5 px-3 rounded-lg flex items-center justify-center space-x-2 transition-all shadow-md font-medium text-sm"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Analysis</span>
-        </button>
-      </div>
-      
-      <div className="flex-1 overflow-hidden flex flex-col">
-        {/* Navigation for Active Session */}
-        <div className="px-4 space-y-1 pb-4">
-          <p className="px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Current Session</p>
-          <button 
-            onClick={() => { setActiveTab('dashboard'); onClose(); }}
-            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-sm ${activeTab === 'dashboard' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}
-          >
-            <Layout className="w-4 h-4" />
-            <span>Dashboard</span>
-          </button>
-          <button 
-            onClick={() => { setActiveTab('chat'); onClose(); }}
-            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-sm ${activeTab === 'chat' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}
-          >
-            <Bot className="w-4 h-4" />
-            <span>RAG Chat</span>
-          </button>
+    <div className="p-4 border-t border-slate-800">
+      <div className="bg-slate-800 rounded-lg p-3 text-xs text-slate-400">
+        <div className="flex items-center space-x-2 mb-2 text-blue-400 font-semibold">
+          <Cpu className="w-3 h-3" />
+          <span>System Status</span>
         </div>
-
-        {/* History List */}
-        <div className="flex-1 overflow-y-auto px-4 pb-4 border-t border-slate-800/50 pt-4">
-          <p className="px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center">
-            <History className="w-3 h-3 mr-1.5" /> History
-          </p>
-          <div className="space-y-1">
-            {sessions.map((session) => (
-              <button
-                key={session.id}
-                onClick={() => { onSwitchSession(session.id); onClose(); }}
-                className={`w-full text-left px-3 py-2.5 rounded-lg transition-all group border ${
-                  currentSessionId === session.id 
-                    ? 'bg-slate-800 border-slate-700 text-white shadow-sm' 
-                    : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/30 hover:text-slate-200'
-                }`}
-              >
-                <div className="font-medium text-sm truncate">{session.title}</div>
-                <div className="text-[10px] text-slate-500 mt-0.5 flex items-center">
-                  <span>{session.date}</span>
-                </div>
-              </button>
-            ))}
-          </div>
+        <div className="flex justify-between">
+          <span>Azure Doc Int:</span>
+          <span className="text-green-400">Active</span>
         </div>
-      </div>
-
-      {/* System Status Footer */}
-      <div className="p-4 border-t border-slate-800 bg-slate-950">
-        <div className="rounded-lg p-2 space-y-2">
-          <div className="flex items-center justify-between text-[10px] text-slate-400">
-            <div className="flex items-center space-x-1.5">
-              <Database className="w-3 h-3 text-purple-400" />
-              <span>Cosmos DB</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-              <span className="text-green-500">Synced</span>
-            </div>
-          </div>
-          <div className="flex items-center justify-between text-[10px] text-slate-400">
-            <div className="flex items-center space-x-1.5">
-              <Cloud className="w-3 h-3 text-blue-400" />
-              <span>Blob Storage</span>
-            </div>
-            <span className="text-green-500">Active</span>
-          </div>
+        <div className="flex justify-between">
+          <span>Vector Index:</span>
+          <span className="text-green-400">3 Docs</span>
         </div>
       </div>
     </div>
-  </>
+  </div>
 );
 
 const DocumentUploader = ({ onUploadStart, onUploadComplete }) => {
@@ -223,7 +185,7 @@ const DocumentUploader = ({ onUploadStart, onUploadComplete }) => {
     const interval = setInterval(() => {
       setProcessingStep(step);
       step++;
-      if (step >= SIMULATED_PIPELINE_STEPS.length) {
+      if (step >= SIMULATED_RAG_STEPS.length) {
         clearInterval(interval);
         setTimeout(() => {
           setIsProcessing(false);
@@ -235,27 +197,27 @@ const DocumentUploader = ({ onUploadStart, onUploadComplete }) => {
 
   if (isProcessing) {
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-12 animate-in fade-in duration-500 m-4">
+      <div className="flex flex-col items-center justify-center h-full bg-white rounded-xl shadow-sm border border-slate-200 p-12">
         <div className="w-full max-w-md space-y-6">
           <div className="flex justify-center">
             <div className="relative">
               <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin"></div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <Cloud className="w-6 h-6 text-blue-500" />
+                <FileText className="w-6 h-6 text-blue-500" />
               </div>
             </div>
           </div>
           <div className="space-y-3">
-            {SIMULATED_PIPELINE_STEPS.map((text, idx) => (
+            {SIMULATED_RAG_STEPS.map((text, idx) => (
               <div key={idx} className={`flex items-center space-x-3 transition-all duration-300 ${idx === processingStep ? 'opacity-100 scale-105' : idx < processingStep ? 'opacity-50' : 'opacity-20'}`}>
                 {idx < processingStep ? (
-                  <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-green-500" />
                 ) : idx === processingStep ? (
-                  <Loader2 className="w-5 h-5 text-blue-500 animate-spin shrink-0" />
+                  <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
                 ) : (
-                  <div className="w-5 h-5 rounded-full border-2 border-slate-200 shrink-0" />
+                  <div className="w-5 h-5 rounded-full border-2 border-slate-200" />
                 )}
-                <span className={`text-sm font-medium truncate ${idx === processingStep ? 'text-blue-600' : 'text-slate-600'}`}>{text}</span>
+                <span className={`text-sm font-medium ${idx === processingStep ? 'text-blue-600' : 'text-slate-600'}`}>{text}</span>
               </div>
             ))}
           </div>
@@ -266,39 +228,35 @@ const DocumentUploader = ({ onUploadStart, onUploadComplete }) => {
 
   return (
     <div 
-      className={`flex flex-col items-center justify-center h-full border-2 border-dashed rounded-xl transition-all cursor-pointer m-4 p-6 text-center ${isDragging ? 'border-blue-500 bg-blue-50 scale-[0.99]' : 'border-slate-300 hover:border-slate-400 bg-slate-50'}`}
+      className={`flex flex-col items-center justify-center h-full border-2 border-dashed rounded-xl transition-colors cursor-pointer ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-slate-300 hover:border-slate-400 bg-slate-50'}`}
       onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
       onDragLeave={() => setIsDragging(false)}
       onDrop={handleDrop}
       onClick={startSimulation}
     >
-      <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6 shadow-sm">
+      <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6">
         <Upload className="w-10 h-10 text-blue-600" />
       </div>
-      <h3 className="text-xl md:text-2xl font-semibold text-slate-800 mb-2">New Analysis Session</h3>
-      <p className="text-slate-500 mb-6 text-center max-w-md text-sm md:text-base">
-        Upload financial documents (PDF, DOCX) to start.
-        Files are securely stored in <strong>Azure Blob Storage</strong>.
+      <h3 className="text-2xl font-semibold text-slate-800 mb-2">Upload Financial Documents</h3>
+      <p className="text-slate-500 mb-6 text-center max-w-md">
+        Drag and drop multiple files (PDF, DOCX, XLSX).
+        Our Multi-Document Intelligence pipeline will analyze layouts and cross-reference data.
       </p>
-      <div className="flex flex-wrap justify-center gap-3 text-xs text-slate-400 font-medium">
-        <span className="px-2 py-1 bg-white border border-slate-200 rounded">Encrypted</span>
-        <span className="px-2 py-1 bg-white border border-slate-200 rounded">Auto-Save</span>
+      <div className="flex gap-3 text-xs text-slate-400 font-medium">
+        <span className="px-2 py-1 bg-white border border-slate-200 rounded">Batch Upload Supported</span>
+        <span className="px-2 py-1 bg-white border border-slate-200 rounded">Auto-Categorization</span>
       </div>
     </div>
   );
 };
 
 const DocumentList = ({ documents, activeDocId, onSelect }) => (
-  <div className="w-full md:w-72 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col md:h-full overflow-hidden shrink-0">
-    <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-      <div>
-        <h3 className="font-semibold text-slate-700 text-sm uppercase tracking-wide mb-1">Documents</h3>
-        <p className="text-[10px] text-slate-500">Blob Storage Container</p>
-      </div>
-      <span className="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold">{Object.keys(documents).length}</span>
+  <div className="w-72 bg-white border-r border-slate-200 flex flex-col h-full overflow-hidden">
+    <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+      <h3 className="font-semibold text-slate-700 text-sm uppercase tracking-wide mb-1">Documents</h3>
+      <p className="text-xs text-slate-500">3 Processed • Ready for Analysis</p>
     </div>
-    {/* On mobile, limit height so it doesn't take over whole screen */}
-    <div className="flex-1 overflow-y-auto p-2 space-y-2 max-h-48 md:max-h-full">
+    <div className="flex-1 overflow-y-auto p-2 space-y-2">
       {Object.values(documents).map((doc) => (
         <button
           key={doc.id}
@@ -323,6 +281,12 @@ const DocumentList = ({ documents, activeDocId, onSelect }) => (
         </button>
       ))}
     </div>
+    <div className="p-3 border-t border-slate-100 bg-slate-50">
+        <button className="w-full flex items-center justify-center space-x-2 py-2 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors">
+            <Upload className="w-3 h-3" />
+            <span>Add More Files</span>
+        </button>
+    </div>
   </div>
 );
 
@@ -334,49 +298,48 @@ const AnalysisDashboard = ({ activeDocData }) => {
   return (
     <div className="flex-1 h-full overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300">
       {/* Header for current doc */}
-      <div className="px-4 md:px-6 py-4 border-b border-slate-200 bg-white flex flex-col md:flex-row justify-between items-start md:items-center flex-shrink-0 shadow-sm z-10 gap-3 md:gap-0">
-        <div className="w-full md:w-auto">
-           <div className="flex items-center justify-between md:justify-start space-x-2">
-             <h2 className="text-lg font-bold text-slate-800 truncate max-w-[200px] md:max-w-xs">{activeDocData.name}</h2>
-             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 border border-green-200 shrink-0">ANALYZED</span>
+      <div className="px-6 py-4 border-b border-slate-200 bg-white flex justify-between items-center flex-shrink-0">
+        <div>
+           <div className="flex items-center space-x-2">
+             <h2 className="text-lg font-bold text-slate-800">{activeDocData.name}</h2>
+             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 border border-green-200">ANALYZED</span>
            </div>
-           <p className="text-slate-500 text-xs mt-1 truncate">
-             <span className="font-medium text-slate-600">Source:</span> Azure Blob Storage
-           </p>
+           <p className="text-slate-500 text-xs mt-1">Azure Doc Intelligence detected {activeDocData.tables?.length || 0} tables and {activeDocData.risks?.length || 0} key highlights.</p>
         </div>
-        <div className="flex w-full md:w-auto bg-slate-100 p-1 rounded-lg overflow-x-auto no-scrollbar">
+        <div className="flex bg-slate-100 p-1 rounded-lg">
           <button 
             onClick={() => setViewMode('insights')}
-            className={`flex-1 md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${viewMode === 'insights' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${viewMode === 'insights' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            Insights
+            Key Insights
           </button>
           <button 
             onClick={() => setViewMode('tables')}
-            className={`flex-1 md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${viewMode === 'tables' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${viewMode === 'tables' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            Data Tables
+            Structured Data
           </button>
           <button 
             onClick={() => setViewMode('preview')}
-            className={`flex-1 md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center justify-center whitespace-nowrap ${viewMode === 'preview' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center ${viewMode === 'preview' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            <Eye className="w-3 h-3 mr-1.5 hidden md:block" />
-            Original
+            <Eye className="w-3 h-3 mr-1.5" />
+            Original Document
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/50">
+      <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
         {viewMode === 'insights' ? (
-          <div className="space-y-6 max-w-5xl mx-auto pb-6">
+          <div className="space-y-6 max-w-5xl mx-auto">
+            {/* Conditional Rendering based on Doc Type for variety */}
             {activeDocData.summary.revenue !== "N/A" ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                   <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Revenue</span>
                   <div className="text-2xl font-bold text-slate-900 mt-1">{activeDocData.summary.revenue}</div>
                   <div className="text-green-600 text-xs font-medium mt-1 flex items-center">
-                    {activeDocData.summary.growth} <span className="text-slate-400 ml-1 font-normal">vs prev</span>
+                    {activeDocData.summary.growth} <span className="text-slate-400 ml-1 font-normal">vs prev period</span>
                   </div>
                 </div>
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
@@ -396,8 +359,8 @@ const AnalysisDashboard = ({ activeDocData }) => {
               </div>
             ) : (
                <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center space-x-3">
-                  <AlertCircle className="w-5 h-5 text-blue-600 shrink-0" />
-                  <span className="text-sm text-blue-800">This document is qualitative. No summary metrics extracted.</span>
+                  <AlertCircle className="w-5 h-5 text-blue-600" />
+                  <span className="text-sm text-blue-800">This document is primarily qualitative. Financial summary metrics are not applicable.</span>
                </div>
             )}
 
@@ -407,7 +370,7 @@ const AnalysisDashboard = ({ activeDocData }) => {
                  Extracted Highlights & Risks
                </h3>
                <ul className="space-y-3">
-                 {activeDocData.risks.map((risk, idx) => (
+                 {activeDocData.risks && activeDocData.risks.map((risk, idx) => (
                     <li key={idx} className="flex items-start">
                       <div className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-2 mr-3 flex-shrink-0"></div>
                       <p className="text-slate-600 text-sm leading-relaxed">{risk}</p>
@@ -417,8 +380,8 @@ const AnalysisDashboard = ({ activeDocData }) => {
             </div>
           </div>
         ) : viewMode === 'tables' ? (
-          <div className="space-y-8 max-w-5xl mx-auto pb-6">
-            {activeDocData.tables.length > 0 ? (
+          <div className="space-y-8 max-w-5xl mx-auto">
+            {activeDocData.tables && activeDocData.tables.length > 0 ? (
                activeDocData.tables.map((table, idx) => (
                 <div key={idx} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                   <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
@@ -430,7 +393,7 @@ const AnalysisDashboard = ({ activeDocData }) => {
                       <thead className="bg-slate-50 text-slate-500">
                         <tr>
                           {table.headers.map((h, i) => (
-                            <th key={i} className="px-6 py-3 font-medium text-xs uppercase tracking-wider whitespace-nowrap">{h}</th>
+                            <th key={i} className="px-6 py-3 font-medium text-xs uppercase tracking-wider">{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -438,7 +401,7 @@ const AnalysisDashboard = ({ activeDocData }) => {
                         {table.rows.map((row, rIdx) => (
                           <tr key={rIdx} className="hover:bg-slate-50 transition-colors">
                             {row.map((cell, cIdx) => (
-                              <td key={cIdx} className={`px-6 py-3 text-slate-700 whitespace-nowrap ${cIdx === 0 ? 'font-medium' : ''}`}>
+                              <td key={cIdx} className={`px-6 py-3 text-slate-700 ${cIdx === 0 ? 'font-medium' : ''}`}>
                                 {cell}
                               </td>
                             ))}
@@ -451,26 +414,71 @@ const AnalysisDashboard = ({ activeDocData }) => {
               ))
             ) : (
               <div className="text-center py-12 bg-white rounded-xl border border-slate-200 border-dashed">
-                <p className="text-slate-500">No structured tables detected.</p>
+                <TableIcon className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                <p className="text-slate-500">No structured tables detected in this document.</p>
               </div>
             )}
           </div>
         ) : (
           /* Preview Mode */
-          <div className="h-full flex justify-center pb-6">
-            <div className="bg-white shadow-xl w-full max-w-3xl min-h-[400px] md:min-h-[800px] p-6 md:p-12 relative border border-slate-300 select-none animate-in fade-in duration-200">
+          <div className="h-full flex justify-center">
+            <div className="bg-white shadow-xl w-full max-w-3xl min-h-[800px] p-12 relative border border-slate-300 select-none animate-in fade-in duration-200">
+               {/* Document Header */}
                <div className="flex justify-between items-start mb-10 border-b border-slate-100 pb-6">
-                  <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-900 text-white flex items-center justify-center font-bold text-lg md:text-xl tracking-tighter rounded">FS</div>
+                  <div className="w-16 h-16 bg-slate-900 text-white flex items-center justify-center font-bold text-xl tracking-tighter rounded">
+                    FS
+                  </div>
                   <div className="text-right">
-                    <div className="text-lg md:text-2xl font-serif font-bold text-slate-800">DOCUMENT PREVIEW</div>
-                    <div className="text-xs md:text-sm text-slate-500 uppercase tracking-widest mt-1 truncate max-w-[150px] md:max-w-none ml-auto">{activeDocData.name}</div>
+                    <div className="text-2xl font-serif font-bold text-slate-800">FINANCIAL REPORT</div>
+                    <div className="text-sm text-slate-500 uppercase tracking-widest mt-1">{activeDocData.name.replace('.pdf', '').replace(/_/g, ' ')}</div>
+                    <div className="text-xs text-slate-400 mt-1">CONFIDENTIAL • INTERNAL USE ONLY</div>
                   </div>
                </div>
+
+               {/* Mock Content Body */}
                <div className="space-y-6 font-serif text-slate-300">
-                  <div className="space-y-3"><div className="h-3 bg-slate-200 w-full rounded-sm"></div><div className="h-3 bg-slate-200 w-11/12 rounded-sm"></div></div>
-                  <div className="border border-slate-200 rounded p-4 my-8"><div className="flex space-x-4 mb-4 border-b border-slate-100 pb-2"><div className="h-4 bg-slate-300 w-1/4 rounded-sm"></div></div><div className="flex space-x-4"><div className="h-3 bg-slate-100 w-1/4 rounded-sm"></div></div></div>
+                  {/* Mock Paragraphs */}
+                  <div className="space-y-3">
+                     <div className="h-3 bg-slate-200 w-full rounded-sm"></div>
+                     <div className="h-3 bg-slate-200 w-11/12 rounded-sm"></div>
+                     <div className="h-3 bg-slate-200 w-full rounded-sm"></div>
+                     <div className="h-3 bg-slate-200 w-3/4 rounded-sm"></div>
+                  </div>
+                  
+                  {/* Mock Table visual */}
+                  <div className="border border-slate-200 rounded p-4 my-8">
+                     <div className="flex space-x-4 mb-4 border-b border-slate-100 pb-2">
+                        <div className="h-4 bg-slate-300 w-1/4 rounded-sm"></div>
+                        <div className="h-4 bg-slate-300 w-1/4 rounded-sm"></div>
+                        <div className="h-4 bg-slate-300 w-1/4 rounded-sm"></div>
+                        <div className="h-4 bg-slate-300 w-1/4 rounded-sm"></div>
+                     </div>
+                     {[1,2,3,4,5].map(i => (
+                        <div key={i} className="flex space-x-4 mb-3">
+                           <div className="h-3 bg-slate-100 w-1/4 rounded-sm"></div>
+                           <div className="h-3 bg-slate-100 w-1/4 rounded-sm"></div>
+                           <div className="h-3 bg-slate-100 w-1/4 rounded-sm"></div>
+                           <div className="h-3 bg-slate-100 w-1/4 rounded-sm"></div>
+                        </div>
+                     ))}
+                  </div>
+
+                  <div className="space-y-3">
+                     <div className="h-3 bg-slate-200 w-full rounded-sm"></div>
+                     <div className="h-3 bg-slate-200 w-full rounded-sm"></div>
+                     <div className="h-3 bg-slate-200 w-5/6 rounded-sm"></div>
+                  </div>
+
+                  {/* Page Number */}
+                  <div className="absolute bottom-6 left-0 right-0 text-center text-xs text-slate-300 font-sans">
+                      Page 1 of 24
+                  </div>
                </div>
-               <div className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] px-3 py-1 font-bold rounded-bl-lg tracking-wider">READ ONLY</div>
+               
+               {/* Overlay indicating it's a preview */}
+               <div className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] px-3 py-1 font-bold rounded-bl-lg tracking-wider">
+                  PREVIEW MODE
+               </div>
             </div>
           </div>
         )}
@@ -479,8 +487,50 @@ const AnalysisDashboard = ({ activeDocData }) => {
   );
 };
 
-const ChatInterface = ({ messages, onSendMessage, isTyping }) => {
+const FeedbackModal = ({ isOpen, onClose, onSubmit }) => {
+  const [comment, setComment] = useState("");
+  
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md animate-in fade-in zoom-in duration-200">
+        <div className="p-4 border-b border-slate-100 flex justify-between items-center">
+          <h3 className="font-semibold text-slate-800">Provide Feedback</h3>
+          <button onClick={onClose}><X className="w-5 h-5 text-slate-400 hover:text-slate-600" /></button>
+        </div>
+        <div className="p-6">
+          <p className="text-sm text-slate-600 mb-4">Why did you find this response helpful/unhelpful? Your feedback improves our RAG model.</p>
+          <textarea 
+            className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none h-32 resize-none"
+            placeholder="Optional comments (e.g., 'The number for net income was incorrect...')"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+          ></textarea>
+        </div>
+        <div className="p-4 border-t border-slate-100 bg-slate-50 rounded-b-xl flex justify-end space-x-2">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-200 rounded-lg font-medium">Cancel</button>
+          <button 
+            onClick={() => { onSubmit(comment); setComment(""); }} 
+            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+          >
+            Submit Feedback
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ChatInterface = () => {
   const [input, setInput] = useState('');
+  const [messages, setMessages] = useState([
+    { id: 1, type: 'bot', text: 'Hello! I\'ve analyzed the **3 uploaded documents**. You can ask me to compare figures across quarters (Q2 vs Q3) or summarize risks from the internal memo.', helpful: null }
+  ]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [activeFeedbackMsgId, setActiveFeedbackMsgId] = useState(null);
+  
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -493,107 +543,16 @@ const ChatInterface = ({ messages, onSendMessage, isTyping }) => {
 
   const handleSend = () => {
     if (!input.trim()) return;
-    onSendMessage(input);
+    
+    const userMsg = { id: Date.now(), type: 'user', text: input };
+    setMessages(prev => [...prev, userMsg]);
     setInput('');
-  };
-
-  return (
-    <div className="flex flex-col h-full bg-slate-50 relative">
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`flex max-w-[90%] md:max-w-[85%] ${msg.type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.type === 'user' ? 'bg-slate-200 ml-2 md:ml-3' : 'bg-blue-600 mr-2 md:mr-3'}`}>
-                {msg.type === 'user' ? <div className="text-slate-500 text-xs font-bold">ME</div> : <Bot className="w-5 h-5 text-white" />}
-              </div>
-              <div className={`flex flex-col ${msg.type === 'user' ? 'items-end' : 'items-start'}`}>
-                <div className={`px-4 py-3 md:px-5 md:py-3.5 rounded-2xl shadow-sm text-sm leading-relaxed whitespace-pre-wrap ${msg.type === 'user' ? 'bg-white text-slate-800 border border-slate-100 rounded-tr-none' : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none'}`}>
-                  <p dangerouslySetInnerHTML={{ __html: msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>') }} />
-                </div>
-                {msg.sources && msg.type === 'bot' && (
-                  <div className="mt-2 flex items-center space-x-4 ml-1">
-                     <div className="flex gap-2 flex-wrap max-w-xs">{msg.sources.map((src, i) => <span key={i} className="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full border border-slate-300">{src}</span>)}</div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-        {isTyping && (
-          <div className="flex justify-start"><div className="bg-white border border-slate-200 px-4 py-3 rounded-2xl rounded-tl-none ml-11 shadow-sm flex items-center space-x-1"><div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div><div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay:'150ms'}}></div><div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay:'300ms'}}></div></div></div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-      <div className="p-4 bg-white border-t border-slate-200">
-        <div className="relative max-w-4xl mx-auto">
-          <input
-            type="text"
-            className="w-full pl-4 pr-12 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all text-sm shadow-inner"
-            placeholder="Ask a question..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          />
-          <button onClick={handleSend} disabled={!input.trim()} className="absolute right-2 top-2 p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-sm"><Send className="w-4 h-4" /></button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- Main App Logic ---
-
-export default function UserDashboard() {
-  const [sessions, setSessions] = useState(MOCK_HISTORICAL_SESSIONS);
-  const [currentSessionId, setCurrentSessionId] = useState(null); // null means "New Session" mode
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [isTyping, setIsTyping] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // Helper to get current session object
-  const getCurrentSession = () => sessions.find(s => s.id === currentSessionId) || null;
-  const currentSession = getCurrentSession();
-
-  const handleNewSession = () => {
-    setCurrentSessionId(null);
-    setActiveTab('dashboard');
-  };
-
-  const handleSwitchSession = (id) => {
-    setCurrentSessionId(id);
-    setActiveTab('dashboard');
-  };
-
-  const handleUploadComplete = () => {
-    const newSessionId = `session-${Date.now()}`;
-    const newSession = {
-      id: newSessionId,
-      title: "New Financial Analysis", // Would be dynamic based on filename
-      date: "Just now",
-      documents: generateMockDocs(newSessionId),
-      activeDocId: `${newSessionId}-1`,
-      chatHistory: [{ id: 1, type: 'bot', text: 'Files uploaded to **Blob Storage**. Metadata saved to **Cosmos DB**. Ready for analysis.', helpful: null }],
-      fileUploaded: true
-    };
-    
-    setSessions(prev => [newSession, ...prev]);
-    setCurrentSessionId(newSessionId);
-  };
-
-  const handleChatMessage = (text) => {
-    if (!currentSession) return;
-    const userMsg = { id: Date.now(), type: 'user', text };
-    
-    // Immediate update for user message using functional update for safety
-    setSessions(prevSessions => prevSessions.map(s => 
-      s.id === currentSessionId ? { ...s, chatHistory: [...s.chatHistory, userMsg] } : s
-    ));
     setIsTyping(true);
 
     // Simulate RAG Latency and Response with Cross-Doc context
     setTimeout(() => {
       let responseText = "Based on the document context, I couldn't find a specific answer to that.";
-      const lowerInput = text.toLowerCase();
+      const lowerInput = input.toLowerCase();
       
       if (lowerInput.includes('revenue') || lowerInput.includes('sales')) {
         responseText = "I found revenue data in two documents:\n\n1. **Q3 2023 Report**: Total Revenue was **$45.2M** (+12.7% YoY).\n2. **Q2 2023 Report**: Total Revenue was **$40.1M**.\n\nComparing the two quarters, revenue grew by approximately **$5.1M** from Q2 to Q3.";
@@ -603,62 +562,157 @@ export default function UserDashboard() {
         responseText = "The **Net Income** for Q3 2023 was **$8.4M**, showing strong growth compared to Q2 2023, where Net Income was **$6.8M**. This improvement is attributed to cost rationalization in APAC.";
       }
 
-      const botResponse = { 
+      setMessages(prev => [...prev, { 
         id: Date.now() + 1, 
         type: 'bot', 
         text: responseText, 
         helpful: null,
         sources: ['Q3_2023_Report.pdf', 'Q2_2023_Report.pdf', 'FY23_Risk_Memo.docx']
-      };
-      
-      setSessions(prevSessions => prevSessions.map(s => 
-        s.id === currentSessionId ? { ...s, chatHistory: [...s.chatHistory, botResponse] } : s
-      ));
+      }]);
       setIsTyping(false);
     }, 1500);
   };
 
-  const updateActiveDoc = (docId) => {
-    const updatedSessions = sessions.map(s => 
-      s.id === currentSessionId ? { ...s, activeDocId: docId } : s
-    );
-    setSessions(updatedSessions);
+  const handleFeedback = (msgId, isHelpful) => {
+    if (isHelpful) {
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, helpful: true } : m));
+    } else {
+      setActiveFeedbackMsgId(msgId);
+      setFeedbackModalOpen(true);
+    }
+  };
+
+  const submitFeedback = (comment) => {
+    setMessages(prev => prev.map(m => m.id === activeFeedbackMsgId ? { ...m, helpful: false, feedbackComment: comment } : m));
+    setFeedbackModalOpen(false);
   };
 
   return (
-    <div className="flex h-screen bg-white font-sans text-slate-900 selection:bg-blue-100">
-      <Sidebar 
-        sessions={sessions} 
-        currentSessionId={currentSessionId} 
-        onSwitchSession={handleSwitchSession} 
-        onNewSession={handleNewSession}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
-      
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        {/* Top Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 flex-shrink-0 z-20 shadow-sm">
-          <div className="flex items-center space-x-2 text-slate-500 text-sm">
-            <button 
-              onClick={() => setSidebarOpen(true)}
-              className="md:hidden mr-2 p-1 text-slate-600 hover:bg-slate-100 rounded"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <span className="hidden md:inline">Workspace</span>
-            <ChevronRight className="w-4 h-4 hidden md:block" />
-            {currentSession ? (
-              <div className="flex items-center">
-                 <span className="text-slate-900 font-medium truncate max-w-[120px] md:max-w-none">{currentSession.title}</span>
-                 <span className="bg-slate-100 px-2 py-0.5 rounded text-[10px] border border-slate-200 hidden md:flex items-center ml-2 text-slate-500">
-                   <Save className="w-3 h-3 mr-1" /> Synced
-                 </span>
+    <div className="flex flex-col h-full bg-slate-50 relative">
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {messages.map((msg) => (
+          <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`flex max-w-[85%] ${msg.type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+              
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.type === 'user' ? 'bg-slate-200 ml-3' : 'bg-blue-600 mr-3'}`}>
+                {msg.type === 'user' ? <div className="text-slate-500 text-xs font-bold">ME</div> : <Bot className="w-5 h-5 text-white" />}
               </div>
-            ) : (
-              <span className="text-slate-900 font-medium">New Session</span>
+
+              <div className={`flex flex-col ${msg.type === 'user' ? 'items-end' : 'items-start'}`}>
+                <div className={`px-5 py-3.5 rounded-2xl shadow-sm text-sm leading-relaxed whitespace-pre-wrap ${
+                  msg.type === 'user' 
+                    ? 'bg-white text-slate-800 border border-slate-100 rounded-tr-none' 
+                    : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none'
+                }`}>
+                  <p dangerouslySetInnerHTML={{ __html: msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>') }} />
+                </div>
+                
+                {msg.type === 'bot' && (
+                  <div className="mt-2 flex items-center space-x-4 ml-1">
+                    {msg.sources && (
+                       <div className="flex gap-2 flex-wrap max-w-xs">
+                         {msg.sources.map((src, idx) => (
+                           <span key={idx} className="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full border border-slate-300">
+                             {src}
+                           </span>
+                         ))}
+                       </div>
+                    )}
+
+                    {msg.id !== 1 && (
+                      <div className="flex items-center space-x-2">
+                        <button 
+                          onClick={() => handleFeedback(msg.id, true)}
+                          className={`p-1 rounded transition-colors ${msg.helpful === true ? 'text-green-600 bg-green-50' : 'text-slate-400 hover:text-green-600 hover:bg-green-50'}`}
+                        >
+                          <ThumbsUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => handleFeedback(msg.id, false)}
+                          className={`p-1 rounded transition-colors ${msg.helpful === false ? 'text-red-500 bg-red-50' : 'text-slate-400 hover:text-red-500 hover:bg-red-50'}`}
+                        >
+                          <ThumbsDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+        
+        {isTyping && (
+          <div className="flex justify-start">
+            <div className="bg-white border border-slate-200 px-4 py-3 rounded-2xl rounded-tl-none ml-11 shadow-sm flex items-center space-x-1">
+              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="p-4 bg-white border-t border-slate-200">
+        <div className="relative max-w-4xl mx-auto">
+          <input
+            type="text"
+            className="w-full pl-4 pr-12 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none transition-all text-sm shadow-inner"
+            placeholder="Ask a question about the financial reports..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          />
+          <button 
+            onClick={handleSend}
+            disabled={!input.trim()}
+            className="absolute right-2 top-2 p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </div>
+        <p className="text-center text-[10px] text-slate-400 mt-2">
+           RAG model v2.1 • Indexing 3 Documents • 98.4% Accuracy
+        </p>
+      </div>
+
+      <FeedbackModal 
+        isOpen={feedbackModalOpen} 
+        onClose={() => setFeedbackModalOpen(false)} 
+        onSubmit={submitFeedback}
+      />
+    </div>
+  );
+};
+
+// --- Main App ---
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [fileUploaded, setFileUploaded] = useState(false);
+  const [activeDocId, setActiveDocId] = useState('doc-1');
+
+  return (
+    <div className="flex h-screen bg-white font-sans text-slate-900 selection:bg-blue-100">
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      
+      <main className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Top Header */}
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0 z-10">
+          <div className="flex items-center space-x-2 text-slate-500 text-sm">
+            <span>Workspace</span>
+            <ChevronRight className="w-4 h-4" />
+            <span className="text-slate-900 font-medium">Financial Analysis</span>
+            {fileUploaded && (
+              <>
+                <ChevronRight className="w-4 h-4" />
+                <span className="bg-slate-100 px-2 py-0.5 rounded text-xs border border-slate-200 flex items-center">
+                   <File className="w-3 h-3 mr-1" />
+                   {Object.keys(MOCK_DOCS_DATA).length} Files Loaded
+                </span>
+              </>
             )}
           </div>
           <div className="flex items-center space-x-4">
@@ -669,35 +723,32 @@ export default function UserDashboard() {
         </header>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-hidden relative bg-slate-50">
-          {!currentSession ? (
-            <div className="h-full md:p-8 overflow-y-auto">
+        <div className="flex-1 overflow-hidden relative">
+          {!fileUploaded ? (
+            <div className="h-full p-8 bg-slate-50/50">
               <DocumentUploader 
                 onUploadStart={() => {}} 
-                onUploadComplete={handleUploadComplete} 
+                onUploadComplete={() => setFileUploaded(true)} 
               />
             </div>
           ) : (
             <>
               {activeTab === 'dashboard' && (
-                <div className="h-full flex flex-col md:flex-row">
+                <div className="h-full flex">
+                   {/* Documents Panel (Left) */}
                    <DocumentList 
-                      documents={currentSession.documents} 
-                      activeDocId={currentSession.activeDocId} 
-                      onSelect={updateActiveDoc} 
+                      documents={MOCK_DOCS_DATA} 
+                      activeDocId={activeDocId} 
+                      onSelect={setActiveDocId} 
                    />
-                   <AnalysisDashboard 
-                     activeDocData={currentSession.documents[currentSession.activeDocId]} 
-                   />
+                   
+                   {/* Main Analysis (Right) */}
+                   <AnalysisDashboard activeDocData={MOCK_DOCS_DATA[activeDocId]} />
                 </div>
               )}
               {activeTab === 'chat' && (
                 <div className="h-full">
-                  <ChatInterface 
-                    messages={currentSession.chatHistory} 
-                    onSendMessage={handleChatMessage}
-                    isTyping={isTyping}
-                  />
+                  <ChatInterface />
                 </div>
               )}
             </>

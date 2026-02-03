@@ -4,6 +4,8 @@ import {
   FileText,
   Bot,
   Send,
+  ThumbsUp,
+  ThumbsDown,
   BarChart3,
   PieChart,
   CheckCircle2,
@@ -46,6 +48,7 @@ import {
   uploadDocuments,
   updateSession,
   deleteSession,
+  submitFeedback,
 } from "../utils/dataHandlerAPI";
 import { marked } from "marked";
 import Markdown from 'react-markdown';
@@ -75,9 +78,15 @@ type UserDashboardProps = {
 
 type SimpleMessage = {
   id: string;
+  messageId?: string;
   role: "user" | "assistant";
   text: string;
   citations?: (string | undefined)[];
+  userFeedback?: {
+    thumbRating: "up" | "down";
+    comment?: string;
+    submittedAt?: string;
+  };
 };
 
 marked.setOptions({ breaks: true });
@@ -553,12 +562,18 @@ const ChatInterface = ({
   messages,
   onSendMessage,
   isTyping,
+  onSendFeedback,
 }: {
   messages: SimpleMessage[];
   onSendMessage: (text: string) => void;
   isTyping: boolean;
+  onSendFeedback: (messageId: string, thumbRating: "up" | "down", comment?: string) => Promise<void>;
 }) => {
   const [input, setInput] = useState("");
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [activeFeedbackMsgId, setActiveFeedbackMsgId] = useState<string | null>(null);
+  const [feedbackComment, setFeedbackComment] = useState("");
+  const [feedbackSubmittingId, setFeedbackSubmittingId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -572,6 +587,18 @@ const ChatInterface = ({
     el.style.height = "auto";
     const nextHeight = Math.min(200, Math.max(44, el.scrollHeight));
     el.style.height = `${nextHeight}px`;
+  };
+
+  const openFeedbackModal = (messageId: string) => {
+    setActiveFeedbackMsgId(messageId);
+    setFeedbackComment("");
+    setFeedbackModalOpen(true);
+  };
+
+  const closeFeedbackModal = () => {
+    setFeedbackModalOpen(false);
+    setActiveFeedbackMsgId(null);
+    setFeedbackComment("");
   };
 
   const handleSend = () => {
@@ -600,6 +627,10 @@ const ChatInterface = ({
         <div className="space-y-4">
           {messages.map((msg) => {
             const isUser = msg.role === "user";
+            const feedbackTargetId = msg.messageId;
+            const showFeedback = !isUser && Boolean(feedbackTargetId);
+            const alreadyRated = showFeedback && Boolean(msg.userFeedback?.thumbRating);
+            const feedbackPending = feedbackTargetId ? feedbackSubmittingId === feedbackTargetId : false;
             return (
               <div key={msg.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
                 <div
@@ -655,6 +686,49 @@ const ChatInterface = ({
                       ))}
                     </div>
                   )}
+                  {showFeedback && feedbackTargetId && (
+                    <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-500">
+                      <div className="flex items-center gap-2">
+                        <span>Was this helpful?</span>
+                        <button
+                          type="button"
+                          className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 transition-colors ${
+                            alreadyRated && msg.userFeedback?.thumbRating === "up"
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                          } ${feedbackPending ? "opacity-60" : ""}`}
+                          disabled={alreadyRated || feedbackPending}
+                          onClick={async () => {
+                            setFeedbackSubmittingId(feedbackTargetId);
+                            try {
+                              await onSendFeedback(feedbackTargetId, "up");
+                            } finally {
+                              setFeedbackSubmittingId(null);
+                            }
+                          }}
+                        >
+                          {feedbackPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ThumbsUp className="w-3.5 h-3.5" />}
+                          <span className="text-[11px] font-semibold">Yes</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 transition-colors ${
+                            alreadyRated && msg.userFeedback?.thumbRating === "down"
+                              ? "border-amber-200 bg-amber-50 text-amber-700"
+                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                          } ${feedbackPending ? "opacity-60" : ""}`}
+                          disabled={alreadyRated || feedbackPending}
+                          onClick={() => openFeedbackModal(feedbackTargetId)}
+                        >
+                          <ThumbsDown className="w-3.5 h-3.5" />
+                          <span className="text-[11px] font-semibold">No</span>
+                        </button>
+                      </div>
+                      {msg.userFeedback?.thumbRating && (
+                        <span className="text-[11px] font-semibold text-gray-600">Thanks for the feedback</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -696,6 +770,52 @@ const ChatInterface = ({
           </Button>
         </div>
       </div>
+      {feedbackModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-xl bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-800">Tell us what was off</p>
+                <p className="text-xs text-slate-500">Your feedback helps improve grounded answers.</p>
+              </div>
+              <button onClick={closeFeedbackModal} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="space-y-3 px-4 py-4">
+              <label className="text-xs font-semibold text-slate-700">Comments (optional)</label>
+              <textarea
+                value={feedbackComment}
+                onChange={(e) => setFeedbackComment(e.target.value)}
+                rows={4}
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 shadow-inner focus:border-blue-400 focus:outline-none"
+                placeholder="What could be improved?"
+              />
+            </div>
+            <div className="flex justify-end gap-2 border-t border-slate-100 bg-slate-50 px-4 py-3 rounded-b-xl">
+              <Button variant="ghost" onClick={closeFeedbackModal}>
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  if (!activeFeedbackMsgId) return;
+                  setFeedbackSubmittingId(activeFeedbackMsgId);
+                  try {
+                    await onSendFeedback(activeFeedbackMsgId, "down", feedbackComment.trim() || undefined);
+                    closeFeedbackModal();
+                  } finally {
+                    setFeedbackSubmittingId(null);
+                  }
+                }}
+                disabled={!activeFeedbackMsgId || feedbackSubmittingId === activeFeedbackMsgId}
+              >
+                {feedbackSubmittingId === activeFeedbackMsgId && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Submit
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -879,12 +999,20 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   }, [activeTab, currentSessionId, updateStatusAndMaybeInsights]);
 
   const mapChat = (chat: ChatMessage[]): SimpleMessage[] =>
-    chat.map((c) => ({
-      id: c.messageId,
-      role: c.role === "assistant" ? "assistant" : "user",
-      text: c.content,
-      citations: c.citations?.map((s) => `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`) || [],
-    }));
+    chat.map((c) => {
+      const baseId = c.messageId || crypto.randomUUID();
+      return {
+        id: baseId,
+        messageId: c.messageId || baseId,
+        role: c.role === "assistant" ? "assistant" : "user",
+        text: c.content,
+        citations:
+          c.citations?.map(
+            (s) => `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`
+          ) || [],
+        userFeedback: c.userFeedback || undefined,
+      };
+    });
 
   const handleUpload = async (files: FileList) => {
     const asArray = Array.from(files);
@@ -953,13 +1081,16 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     if (!session || session.systemStatus?.overallStatus !== "completed") {
       return toast.error("Session processing is not completed yet. Please wait for status to finish.");
     }
-    const userMsg: SimpleMessage = { id: crypto.randomUUID(), role: "user", text };
+    const userId = crypto.randomUUID();
+    const userMsg: SimpleMessage = { id: userId, messageId: userId, role: "user", text };
     setMessages((prev) => [...prev, userMsg]);
     setIsTyping(true);
     try {
       const resp = await askChatQuestion(currentSessionId, text);
+      const botId = resp.messageId || crypto.randomUUID();
       const botMsg: SimpleMessage = {
-        id: crypto.randomUUID(),
+        id: botId,
+        messageId: resp.messageId,
         role: "assistant",
         text: resp.answer,
         citations: resp.citations?.map((s) => `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`) || [],
@@ -969,6 +1100,35 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
       toast.error(err?.message || "Failed to send message");
     } finally {
       setIsTyping(false);
+    }
+  };
+
+  const handleSubmitFeedback = async (messageId: string, thumbRating: "up" | "down", comment?: string) => {
+    if (!currentSessionId) {
+      toast.error("Select a session first");
+      return;
+    }
+    const previousFeedback = messages.find((m) => m.id === messageId || m.messageId === messageId)?.userFeedback;
+    const submittedAt = new Date().toISOString();
+
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId || m.messageId === messageId
+          ? { ...m, userFeedback: { thumbRating, comment, submittedAt } }
+          : m
+      )
+    );
+
+    try {
+      await submitFeedback({ sessionId: currentSessionId, messageId, thumbRating, comment });
+      toast.success("Feedback recorded");
+    } catch (err: any) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId || m.messageId === messageId ? { ...m, userFeedback: previousFeedback } : m
+        )
+      );
+      toast.error(err?.message || "Failed to submit feedback");
     }
   };
 
@@ -1194,7 +1354,12 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                       </Button>
                     </div>
                   ) : (
-                    <ChatInterface messages={messages} onSendMessage={handleSendMessage} isTyping={isTyping} />
+                    <ChatInterface
+                      messages={messages}
+                      onSendMessage={handleSendMessage}
+                      isTyping={isTyping}
+                      onSendFeedback={handleSubmitFeedback}
+                    />
                   )}
                 </div>
               )}

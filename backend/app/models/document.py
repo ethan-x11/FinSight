@@ -31,5 +31,6 @@ class SourceSnippet(BaseModel):
 
 
 class AskResponse(BaseModel):
+    messageId: str
     answer: str
     citations: list[SourceSnippet]

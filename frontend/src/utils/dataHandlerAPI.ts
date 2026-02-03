@@ -21,7 +21,7 @@ interface ImportMetaEnvLite {
 }
 
 interface ExtendedImportMeta extends ImportMeta {
-	env?: ImportMetaEnvLite;
+	env: ImportMetaEnv & ImportMetaEnvLite;
 }
 
 interface RuntimeWindow extends Window {
@@ -179,6 +179,7 @@ export interface UploadDocumentsResponse {
 
 export interface ChatResponse {
 	answer: string;
+	messageId: string;
 	citations: {
 		sourcefile: string;
 		chunk_id: string;
