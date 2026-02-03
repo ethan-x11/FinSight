@@ -43,6 +43,10 @@ class DocumentIntelligenceService:
         tables: List[Dict[str, Any]] = []
         page_spans: List[Dict[str, int]] = []
 
+        # Merge tables that span multiple pages by caption/title
+        merged_tables: Dict[str, Dict[str, Any]] = {}
+        merge_order: List[str] = []
+
         for table in result.tables or []:
             rows: List[Dict[str, Any]] = []
             for row_idx in range(table.row_count):
@@ -54,14 +58,34 @@ class DocumentIntelligenceService:
             page_number = table.bounding_regions[0].page_number if table.bounding_regions else 1
             caption = getattr(table, "caption", None)
             caption_text = caption.content if caption and getattr(caption, "content", None) else ""
+            key = caption_text.strip() if caption_text else f"table-{len(merge_order)+1}"
 
+            if key not in merged_tables:
+                merge_order.append(key)
+                merged_tables[key] = {
+                    "title": caption_text or f"Table {len(merge_order)}",
+                    "rows": [],
+                    "pageNumbers": [],
+                }
+
+            merged_tables[key]["rows"].extend(rows)
+            merged_tables[key]["pageNumbers"].append(page_number)
+
+        # Build final merged table list with page ranges
+        for idx, key in enumerate(merge_order, start=1):
+            entry = merged_tables[key]
+            pages = sorted(set(entry.get("pageNumbers", []))) or [1]
+            start_page, end_page = pages[0], pages[-1]
+            page_range = str(start_page) if start_page == end_page else f"{start_page}-{end_page}"
             tables.append(
                 {
-                    "tableId": f"table-{page_number}-{len(tables)+1}",
-                    "title": caption_text or f"Table {len(tables)+1}",
-                    "pageNumber": page_number,
+                    "tableId": f"table-{start_page}-{idx}",
+                    "title": entry.get("title") or f"Table {idx}",
+                    "pageNumber": start_page,
+                    "pageNumbers": pages,
+                    "pageRange": page_range,
                     "layoutType": "horizontal",
-                    "rows": rows,
+                    "rows": entry.get("rows", []),
                 }
             )
 
@@ -84,4 +108,14 @@ class DocumentIntelligenceService:
             )
 
         page_spans.sort(key=lambda entry: entry["startOffset"])
-        return {"text": text_content, "tables": tables, "pageSpans": page_spans}
+        footnotes: List[Dict[str, Any]] = []
+        for footnote in getattr(result, "footnotes", []) or []:
+            content = getattr(footnote, "content", None) or ""
+            page_number = None
+            if getattr(footnote, "bounding_regions", None):
+                region = footnote.bounding_regions[0]
+                page_number = getattr(region, "page_number", None)
+            if content:
+                footnotes.append({"content": content, "pageNumber": page_number})
+
+        return {"text": text_content, "tables": tables, "pageSpans": page_spans, "footnotes": footnotes}

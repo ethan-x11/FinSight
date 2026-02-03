@@ -13,7 +13,7 @@ from app.models.user import UserInDB
 router = APIRouter(tags=["insights"], dependencies=[Depends(get_current_user)])
 
 
-@router.get("/insights/{session_id}", response_model=AnalysisOutput)
+@router.get("/insights/{session_id}", response_model=List[AnalysisOutput])
 async def get_insights(
     session_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -26,5 +26,8 @@ async def get_insights(
         raise HTTPException(status_code=403, detail="Not authorized")
 
     analysis = session.get("analysisOutput") or []
-    print("Analysis Output:", analysis)
+    
+    if isinstance(analysis, dict):
+        analysis = [analysis]
+    # print("Analysis Output:", analysis)
     return [AnalysisOutput.model_validate(item) for item in analysis]

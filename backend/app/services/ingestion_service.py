@@ -36,6 +36,18 @@ class IngestionService:
         self.chat_service = ChatService()
         self.analysis_service = AnalysisService()
         self.index_base_name = settings.search_index_name
+
+    @staticmethod
+    def _pages_from_range(page_range: str | None) -> List[int]:
+        if not page_range:
+            return []
+        try:
+            if "-" in page_range:
+                start, end = page_range.split("-", 1)
+                return list(range(int(start), int(end) + 1))
+            return [int(page_range)]
+        except Exception:
+            return []
         
     def _build_index_name(self, name: str) -> str:
         sanitized = name.strip().lower()
@@ -178,6 +190,8 @@ class IngestionService:
             self.sessions_repo.update_status(session_id, status)
 
             text_content = doc_result.get("text", "")
+            tables = doc_result.get("tables") or []
+            footnotes = doc_result.get("footnotes") or []
             page_markers = self._extract_page_markers(text_content)
             page_spans = [
                 span
@@ -228,12 +242,37 @@ class IngestionService:
                         local_cursor += 1
 
                     page_range = self.compute_page_range(start_offset, end_offset, page_spans, page_markers)
+                    pages_for_chunk = self._pages_from_range(page_range)
+
+                    # Collect notes: include table references and footnotes attached to pages
+                    notes: List[str] = []
+                    for table in tables:
+                        table_pages = table.get("pageNumbers") or [table.get("pageNumber")]
+                        if any(p in pages_for_chunk for p in table_pages if p is not None):
+                            title = table.get("title") or "Table"
+                            page_range_note = table.get("pageRange") or ",".join(str(p) for p in table_pages if p)
+                            notes.append(f"Table: {title} (pages {page_range_note})")
+
+                    for footnote in footnotes:
+                        page_num = footnote.get("pageNumber")
+                        if pages_for_chunk and page_num and page_num in pages_for_chunk:
+                            content = footnote.get("content") or ""
+                            if content:
+                                notes.append(f"Footnote (p.{page_num}): {content}")
+
+                    note_suffix = ""
+                    if notes:
+                        bullet_notes = "\n".join(f"- {n}" for n in notes)
+                        note_suffix = f"\n\nNotes:\n{bullet_notes}"
+                    content_with_notes = f"{chunk}{note_suffix}" if note_suffix else chunk
+
                     chunk_infos.append(
                         {
-                            "content": chunk,
+                            "content": content_with_notes,
                             "startOffset": start_offset,
                             "endOffset": end_offset,
                             "pageRange": page_range,
+                            "notes": notes,
                         }
                     )
 
