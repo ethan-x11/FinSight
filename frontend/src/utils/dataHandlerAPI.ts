@@ -202,7 +202,7 @@ export interface ChatResponse {
 		content: string;
 		pointer_url?: string;
 	}[];
-	linkedCitations?: SourcePointer[];
+	LinkedCitation?: SourcePointer[];
 }
 
 export interface FeedbackResponse {

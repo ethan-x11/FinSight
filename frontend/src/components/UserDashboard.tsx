@@ -82,7 +82,7 @@ type SimpleMessage = {
   messageId?: string;
   role: "user" | "assistant";
   text: string;
-  citations?: (string | undefined)[];
+  citations?: { name: string; url?: string }[];
   userFeedback?: {
     thumbRating: "up" | "down";
     comment?: string;
@@ -741,12 +741,15 @@ const ChatInterface = ({
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       Sources: 
                       {msg.citations.map((src, i) => (
-                        <span
-                          key={`${src}-${i}`}
+                        <a
+                          key={`${src.name}-${i}`}
+                          href={src.url || "#"}
+                          target="_blank"
+                          rel="noreferrer"
                           className={`text-[11px] font-semibold px-2 py-1 rounded-full border ${isUser ? "bg-white/15 text-white border-white/30" : "bg-blue-50 text-blue-700 border-blue-200"}`}
                         >
-                          {src}
-                        </span>
+                          {src.name}
+                        </a>
                       ))}
                     </div>
                   )}
@@ -1071,9 +1074,10 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
         role: c.role === "assistant" ? "assistant" : "user",
         text: c.role === "assistant" ? linkifyRawCitations(c.content, c.linkedCitations) : c.content,
         citations:
-          c.citations?.map(
-            (s) => `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`
-          ) || [],
+          c.citations?.map((s) => ({
+            name: `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`,
+            url: s.pointer_url,
+          })) || [],
         userFeedback: c.userFeedback || undefined,
       };
     });
@@ -1156,8 +1160,11 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
         id: botId,
         messageId: resp.messageId,
         role: "assistant",
-        text: linkifyRawCitations(resp.answer, resp.linkedCitations),
-        citations: resp.citations?.map((s) => `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`) || [],
+        text: linkifyRawCitations(resp.answer, resp.LinkedCitation),
+        citations: resp.citations?.map((s) => ({
+          name: `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`,
+          url: s.pointer_url,
+        })) || [],
       };
       setMessages((prev) => [...prev, botMsg]);
     } catch (err: any) {
