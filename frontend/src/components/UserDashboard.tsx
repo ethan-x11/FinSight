@@ -694,7 +694,7 @@ const ChatInterface = ({
               <div key={msg.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
                 <div
                   className={`max-w-[92%] md:max-w-[78%] px-4 py-3 rounded-2xl border shadow-sm transition-all ${isUser
-                    ? "bg-blue-400 text-white border-blue-600 shadow-blue-200/60"
+                    ? "bg-slate-500 text-white border-blue-800 shadow-blue-200/60"
                     : "bg-white text-slate-800 border-default"}
                   ${isUser ? "rounded-tr-none" : "rounded-tl-none"}`}
                 >
