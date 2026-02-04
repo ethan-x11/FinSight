@@ -284,7 +284,7 @@ class IngestionService:
                 offset_cursor = local_cursor
                 any_chunks = True
 
-                embeddings = self.chat_service.embed_texts([info["content"] for info in chunk_infos])
+                embeddings = self.chat_service.azure_factory.embed_texts([info["content"] for info in chunk_infos])
                 steps["embeddingsGenerated"] = True
                 # status["steps"] = steps
                 # self.sessions_repo.update_status(session_id, status)

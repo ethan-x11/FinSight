@@ -50,6 +50,7 @@ import {
   updateSession,
   deleteSession,
   submitFeedback,
+  Query,
 } from "../utils/dataHandlerAPI";
 import { marked } from "marked";
 import Markdown from 'react-markdown';
@@ -83,7 +84,7 @@ type SimpleMessage = {
   role: "user" | "assistant";
   text: string;
   citations?: { name: string; url?: string }[];
-  queryPlan?: string[];
+  queryPlan?: Query[];
   linkedCitations?: SourcePointer[];
   userFeedback?: {
     thumbRating: "up" | "down";
@@ -1178,14 +1179,16 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
         id: botId,
         messageId: resp.messageId,
         role: "assistant",
-        text: linkifyRawCitations(resp.answer, resp.LinkedCitation),
+        text: linkifyRawCitations(resp.answer, resp.linkedCitations),
         citations: resp.citations?.map((s) => ({
           name: `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`,
           url: s.pointer_url,
         })) || [],
-        linkedCitations: resp.LinkedCitation,
+        queryPlan: resp.queryPlan,
+        linkedCitations: resp.linkedCitations,
       };
       setMessages((prev) => [...prev, botMsg]);
+      console.log("Chat response received", resp);
     } catch (err: any) {
       toast.error(err?.message || "Failed to send message");
     } finally {

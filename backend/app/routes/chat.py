@@ -39,8 +39,8 @@ async def chat_flow(
     
     if payload.use_query_planner:
         query_plan = query_planner.plan_query(payload.question)
-        for query in query_plan.queries:
-            results.extend(search_service.search(session_id, query, top=payload.top_k))
+        for queryObj in query_plan.queries:
+            results.extend(search_service.search(session_id, queryObj.query, top=payload.top_k))
     
     answer_payload = chat_service.generate_answer(
         payload.question,
@@ -61,7 +61,7 @@ async def chat_flow(
         "role": "assistant",
         "content": answer_payload["answer"],
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "queryPlan": [q for q in query_plan.queries],
+        "queryPlan": [q.model_dump() for q in query_plan.queries],
         "citations": answer_payload.get("citations"),
         "linkedCitations": answer_payload.get("linkedCitations", []),
     }
@@ -69,8 +69,8 @@ async def chat_flow(
 
     return AskResponse(
         messageId=assistant_message["messageId"],
-        answer=answer_payload["answer"],
+        answer=assistant_message["content"],
         queryPlan=assistant_message["queryPlan"],
-        citations=answer_payload["citations"],
-        linkedCitations=answer_payload.get("linkedCitations", []),
+        citations=assistant_message["citations"],
+        linkedCitations=assistant_message["linkedCitations"],
     )

@@ -162,7 +162,7 @@ export interface ChatMessage {
 		content?: string;
 		pointer_url?: string;
 	}[];
-	queryPlan?: string[];
+	queryPlan?: Query[];
 	linkedCitations?: SourcePointer[];
 	userFeedback?: {
 		thumbRating: "up" | "down";
@@ -170,6 +170,11 @@ export interface ChatMessage {
 		submittedAt: string;
 	} | null;
 	isStreaming?: boolean;
+}
+
+export interface Query {
+	query: string;
+	reasoning?: string;
 }
 
 export interface AnalysisSession {
@@ -195,7 +200,6 @@ export interface UploadDocumentsResponse {
 export interface ChatResponse {
 	answer: string;
 	messageId: string;
-	queryPlan?: string[];
 	citations: {
 		sourcefile: string;
 		chunk_id: string;
@@ -205,7 +209,8 @@ export interface ChatResponse {
 		content: string;
 		pointer_url?: string;
 	}[];
-	LinkedCitation?: SourcePointer[];
+	queryPlan?: Query[];
+	linkedCitations?: SourcePointer[];
 }
 
 export interface FeedbackResponse {

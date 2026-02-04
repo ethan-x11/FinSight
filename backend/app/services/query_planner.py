@@ -34,16 +34,17 @@ class QueryPlanner:
 
             "4.  **Strict Output Formatting:**\n"
             "    * Your output must be **strictly** a valid JSON object.\n"
-            "    * The JSON must contain a single root key `\"queries\"` where the value is a list of strings.\n"
+            "    * The JSON must contain a single root key `\"queries\"` where the value is a list of query objects.\n"
+            "    * The Query object must have a `query` field containing the query string and an optional `reasoning` field explaining the query.\n"
             "    * **Do NOT** include Markdown formatting (like ```json ... ```), explanations, or conversational text. "
             "Output **only** the raw JSON string.\n\n"
 
             "### **Few-Shot Examples**\n\n"
             "**User Input:** \"Why did the operating margin decline in Q3?\"\n"
-            "**Output:** {\"queries\": [\"operating margin Q3 analysis\", \"reasons for operating margin decline\", \"operating expenses increase Q3\", \"cost of revenue Q3\"]}\n\n"
+            "**Output:** {\"queries\": [{\"query\": \"operating margin Q3 analysis\"}, {\"query\": \"reasons for operating margin decline\"}, {\"query\": \"operating expenses increase Q3\"}, {\"query\": \"cost of revenue Q3\"}]}\n\n"
 
             "**User Input:** \"Compare Apple and Microsoft's approach to AI risks.\"\n"
-            "**Output:** {\"queries\": [\"Apple AI risk factors\", \"Microsoft AI risk factors\", \"Apple artificial intelligence strategy\", \"Microsoft generative AI risks\"]}\n\n"
+            "**Output:** {\"queries\": [{\"query\": \"Apple AI risk factors\"}, {\"query\": \"Microsoft AI risk factors\"}, {\"query\": \"Apple artificial intelligence strategy\"}, {\"query\": \"Microsoft generative AI risks\"}]}\n\n"
             "Strictly do not include any MARKDOWN formatting in your output."
         )
         
