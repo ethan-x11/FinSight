@@ -83,27 +83,14 @@ class ChatService:
         "Citation should strictly follow the pattern - [PDF Name, Page Number, Chunk Number, content_snapshot(exact text starting from the chunk)] (Example: [10-K_2023.pdf, Page 12, Chunk 3, \"starting text of the chunk...\"])\n"
         )
                 
-        history_messages: List[Dict[str, str]] = []
-        if history:
-            recent_messages = list(history)[-10:]
-            for entry in recent_messages:
-                role = entry.get("role")
-                content = entry.get("content")
-                if role in {"user", "assistant"} and isinstance(content, str) and content.strip():
-                    history_messages.append({"role": role, "content": content})
-        messages = [
-            {"role": "system", "content": system_prompt},
-        ]
-        if history_messages:
-            messages.extend(history_messages)
-        messages.append(
-            {"role": "user", "content": f"Context:\n{context_str}\n\nQuestion: {question}"},
+        user_content = f"Context:\n{context_str}\n\nQuestion: {question}"
+
+        answer = self.azure_factory.run_chat(
+            user_message=user_content,
+            system_message=system_prompt,
+            history=history,
         )
-        completion = self.client.chat.completions.create(
-            model=self.chat_model, messages=cast(Iterable[ChatCompletionMessageParam], messages), 
-            # temperature=0.2
-        )
-        answer = completion.choices[0].message.content if completion.choices else ""
+        
         linked_citations = self._build_linked_citations(answer or "", context_docs)
         
         citations = [
