@@ -153,7 +153,7 @@ export interface ChatMessage {
 	role: ChatRole;
 	content: string;
 	timestamp: string;
-	citations?: {
+	citations: {
 		sourcefile?: string;
 		chunk_id?: string;
 		heading?: string;
@@ -162,8 +162,8 @@ export interface ChatMessage {
 		content?: string;
 		pointer_url?: string;
 	}[];
-	queryPlan?: Query[];
-	linkedCitations?: SourcePointer[];
+	queryPlan: Query[];
+	linkedCitations: SourcePointer[];
 	userFeedback?: {
 		thumbRating: "up" | "down";
 		comment?: string;

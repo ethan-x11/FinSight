@@ -150,8 +150,11 @@ const buildLinkLabel = (pointer: SourcePointer) => {
 };
 
 const linkifyRawCitations = (text: string, linkedCitations?: SourcePointer[]) => {
+  console.log("Original Text", text);
+  console.log("Original Citations", linkedCitations);
   if (!linkedCitations || linkedCitations.length === 0) return text;
   let output = text;
+  console.log("Linkifying citations...");
   linkedCitations.forEach((pointer) => {
     if (!pointer?.raw_cite || !pointer?.url) return;
     const display = buildLinkLabel(pointer);
@@ -701,62 +704,62 @@ const ChatInterface = ({
                     dangerouslySetInnerHTML={{ __html: marked.parse(msg.text || "") }}
                   /> */}
                   <div
-                  className={`text-sm leading-relaxed mt-1 [&>*]:mb-2 [&>*:last-child]:mb-0 [&>ul]:list-disc [&>ul]:ml-5 [&>ol]:list-decimal [&>ol]:ml-5 ${isUser ? "text-white" : "text-slate-800"}`}
+                    className={`text-sm leading-relaxed mt-1 [&>*]:mb-2 [&>*:last-child]:mb-0 [&>ul]:list-disc [&>ul]:ml-5 [&>ol]:list-decimal [&>ol]:ml-5 ${isUser ? "text-white" : "text-slate-800"}`}
                   >
-                  <Markdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]}
-                    children={msg.text || ""}
-                    components={{
-                      a(props) {
-                        const { href, children } = props;
-                        const pointer = msg.linkedCitations?.find((item) => item?.url && href && item.url === href);
-                        const snapshot = pointer?.text_snapshot?.trim();
-                        return (
-                          <span className="relative inline-flex items-center group">
-                            <a
-                              href={href}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:text-blue-500 hover:bg-slate-200"
+                    <Markdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]}
+                      children={msg.text || ""}
+                      components={{
+                        a(props) {
+                          const { href, children } = props;
+                          const pointer = msg.linkedCitations?.find((item) => item?.url && href && item.url === href);
+                          const snapshot = pointer?.text_snapshot?.trim();
+                          return (
+                            <span className="relative inline-flex items-center group">
+                              <a
+                                href={href}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:text-blue-500 hover:bg-slate-200"
+                              >
+                                {children}
+                              </a>
+                              {snapshot && (
+                                <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-72 -translate-x-1/2 rounded-lg border border-slate-200 bg-white p-3 text-[11px] text-slate-700 shadow-lg opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                                  <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-1">
+                                    Citation preview
+                                  </span>
+                                  <span className="block max-h-40 overflow-auto whitespace-pre-wrap leading-relaxed">
+                                    {snapshot}
+                                  </span>
+                                </span>
+                              )}
+                            </span>
+                          );
+                        },
+                        code(props) {
+                          const { children, className } = props
+                          const match = /language-(\w+)/.exec(className || '')
+                          return match ? (
+                            <SyntaxHighlighter
+                              PreTag="div"
+                              language={match[1]}
+                            // style={dark}
                             >
+                              {String(children).replace(/\n$/, '')}
+                            </SyntaxHighlighter>
+                          ) : (
+                            <code className={className}>
                               {children}
-                            </a>
-                            {snapshot && (
-                              <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-72 -translate-x-1/2 rounded-lg border border-slate-200 bg-white p-3 text-[11px] text-slate-700 shadow-lg opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-                                <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-1">
-                                  Citation preview
-                                </span>
-                                <span className="block max-h-40 overflow-auto whitespace-pre-wrap leading-relaxed">
-                                  {snapshot}
-                                </span>
-                              </span>
-                            )}
-                          </span>
-                        );
-                      },
-                      code(props) {
-                        const { children, className } = props
-                        const match = /language-(\w+)/.exec(className || '')
-                        return match ? (
-                          <SyntaxHighlighter
-                            PreTag="div"
-                            language={match[1]}
-                          // style={dark}
-                          >
-                            {String(children).replace(/\n$/, '')}
-                          </SyntaxHighlighter>
-                        ) : (
-                          <code className={className}>
-                            {children}
-                          </code>
-                        )
-                      }
-                    }}
-                  />
+                            </code>
+                          )
+                        }
+                      }}
+                    />
                   </div>
-                  
+
                   {msg.citations && msg.citations.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
-                      Sources: 
+                      Sources:
                       {msg.citations.map((src, i) => (
                         <a
                           key={`${src.name}-${i}`}
@@ -776,11 +779,10 @@ const ChatInterface = ({
                         <span>Was this helpful?</span>
                         <button
                           type="button"
-                          className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 transition-colors ${
-                            alreadyRated && msg.userFeedback?.thumbRating === "up"
-                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                          } ${feedbackPending ? "opacity-60" : ""}`}
+                          className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 transition-colors ${alreadyRated && msg.userFeedback?.thumbRating === "up"
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                            } ${feedbackPending ? "opacity-60" : ""}`}
                           disabled={alreadyRated || feedbackPending}
                           onClick={async () => {
                             setFeedbackSubmittingId(feedbackTargetId);
@@ -796,11 +798,10 @@ const ChatInterface = ({
                         </button>
                         <button
                           type="button"
-                          className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 transition-colors ${
-                            alreadyRated && msg.userFeedback?.thumbRating === "down"
-                              ? "border-amber-200 bg-amber-50 text-amber-700"
-                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                          } ${feedbackPending ? "opacity-60" : ""}`}
+                          className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 transition-colors ${alreadyRated && msg.userFeedback?.thumbRating === "down"
+                            ? "border-amber-200 bg-amber-50 text-amber-700"
+                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                            } ${feedbackPending ? "opacity-60" : ""}`}
                           disabled={alreadyRated || feedbackPending}
                           onClick={() => openFeedbackModal(feedbackTargetId)}
                         >

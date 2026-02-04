@@ -77,7 +77,7 @@ class AskResponse(BaseModel):
     answer: str
     queryPlan: Optional[List[Query]] = None
     citations: List[Citation] = Field(default_factory=list)
-    linkedCitations: List[SourcePointer] = Field(default_factory=list, serialization_alias="LinkedCitation")
+    linkedCitations: List[SourcePointer] = Field(default_factory=list)
 
 
 
