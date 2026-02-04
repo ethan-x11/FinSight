@@ -60,6 +60,7 @@ class ChatMessage(BaseModel):
     role: Literal["user", "assistant", "system"]
     content: str
     timestamp: datetime
+    queryPlan: Optional[List[str]] = None
     citations: Optional[List[Citation]] = None
     linkedCitations: Optional[List[SourcePointer]] = None
     userFeedback: Optional[FeedbackData] = None
@@ -73,8 +74,9 @@ class AskRequest(BaseModel):
 class AskResponse(BaseModel):
     messageId: str
     answer: str
-    citations: list[Citation]
-    linkedCitations: list[SourcePointer] = Field(default_factory=list, serialization_alias="LinkedCitation")
+    queryPlan: Optional[List[str]] = None
+    citations: List[Citation] = Field(default_factory=list)
+    linkedCitations: List[SourcePointer] = Field(default_factory=list, serialization_alias="LinkedCitation")
 
 
 
@@ -148,3 +150,7 @@ class SessionUpdate(BaseModel):
     analysisOutput: Optional[AnalysisOutput] = None
     chatHistory: Optional[List[ChatMessage]] = None
 
+
+
+class QueryPlannerResponse(BaseModel):
+    queries: List[str] = Field(default_factory=list)

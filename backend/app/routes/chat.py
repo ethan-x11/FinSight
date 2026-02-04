@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import Any, Dict, List
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -11,6 +12,7 @@ from app.models.session import AskRequest, AskResponse
 from app.models.user import UserInDB
 from app.services.chat_service import ChatService
 from app.services.search_service import SearchService
+from app.services.query_planner import QueryPlanner
 
 router = APIRouter(tags=["chat"], dependencies=[Depends(get_current_user)])
 
@@ -30,8 +32,15 @@ async def chat_flow(
 
     search_service = SearchService()
     chat_service = ChatService()
-
-    results = search_service.search(session_id, payload.question, top=payload.top_k)
+    query_planner = QueryPlanner()
+    
+    query_plan = query_planner.plan_query(payload.question)
+    
+    results : List[Dict[str, Any]] = search_service.search(session_id, payload.question, top=payload.top_k)
+    
+    for query in query_plan.queries:
+        results.extend(search_service.search(session_id, query, top=payload.top_k))
+    
     answer_payload = chat_service.generate_answer(
         payload.question,
         results,
@@ -51,6 +60,7 @@ async def chat_flow(
         "role": "assistant",
         "content": answer_payload["answer"],
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        "queryPlan": [q for q in query_plan.queries],
         "citations": answer_payload.get("citations"),
         "linkedCitations": answer_payload.get("linkedCitations", []),
     }
@@ -59,6 +69,7 @@ async def chat_flow(
     return AskResponse(
         messageId=assistant_message["messageId"],
         answer=answer_payload["answer"],
+        queryPlan=assistant_message["queryPlan"],
         citations=answer_payload["citations"],
         linkedCitations=answer_payload.get("linkedCitations", []),
     )

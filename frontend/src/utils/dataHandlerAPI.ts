@@ -153,6 +153,7 @@ export interface ChatMessage {
 	role: ChatRole;
 	content: string;
 	timestamp: string;
+	queryPlan?: string[];
 	citations?: {
 		sourcefile?: string;
 		chunk_id?: string;
@@ -194,6 +195,7 @@ export interface UploadDocumentsResponse {
 export interface ChatResponse {
 	answer: string;
 	messageId: string;
+	queryPlan?: string[];
 	citations: {
 		sourcefile: string;
 		chunk_id: string;
