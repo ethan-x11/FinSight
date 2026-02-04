@@ -147,7 +147,7 @@ class ChatService:
 
         linked: List[Dict[str, Any]] = []
         for match in citation_pattern.finditer(answer):
-            print("Matched citation:", match.groups())
+            # print("Matched citation:", match.groups())
             raw_cite = match.group(0)
             sourcefile = match.group("sourcefile").strip()
             page_raw = match.group("page").strip()

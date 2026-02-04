@@ -83,6 +83,7 @@ type SimpleMessage = {
   role: "user" | "assistant";
   text: string;
   citations?: { name: string; url?: string }[];
+  queryPlan?: string[];
   linkedCitations?: SourcePointer[];
   userFeedback?: {
     thumbRating: "up" | "down";
@@ -1093,6 +1094,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
             name: `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`,
             url: s.pointer_url,
           })) || [],
+        queryPlan: c.queryPlan,
         linkedCitations: c.linkedCitations,
         userFeedback: c.userFeedback || undefined,
       };

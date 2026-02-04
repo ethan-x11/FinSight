@@ -70,6 +70,7 @@ class ChatMessage(BaseModel):
 class AskRequest(BaseModel):
     question: str
     top_k: int = 8
+    use_query_planner: Optional[bool] = True
 
 class AskResponse(BaseModel):
     messageId: str

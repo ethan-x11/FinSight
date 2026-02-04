@@ -153,7 +153,6 @@ export interface ChatMessage {
 	role: ChatRole;
 	content: string;
 	timestamp: string;
-	queryPlan?: string[];
 	citations?: {
 		sourcefile?: string;
 		chunk_id?: string;
@@ -163,6 +162,7 @@ export interface ChatMessage {
 		content?: string;
 		pointer_url?: string;
 	}[];
+	queryPlan?: string[];
 	linkedCitations?: SourcePointer[];
 	userFeedback?: {
 		thumbRating: "up" | "down";
@@ -357,10 +357,10 @@ export async function uploadDocuments(files: File[], title?: string): Promise<Up
 	});
 }
 
-export async function askChatQuestion(sessionId: string, question: string, topK = 8): Promise<ChatResponse> {
+export async function askChatQuestion(sessionId: string, question: string,  topK = 8, useQueryPlanner: boolean = true): Promise<ChatResponse> {
 	return request<ChatResponse>(`/session/${sessionId}/chat`, {
 		method: "POST",
-		body: { question, top_k: topK },
+		body: { question, top_k: topK, use_query_planner: useQueryPlanner },
 		authenticated: true,
 	});
 }

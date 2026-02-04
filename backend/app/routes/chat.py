@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.auth import get_current_user
 from app.repositories.sessions import SessionsRepository, get_sessions_repository
-from app.models.session import AskRequest, AskResponse
+from app.models.session import AskRequest, AskResponse, QueryPlannerResponse
 from app.models.user import UserInDB
 from app.services.chat_service import ChatService
 from app.services.search_service import SearchService
@@ -33,13 +33,14 @@ async def chat_flow(
     search_service = SearchService()
     chat_service = ChatService()
     query_planner = QueryPlanner()
-    
-    query_plan = query_planner.plan_query(payload.question)
+    query_plan = QueryPlannerResponse(queries=[])
     
     results : List[Dict[str, Any]] = search_service.search(session_id, payload.question, top=payload.top_k)
     
-    for query in query_plan.queries:
-        results.extend(search_service.search(session_id, query, top=payload.top_k))
+    if payload.use_query_planner:
+        query_plan = query_planner.plan_query(payload.question)
+        for query in query_plan.queries:
+            results.extend(search_service.search(session_id, query, top=payload.top_k))
     
     answer_payload = chat_service.generate_answer(
         payload.question,
