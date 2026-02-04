@@ -38,7 +38,7 @@ export function QueryPlanButton({ queries, className }: QueryPlanButtonProps) {
         </HoverCardTrigger>
         <HoverCardContent className="bg-gray-100 w-80">
           <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-            Query plan
+            Query Plan
           </div>
           <div className="mt-3 space-y-2">
             {queries.map((item, idx) => (
