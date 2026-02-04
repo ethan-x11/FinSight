@@ -66,6 +66,7 @@ import { toast } from "sonner";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
+import { QueryPlanButton } from "./ui/query-plan";
 import { ProfileDialog } from "./ProfileDialog";
 import { PasswordChangeDialog } from "./PasswordChangeDialog";
 import { APP_BRAND_NAME, APP_TAGLINE } from "../config/appConfig";
@@ -760,19 +761,26 @@ const ChatInterface = ({
                   </div>
 
                   {msg.citations && msg.citations.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      Sources:
-                      {msg.citations.map((src, i) => (
-                        <a
-                          key={`${src.name}-${i}`}
-                          href={src.url || "#"}
-                          target="_blank"
-                          rel="noreferrer"
-                          className={`text-[11px] font-semibold px-2 py-1 rounded-full border ${isUser ? "bg-white/15 text-white border-white/30" : "bg-blue-50 text-blue-700 border-blue-200"}`}
-                        >
-                          {src.name}
-                        </a>
-                      ))}
+                    <div className="mt-2 space-y-2 group">
+                      <div className="flex flex-wrap gap-1.5">
+                        Sources:
+                        {msg.citations.map((src, i) => (
+                          <a
+                            key={`${src.name}-${i}`}
+                            href={src.url || "#"}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={`text-[11px] font-semibold px-2 py-1 rounded-full border ${isUser ? "bg-white/15 text-white border-white/30" : "bg-blue-50 text-blue-700 border-blue-200"}`}
+                          >
+                            {src.name}
+                          </a>
+                        ))}
+                      </div>
+                      {msg.queryPlan && msg.queryPlan.length > 0 && (
+                        <div className="flex items-center gap-2">
+                          <QueryPlanButton queries={msg.queryPlan} />
+                        </div>
+                      )}
                     </div>
                   )}
                   {showFeedback && feedbackTargetId && (
