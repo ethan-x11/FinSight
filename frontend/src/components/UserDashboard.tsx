@@ -151,11 +151,11 @@ const buildLinkLabel = (pointer: SourcePointer) => {
 };
 
 const linkifyRawCitations = (text: string, linkedCitations?: SourcePointer[]) => {
-  console.log("Original Text", text);
-  console.log("Original Citations", linkedCitations);
+  // console.log("Original Text", text);
+  // console.log("Original Citations", linkedCitations);
   if (!linkedCitations || linkedCitations.length === 0) return text;
   let output = text;
-  console.log("Linkifying citations...");
+  // console.log("Linkifying citations...");
   linkedCitations.forEach((pointer) => {
     if (!pointer?.raw_cite || !pointer?.url) return;
     const display = buildLinkLabel(pointer);
