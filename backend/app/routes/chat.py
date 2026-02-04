@@ -50,6 +50,17 @@ async def chat_flow(
         for future in as_completed(futures):
             results.extend(future.result())
     
+    # Remove duplicates while preserving order
+    seen = set()
+    deduped_results = []
+    for item in results:
+        key = tuple(sorted(item.items()))
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped_results.append(item)
+    results = deduped_results
+
     answer_payload = chat_service.generate_answer(
         payload.question,
         results,
