@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List
 from uuid import uuid4
 
@@ -34,13 +35,20 @@ async def chat_flow(
     chat_service = ChatService()
     query_planner = QueryPlanner()
     query_plan = QueryPlannerResponse(queries=[])
-    
-    results : List[Dict[str, Any]] = search_service.search(session_id, payload.question, top=payload.top_k)
-    
+
     if payload.use_query_planner:
         query_plan = query_planner.plan_query(payload.question)
-        for queryObj in query_plan.queries:
-            results.extend(search_service.search(session_id, queryObj.query, top=payload.top_k))
+
+    queries = [payload.question]
+    if payload.use_query_planner:
+        queries.extend([queryObj.query for queryObj in query_plan.queries])
+
+    results: List[Dict[str, Any]] = []
+    max_workers = min(8, max(1, len(queries)))
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [executor.submit(search_service.search, session_id, q, payload.top_k) for q in queries]
+        for future in as_completed(futures):
+            results.extend(future.result())
     
     answer_payload = chat_service.generate_answer(
         payload.question,

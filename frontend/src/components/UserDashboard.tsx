@@ -621,11 +621,13 @@ const ChatInterface = ({
   onSendFeedback,
 }: {
   messages: SimpleMessage[];
-  onSendMessage: (text: string) => void;
+  onSendMessage: (text: string, topK: number, useQueryPlanner: boolean) => void;
   isTyping: boolean;
   onSendFeedback: (messageId: string, thumbRating: "up" | "down", comment?: string) => Promise<void>;
 }) => {
   const [input, setInput] = useState("");
+  const [topK, setTopK] = useState(8);
+  const [useQueryPlanner, setUseQueryPlanner] = useState(false);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [activeFeedbackMsgId, setActiveFeedbackMsgId] = useState<string | null>(null);
   const [feedbackComment, setFeedbackComment] = useState("");
@@ -659,7 +661,7 @@ const ChatInterface = ({
 
   const handleSend = () => {
     if (!input.trim()) return;
-    onSendMessage(input.trim());
+    onSendMessage(input.trim(), topK, useQueryPlanner);
     setInput("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "44px";
@@ -831,7 +833,46 @@ const ChatInterface = ({
         </div>
       </div>
       <div className="p-4 md:p-5 bg-white/90 border-t border-default shadow-inner backdrop-blur-sm">
-        <div className="flex gap-2 max-w-4xl mx-auto">
+        <div className="flex gap-2 max-w-5xl mx-auto">
+          <div className="flex flex-col gap-1">
+            <label className="text-[8px] font-semibold uppercase tracking-[0.12em] text-slate-400">Query Planner</label>
+            <button
+              type="button"
+              onClick={() => setUseQueryPlanner((prev) => !prev)}
+              className={`relative h-4 w-12 rounded-full border transition-colors duration-200 ${useQueryPlanner
+                ? "bg-blue-600 border-blue-600"
+                : "bg-slate-200 border-slate-300"}`}
+              aria-pressed={useQueryPlanner}
+            >
+              <span
+                className={`absolute top-1/2 -translate-y-1/2 h-3 w-3 rounded-full bg-white shadow-sm transition-all duration-200 ${useQueryPlanner ? "left-8" : "left-1"}`}
+              />
+              <span
+                className={`absolute top-1/2 -translate-y-1/2 text-[8px] font-semibold transition-opacity duration-200 ${useQueryPlanner ? "left-3 text-white opacity-100" : "left-3 text-slate-500 opacity-0"}`}
+              >
+                On
+              </span>
+              <span
+                className={`absolute top-1/2 -translate-y-1/2 text-[8px] font-semibold transition-opacity duration-200 ${useQueryPlanner ? "right-3 text-white opacity-0" : "right-3 text-slate-600 opacity-100"}`}
+              >
+                Off
+              </span>
+            </button>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-[8px] font-semibold uppercase tracking-[0.12em] text-slate-400">Top K</label>
+            <select
+              value={topK}
+              onChange={(e) => setTopK(Number(e.target.value))}
+              className="h-6 rounded-md border border-default bg-slate-50 px-2 text-xs text-slate-900 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            >
+              {Array.from({ length: 15 }, (_, idx) => idx + 1).map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </div>
           <textarea
             ref={textareaRef}
             value={input}
@@ -1163,7 +1204,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     }
   };
 
-  const handleSendMessage = async (text: string) => {
+  const handleSendMessage = async (text: string, topK: number, useQueryPlanner: boolean) => {
     if (!currentSessionId) return toast.error("Select a session first");
     const session = sessions.find((s) => s.id === currentSessionId);
     if (!session || session.systemStatus?.overallStatus !== "completed") {
@@ -1174,7 +1215,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     setMessages((prev) => [...prev, userMsg]);
     setIsTyping(true);
     try {
-      const resp = await askChatQuestion(currentSessionId, text);
+      const resp = await askChatQuestion(currentSessionId, text, topK, useQueryPlanner);
       const botId = resp.messageId || crypto.randomUUID();
       const botMsg: SimpleMessage = {
         id: botId,
