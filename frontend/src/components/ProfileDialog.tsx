@@ -105,7 +105,7 @@ export function ProfileDialog({ open, onClose }: ProfileDialogProps) {
 
             <div className="space-y-6 mt-4">
               <Card className="border border-slate-200 shadow-sm bg-white rounded-lg">
-                <CardHeader className="pb-3">
+                <CardHeader className="">
                   <CardTitle className="text-base flex items-center gap-2 text-slate-800">
                     {user.isAdmin && <Shield className="w-4 h-4 text-indigo-600" />}
                     Account Information
