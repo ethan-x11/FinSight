@@ -146,14 +146,14 @@ class ChatService:
         )
         # print("Answer with Links:", answer_with_links)
         
-        with open("debug_citations.json", "w", encoding="utf-8") as f:
-            json.dump(citations, f, ensure_ascii=False, indent=4)
-        with open("debug_linked_citations.json", "w", encoding="utf-8") as f:
-            json.dump(linked_citations, f, ensure_ascii=False, indent=4)
-        with open("debug_answer.txt", "w", encoding="utf-8") as f:
-            f.write(answer or "")
-        with open("debug_answer_with_links.txt", "w", encoding="utf-8") as f:
-            f.write(answer_with_links)
+        # with open("debug_citations.json", "w", encoding="utf-8") as f:
+        #     json.dump(citations, f, ensure_ascii=False, indent=4)
+        # with open("debug_linked_citations.json", "w", encoding="utf-8") as f:
+        #     json.dump(linked_citations, f, ensure_ascii=False, indent=4)
+        # with open("debug_answer.txt", "w", encoding="utf-8") as f:
+        #     f.write(answer or "")
+        # with open("debug_answer_with_links.txt", "w", encoding="utf-8") as f:
+        #     f.write(answer_with_links)
 
         result = {
             "answer": answer_with_links,
