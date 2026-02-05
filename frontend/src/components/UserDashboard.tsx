@@ -635,6 +635,7 @@ const ChatInterface = ({
   const [activeFeedbackMsgId, setActiveFeedbackMsgId] = useState<string | null>(null);
   const [feedbackComment, setFeedbackComment] = useState("");
   const [feedbackSubmittingId, setFeedbackSubmittingId] = useState<string | null>(null);
+  const [expandedReasoningIds, setExpandedReasoningIds] = useState<Record<string, boolean>>({});
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -660,6 +661,10 @@ const ChatInterface = ({
     setFeedbackModalOpen(false);
     setActiveFeedbackMsgId(null);
     setFeedbackComment("");
+  };
+
+  const toggleReasoning = (messageId: string) => {
+    setExpandedReasoningIds((prev) => ({ ...prev, [messageId]: !prev[messageId] }));
   };
 
   const handleSend = () => {
@@ -692,6 +697,8 @@ const ChatInterface = ({
             const showFeedback = !isUser && Boolean(feedbackTargetId);
             const alreadyRated = showFeedback && Boolean(msg.userFeedback?.thumbRating);
             const feedbackPending = feedbackTargetId ? feedbackSubmittingId === feedbackTargetId : false;
+            const canShowReasoning = !isUser && Boolean(msg.reasoningSteps?.length) && Boolean(msg.messageId);
+            const isReasoningOpen = msg.messageId ? expandedReasoningIds[msg.messageId] : false;
             return (
               <div key={msg.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
                 <div
@@ -700,14 +707,43 @@ const ChatInterface = ({
                     : "bg-white text-slate-800 border-default"}
                   ${isUser ? "rounded-tr-none" : "rounded-tl-none"}`}
                 >
-                  <div className={`flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] font-semibold ${isUser ? "text-white/80" : "text-slate-500"}`}>
-                    {isUser ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
-                    <span>{isUser ? "You" : "Assistant"}</span>
+                  <div className={`flex items-center justify-between gap-2 text-[11px] uppercase tracking-[0.08em] font-semibold ${isUser ? "text-white/80" : "text-slate-500"}`}>
+                    <div className="flex items-center gap-2">
+                      {isUser ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
+                      <span>{isUser ? "You" : "Assistant"}</span>
+                    </div>
+                    {canShowReasoning && msg.messageId && (
+                      <button
+                        type="button"
+                        onClick={() => toggleReasoning(msg.messageId!)}
+                        className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold transition-colors ${isReasoningOpen
+                          ? "border-blue-200 bg-blue-50 text-blue-700"
+                          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
+                      >
+                        {isReasoningOpen ? "Hide Reasoning" : "Show Reasoning Steps"}
+                      </button>
+                    )}
                   </div>
                   {/* <div
                     className={`text-sm leading-relaxed mt-1 whitespace-pre-wrap [&>*]:mb-2 [&>*:last-child]:mb-0 [&>ul]:list-disc [&>ul]:ml-5 [&>ol]:list-decimal [&>ol]:ml-5 ${isUser ? "text-white" : "text-slate-800"}`}
                     dangerouslySetInnerHTML={{ __html: marked.parse(msg.text || "") }}
                   /> */}
+
+
+                  {canShowReasoning && isReasoningOpen && (
+                    <div className="mt-3 mb-3 space-y-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Reasoning steps</p>
+                      <div className="space-y-2">
+                        {msg.reasoningSteps?.map((step, idx) => (
+                          <div key={`${step.title}-${idx}`} className="rounded-md bg-white border border-slate-200 px-3 py-2">
+                            <p className="text-xs font-semibold text-slate-700">{step.title}</p>
+                            <p className="text-xs text-slate-600 mt-1">{step.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div
                     className={`text-sm leading-relaxed mt-1 [&>*]:mb-2 [&>*:last-child]:mb-0 [&>ul]:list-disc [&>ul]:ml-5 [&>ol]:list-decimal [&>ol]:ml-5 ${isUser ? "text-white" : "text-slate-800"}`}
                   >

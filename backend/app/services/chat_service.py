@@ -98,7 +98,7 @@ class ChatService:
             history=history,
         )
 
-        print("Raw Response from Azure OpenAI:", response)  # Debugging log
+        # print("Raw Response from Azure OpenAI:", response)  # Debugging log
         
         response = (
             json.loads(response)
@@ -141,11 +141,11 @@ class ChatService:
         ]
 
         linked_citations = CitationUtils.build_linked_citations(answer or "", citations)
-        print("Linked Citations:", linked_citations)
+        # print("Linked Citations:", linked_citations)
         answer_with_links = CitationUtils.replace_citation_snapshots(
             answer or "", linked_citations
         )
-        print("Answer with Links:", answer_with_links)
+        # print("Answer with Links:", answer_with_links)
 
         result = {
             "answer": answer_with_links,
