@@ -140,29 +140,29 @@ const formatPageLabel = (start?: number, end?: number) => {
   return `, Page ${start}`;
 };
 
-const buildLinkLabel = (pointer: SourcePointer) => {
-  const parsed = parseCitationLabel(pointer.raw_cite);
-  const sourcefile = pointer.sourcefile?.trim() || parsed.source;
-  const pageStart = pointer.page_start ?? parsed.pageStart;
-  const pageEnd = pointer.page_end ?? parsed.pageEnd;
-  if (!sourcefile) return normalizeRawCitation(pointer.raw_cite);
-  return `${sourcefile}${pointer.page_range ? `, Page - ${pointer.page_range}` : formatPageLabel(pageStart, pageEnd)}`;
-};
+// const buildLinkLabel = (pointer: SourcePointer) => {
+//   const parsed = parseCitationLabel(pointer.raw_cite);
+//   const sourcefile = pointer.sourcefile?.trim() || parsed.source;
+//   const pageStart = pointer.page_start ?? parsed.pageStart;
+//   const pageEnd = pointer.page_end ?? parsed.pageEnd;
+//   if (!sourcefile) return normalizeRawCitation(pointer.raw_cite);
+//   return `${sourcefile}${pointer.page_range ? `, Page - ${pointer.page_range}` : formatPageLabel(pageStart, pageEnd)}`;
+// };
 
-const linkifyRawCitations = (text: string, linkedCitations?: SourcePointer[]) => {
-  // console.log("Original Text", text);
-  // console.log("Original Citations", linkedCitations);
-  if (!linkedCitations || linkedCitations.length === 0) return text;
-  let output = text;
-  // console.log("Linkifying citations...");
-  linkedCitations.forEach((pointer) => {
-    if (!pointer?.raw_cite || !pointer?.url) return;
-    const display = buildLinkLabel(pointer);
-    const replacement = `[${display}](${pointer.url})`;
-    output = output.split(pointer.raw_cite).join(replacement);
-  });
-  return output;
-};
+// const linkifyRawCitations = (text: string, linkedCitations?: SourcePointer[]) => {
+//   // console.log("Original Text", text);
+//   // console.log("Original Citations", linkedCitations);
+//   if (!linkedCitations || linkedCitations.length === 0) return text;
+//   let output = text;
+//   // console.log("Linkifying citations...");
+//   linkedCitations.forEach((pointer) => {
+//     if (!pointer?.raw_cite || !pointer?.url) return;
+//     const display = buildLinkLabel(pointer);
+//     const replacement = `[${display}](${pointer.url})`;
+//     output = output.split(pointer.raw_cite).join(replacement);
+//   });
+//   return output;
+// };
 
 const Sidebar = ({
   sessions,
@@ -1091,7 +1091,8 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
         id: baseId,
         messageId: c.messageId || baseId,
         role: c.role === "assistant" ? "assistant" : "user",
-        text: c.role === "assistant" ? linkifyRawCitations(c.content, c.linkedCitations) : c.content,
+        // text: c.role === "assistant" ? linkifyRawCitations(c.content, c.linkedCitations) : c.content,
+        text: c.content,
         citations:
           c.citations?.map((s) => ({
             name: `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`,
@@ -1181,7 +1182,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
         id: botId,
         messageId: resp.messageId,
         role: "assistant",
-        text: linkifyRawCitations(resp.answer, resp.linkedCitations),
+        text: resp.answer,
         citations: resp.citations?.map((s) => ({
           name: `${s.sourcefile}${s.page_range ? `, page- ${s.page_range}` : ""}${s.chunk_id ? `, ${s.chunk_id}` : ""}`,
           url: s.pointer_url,

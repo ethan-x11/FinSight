@@ -44,7 +44,7 @@ class CitationUtils:
         for doc in context_docs:
             sourcefile = doc.get("sourcefile")
             if isinstance(sourcefile, str) and sourcefile:
-                url_lookup[sourcefile.strip().lower()] = doc.get("documentUrl")
+                url_lookup[sourcefile.strip().lower()] = doc.get("document_url")
 
         linked: List[Dict[str, Any]] = []
         for match in citation_pattern.finditer(answer):
@@ -63,14 +63,14 @@ class CitationUtils:
                 if (
                     isinstance(doc_source, str)
                     and doc_source.strip().lower() == sourcefile.lower()
-                    and str(doc.get("chunkId", "")).strip() == chunk_id
+                    and str(doc.get("chunk_id", "")).strip() == chunk_id
                 ):
                     matched_doc = doc
                     break
 
             if matched_doc:
-                page_value = str(matched_doc.get("documentPageNumber") or "").strip()
-                page_range = matched_doc.get("pageRange") or ""
+                page_value = str(matched_doc.get("document_page_number") or "").strip()
+                page_range = matched_doc.get("page_range") or ""
                 if page_value:
                     parts = page_value.split("-", 1)
                     try:
@@ -95,7 +95,7 @@ class CitationUtils:
                 for doc in context_docs:
                     doc_source = doc.get("sourcefile")
                     if isinstance(doc_source, str) and doc_source.lower() in raw_cite.lower():
-                        document_url = doc.get("documentUrl")
+                        document_url = doc.get("document_url")
                         break
 
             url = cls.build_citation_url(document_url, page_start, text_snapshot)

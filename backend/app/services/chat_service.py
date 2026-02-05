@@ -90,10 +90,6 @@ class ChatService:
             history=history,
         )
         
-        linked_citations = CitationUtils.build_linked_citations(answer or "", context_docs)
-        answer_with_links = CitationUtils.replace_citation_snapshots(
-            answer or "", linked_citations
-        )
         
         citations = [
             {
@@ -108,9 +104,18 @@ class ChatService:
                 int(str(doc.get("documentPageNumber") or "").strip().split("-",1)[0]) if str(doc.get("documentPageNumber") or "") else None,
                 None,
             ),
+            "document_page_number": doc.get("documentPageNumber"),
             }
             for doc in context_docs
         ]
+        
+        linked_citations = CitationUtils.build_linked_citations(answer or "", citations)
+        print("Linked Citations:", linked_citations)
+        answer_with_links = CitationUtils.replace_citation_snapshots(
+            answer or "", linked_citations
+        )
+        print("Answer with Links:", answer_with_links)
+        
         return {
             "answer": answer_with_links,
             "citations": citations,
