@@ -179,6 +179,7 @@ class SearchService:
                 "pageRange": item.get("pageRange"),
                 "documentUrl": item.get("documentUrl"),
                 "documentPageNumber": item.get("documentPageNumber"),
+                "notes": item.get("notes"),
             })
         search_data.extend(hits)
         return search_data
