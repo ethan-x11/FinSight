@@ -602,7 +602,7 @@ const DocumentPreview = ({ document }: { document: SourceDocument | null }) => {
           rel="noreferrer"
           className="text-xs font-semibold text-blue-600 hover:text-blue-500"
         >
-          Open in new tab
+              Open in new tab
         </a>
       </div>
       <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
@@ -731,15 +731,26 @@ const ChatInterface = ({
 
 
                   {canShowReasoning && isReasoningOpen && (
-                    <div className="mt-3 mb-3 space-y-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                    <div className="mt-3 mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Reasoning steps</p>
-                      <div className="space-y-2">
-                        {msg.reasoningSteps?.map((step, idx) => (
-                          <div key={`${step.title}-${idx}`} className="rounded-md bg-white border border-slate-200 px-3 py-2">
-                            <p className="text-xs font-semibold text-slate-700">{step.title}</p>
-                            <p className="text-xs text-slate-600 mt-1">{step.description}</p>
-                          </div>
-                        ))}
+                      <div className="mt-2 space-y-2">
+                        {msg.reasoningSteps?.map((step, idx) => {
+                          const isLast = idx === (msg.reasoningSteps?.length || 0) - 1;
+                          return (
+                            <div key={`${step.title}-${idx}`} className="relative pl-6">
+                              {!isLast && (
+                                <span className="absolute left-[5px] top-5 h-[calc(90%+4px)] w-px bg-slate-200 overflow-hidden">
+                                  <span className="absolute inset-0 bg-slate-400 opacity-70 animate-pulse" />
+                                </span>
+                              )}
+                              <span className="absolute left-0 top-2.5 h-3 w-3 rounded-full bg-slate-500 shadow-[0_0_0_3px_rgba(59,130,246,0.2)] animate-pulse" />
+                              <div className="rounded-md bg-white border border-slate-200 px-3 py-2">
+                                <p className="text-xs font-semibold text-slate-700">{step.title}</p>
+                                <p className="text-xs text-slate-600 mt-1">{step.description}</p>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
