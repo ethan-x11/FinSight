@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List, Set
-
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from azure.core.credentials import AzureKeyCredential
 from azure.core.exceptions import ResourceNotFoundError
 from azure.search.documents import SearchClient
@@ -103,6 +103,19 @@ class SearchService:
                 credential=self._credential,
             )
         return self._search_clients[index_name]
+    
+    def _dedupe_list_with_order(self, data: List[Any]) -> List[Any]:
+        # Remove duplicates while preserving order
+        seen = set()
+        deduped_results = []
+        for item in data:
+            key = tuple(sorted(item.items()))
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped_results.append(item)
+        
+        return deduped_results
 
     def delete_indices_with_prefix(self, index_base_name: str) -> List[str]:
         """Delete all search indexes whose names start with the given base and return the deleted names."""
@@ -165,6 +178,19 @@ class SearchService:
             search_data.extend(hits)
         return search_data
     
+    def search_batch(self, session_id: str, queries: List[str], top: int = 5) -> List[Dict[str, Any]]:
+        results: List[Dict[str, Any]] = []
+        max_workers = min(8, max(1, len(queries)))
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [
+                executor.submit(self.search, session_id, q, top)
+                for q in queries
+            ]
+            for future in as_completed(futures):
+                results.extend(future.result())
+            
+        return self._dedupe_list_with_order(results)
+    
     def search_single(self, index_name: str, query: str, top: int = 5) -> List[Dict[str, Any]]:
         search_data: List[Dict[str, Any]] = []
         search_client = self._get_search_client(index_name)
@@ -183,7 +209,19 @@ class SearchService:
             })
         search_data.extend(hits)
         return search_data
-
+    
+    def search_single_batch(self, index_name: str, queries: List[str], top: int = 5) -> List[Dict[str, Any]]:
+        results = []
+        max_workers = min(8, max(1, len(queries)))
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [
+                executor.submit(self.search_single, index_name, q, top=8)
+                for q in queries
+            ]
+            for future in as_completed(futures):
+                results.extend(future.result())
+        
+        return self._dedupe_list_with_order(results)
 
 if __name__ == "__main__":
     service = SearchService()

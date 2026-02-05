@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     # Azure Document Intelligence
     docint_endpoint: str = Field(default="", validation_alias="AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT")
     docint_key: str = Field(default="", validation_alias="AZURE_DOCUMENT_INTELLIGENCE_KEY")
-    docint_api_version: str = Field(default="2024-11-30", validation_alias="AZURE_DOCUMENT_INTELLIGENCE_API_VERSION")
+    docint_api_version: str = Field(default="", validation_alias="AZURE_DOCUMENT_INTELLIGENCE_API_VERSION")
 
     # Azure AI Search
     search_endpoint: str = Field(default="", validation_alias="AZURE_SEARCH_ENDPOINT")
@@ -65,7 +65,7 @@ class Settings(BaseSettings):
     # Azure OpenAI
     azure_openai_api_key: str = Field(default="", validation_alias="AZURE_OPENAI_API_KEY")
     azure_openai_endpoint: str = Field(default="", validation_alias="AZURE_OPENAI_ENDPOINT")
-    azure_openai_api_version: str = Field(default="2025-01-01-preview", validation_alias="AZURE_OPENAI_API_VERSION")
+    azure_openai_api_version: str = Field(default="", validation_alias="AZURE_OPENAI_API_VERSION")
     azure_openai_chat_deployment: str = Field(default="", validation_alias="AZURE_OPENAI_CHAT_DEPLOYMENT_NAME")
     azure_openai_text_deployment: str = Field(default="", validation_alias="AZURE_OPENAI_TEXT_DEPLOYMENT_NAME")
     azure_openai_embedding_deployment: str = Field(default="", validation_alias="AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME")

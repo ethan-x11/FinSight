@@ -98,7 +98,7 @@ class ChatService:
             history=history,
         )
 
-        # print("Raw Response from Azure OpenAI:", response)  # Debugging log
+        print("Raw Response from Azure OpenAI:", response)  # Debugging log
         
         response = (
             json.loads(response)

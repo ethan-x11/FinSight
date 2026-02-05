@@ -47,26 +47,7 @@ async def chat_flow(
     if payload.use_query_planner:
         queries.extend([queryObj.query for queryObj in query_plan.queries])
 
-    results: List[Dict[str, Any]] = []
-    max_workers = min(8, max(1, len(queries)))
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = [
-            executor.submit(search_service.search, session_id, q, payload.top_k)
-            for q in queries
-        ]
-        for future in as_completed(futures):
-            results.extend(future.result())
-
-    # Remove duplicates while preserving order
-    seen = set()
-    deduped_results = []
-    for item in results:
-        key = tuple(sorted(item.items()))
-        if key in seen:
-            continue
-        seen.add(key)
-        deduped_results.append(item)
-    results = deduped_results
+    results = search_service.search_batch(session_id, queries, top=payload.top_k)
 
     answer_payload = chat_service.generate_answer(
         payload.question,
