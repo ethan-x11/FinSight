@@ -51,6 +51,7 @@ class QueryPlanner:
         response = self.azure_factory.run_chat(
             user_message=question,
             system_message=query_planner_prompt,
+            response_format=QueryPlannerResponse,
         )
         
         return QueryPlannerResponse.model_validate(json.loads(response) if response else {"queries": []})
