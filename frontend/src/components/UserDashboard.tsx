@@ -636,6 +636,9 @@ const ChatInterface = ({
   const [feedbackComment, setFeedbackComment] = useState("");
   const [feedbackSubmittingId, setFeedbackSubmittingId] = useState<string | null>(null);
   const [expandedReasoningIds, setExpandedReasoningIds] = useState<Record<string, boolean>>({});
+  const [sourcesModalOpen, setSourcesModalOpen] = useState(false);
+  const [sourcesModalItems, setSourcesModalItems] = useState<{ name: string; url?: string }[]>([]);
+  const [sourcesModalTitle, setSourcesModalTitle] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -661,6 +664,18 @@ const ChatInterface = ({
     setFeedbackModalOpen(false);
     setActiveFeedbackMsgId(null);
     setFeedbackComment("");
+  };
+
+  const openSourcesModal = (sources: { name: string; url?: string }[], title?: string | null) => {
+    setSourcesModalItems(sources);
+    setSourcesModalTitle(title || null);
+    setSourcesModalOpen(true);
+  };
+
+  const closeSourcesModal = () => {
+    setSourcesModalOpen(false);
+    setSourcesModalItems([]);
+    setSourcesModalTitle(null);
   };
 
   const toggleReasoning = (messageId: string) => {
@@ -699,6 +714,9 @@ const ChatInterface = ({
             const feedbackPending = feedbackTargetId ? feedbackSubmittingId === feedbackTargetId : false;
             const canShowReasoning = !isUser && Boolean(msg.reasoningSteps?.length) && Boolean(msg.messageId);
             const isReasoningOpen = msg.messageId ? expandedReasoningIds[msg.messageId] : false;
+            const sources = msg.citations || [];
+            const previewSources = sources.slice(0, 3);
+            const remainingSources = sources.length - previewSources.length;
             return (
               <div key={msg.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
                 <div
@@ -761,11 +779,11 @@ const ChatInterface = ({
                     <MarkdownMessage text={msg.text || ""} linkedCitations={msg.linkedCitations} />
                   </div>
 
-                  {msg.citations && msg.citations.length > 0 && (
+                  {sources.length > 0 && (
                     <div className="mt-2 space-y-2 group">
-                      <div className="flex flex-wrap gap-1.5">
-                        Sources:
-                        {msg.citations.map((src, i) => (
+                      <div className="flex flex-wrap gap-1.5 items-center">
+                        <span>Sources:</span>
+                        {previewSources.map((src, i) => (
                           <a
                             key={`${src.name}-${i}`}
                             href={src.url || "#"}
@@ -776,6 +794,15 @@ const ChatInterface = ({
                             {src.name}
                           </a>
                         ))}
+                        {remainingSources > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => openSourcesModal(sources, isUser ? "User Sources" : "Assistant Sources")}
+                            className={`text-[11px] font-semibold px-2 py-1 rounded-full border transition-colors ${isUser ? "bg-white/10 text-white border-white/30 hover:bg-white/15" : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"}`}
+                          >
+                            +{remainingSources} more
+                          </button>
+                        )}
                       </div>
                       {msg.queryPlan && msg.queryPlan.length > 0 && (
                         <div className="flex items-center gap-2">
@@ -947,6 +974,40 @@ const ChatInterface = ({
                 {feedbackSubmittingId === activeFeedbackMsgId && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Submit
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      {sourcesModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-3xl rounded-xl bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-800">{sourcesModalTitle || "Sources"}</p>
+                <p className="text-xs text-slate-500">All cited sources for this response.</p>
+              </div>
+              <button onClick={closeSourcesModal} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="px-4 py-4">
+              {sourcesModalItems.length === 0 ? (
+                <div className="text-sm text-slate-500">No sources available.</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                  {sourcesModalItems.map((src, idx) => (
+                    <a
+                      key={`${src.name}-${idx}`}
+                      href={src.url || "#"}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs font-semibold px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                    >
+                      {src.name}
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
