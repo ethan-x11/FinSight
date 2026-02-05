@@ -1,6 +1,46 @@
 [
     {
-        "raw_cite": "[test.pdf, Page 4, Chunk chunk-6, \"Shareholders registered on Easi/Easiest facility\"]",
+        "raw_cite": "[test.pdf, Page 1, Chunk chunk-2, \"Rich experience in various areas of technology, operations, compliance and governance matters\"]",
+        "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=1&search=Rich%20experience%20in%20various",
+        "sourcefile": "test.pdf",
+        "page_start": 1,
+        "page_end": 1,
+        "chunk_id": "chunk-2",
+        "text_snapshot": "Rich experience in various areas of technology, operations, compliance and governance matters",
+        "page_range": "63"
+    },
+    {
+        "raw_cite": "[test.pdf, Page 1, Chunk chunk-2, \"Re-appointment in terms of Section 152(6)...\"]",
+        "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=1&search=Re-appointment%20in%20terms%20of",
+        "sourcefile": "test.pdf",
+        "page_start": 1,
+        "page_end": 1,
+        "chunk_id": "chunk-2",
+        "text_snapshot": "Re-appointment in terms of Section 152(6)...",
+        "page_range": "63"
+    },
+    {
+        "raw_cite": "[test.pdf, Page 1, Chunk chunk-2, \"Tata Electronics Private Limited\"]",
+        "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=1&search=Tata%20Electronics%20Private%20Limited",
+        "sourcefile": "test.pdf",
+        "page_start": 1,
+        "page_end": 1,
+        "chunk_id": "chunk-2",
+        "text_snapshot": "Tata Electronics Private Limited",
+        "page_range": "63"
+    },
+    {
+        "raw_cite": "[test.pdf, Page 1, Chunk chunk-2, \"Ceased to be a Non-Executive...\"]",
+        "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=1&search=Ceased%20to%20be%20a",
+        "sourcefile": "test.pdf",
+        "page_start": 1,
+        "page_end": 1,
+        "chunk_id": "chunk-2",
+        "text_snapshot": "Ceased to be a Non-Executive...",
+        "page_range": "63"
+    },
+    {
+        "raw_cite": "[test.pdf, Page 3, Chunk chunk-6, \"Shareholders registered on Easi/Easiest facility\"]",
         "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Shareholders%20registered%20on%20Easi/Easiest",
         "sourcefile": "test.pdf",
         "page_start": 2,
@@ -10,7 +50,7 @@
         "page_range": "63"
     },
     {
-        "raw_cite": "[test.pdf, Page 4, Chunk chunk-6, \"Shareholders not registered on Easi/Easiest facility\"]",
+        "raw_cite": "[test.pdf, Page 3, Chunk chunk-6, \"Shareholders not registered on Easi/Easiest facility\"]",
         "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Shareholders%20not%20registered%20on",
         "sourcefile": "test.pdf",
         "page_start": 2,
@@ -20,7 +60,7 @@
         "page_range": "63"
     },
     {
-        "raw_cite": "[test.pdf, Page 4, Chunk chunk-6, \"Shareholders not registered on IDeAS facility\"]",
+        "raw_cite": "[test.pdf, Page 3, Chunk chunk-6, \"Shareholders not registered on IDeAS facility\"]",
         "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Shareholders%20not%20registered%20on",
         "sourcefile": "test.pdf",
         "page_start": 2,
@@ -30,24 +70,44 @@
         "page_range": "63"
     },
     {
-        "raw_cite": "[test.pdf, Page 65, Chunk chunk-9, \"Quick links to access e-voting system\"]",
-        "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Quick%20links%20to%20access",
+        "raw_cite": "[test.pdf, Page 3, Chunk chunk-10, \"Visit website - https://www.evoting.nsdl.com/\"]",
+        "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=3&search=Visit%20website%20-%20https%3A//www.evoting.nsdl.com/",
         "sourcefile": "test.pdf",
-        "page_start": 2,
+        "page_start": 3,
         "page_end": 3,
-        "chunk_id": "chunk-9",
-        "text_snapshot": "Quick links to access e-voting system",
-        "page_range": "63-65"
+        "chunk_id": "chunk-10",
+        "text_snapshot": "Visit website - https://www.evoting.nsdl.com/",
+        "page_range": "65"
     },
     {
-        "raw_cite": "[test.pdf, Page 4, Chunk chunk-18, \"Cut-off date to determine entitlement for e-voting\"]",
+        "raw_cite": "[test.pdf, Page 4, Chunk chunk-17, \"Thursday, June 19, 2025, at 3:00 p.m. (IST)\"]",
+        "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=4&search=Thursday%2C%20June%2019%2C%202025%2C",
+        "sourcefile": "test.pdf",
+        "page_start": 4,
+        "page_end": 4,
+        "chunk_id": "chunk-17",
+        "text_snapshot": "Thursday, June 19, 2025, at 3:00 p.m. (IST)",
+        "page_range": "66"
+    },
+    {
+        "raw_cite": "[test.pdf, Page 4, Chunk chunk-17, \"Cut-off date to determine entitlement for e-voting\"]",
         "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=4&search=Cut-off%20date%20to%20determine",
         "sourcefile": "test.pdf",
         "page_start": 4,
         "page_end": 4,
-        "chunk_id": "chunk-18",
+        "chunk_id": "chunk-17",
         "text_snapshot": "Cut-off date to determine entitlement for e-voting",
         "page_range": "66"
+    },
+    {
+        "raw_cite": "[test.pdf, Page 3, Chunk chunk-15, \"Members may attend the AGM through VC/OAVM\"]",
+        "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=3&search=Members%20may%20attend%20the",
+        "sourcefile": "test.pdf",
+        "page_start": 3,
+        "page_end": 4,
+        "chunk_id": "chunk-15",
+        "text_snapshot": "Members may attend the AGM through VC/OAVM",
+        "page_range": "65"
     },
     {
         "raw_cite": "[test.pdf, Page 3, Chunk chunk-13, \"For queries relating to e-voting\"]",
@@ -58,5 +118,15 @@
         "chunk_id": "chunk-13",
         "text_snapshot": "For queries relating to e-voting",
         "page_range": "65"
+    },
+    {
+        "raw_cite": "[test.pdf, Page 4, Chunk chunk-17, \"Members may connect with...\"]",
+        "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=4&search=Members%20may%20connect%20with...",
+        "sourcefile": "test.pdf",
+        "page_start": 4,
+        "page_end": 4,
+        "chunk_id": "chunk-17",
+        "text_snapshot": "Members may connect with...",
+        "page_range": "66"
     }
 ]

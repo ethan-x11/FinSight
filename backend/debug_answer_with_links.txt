@@ -1,46 +1,28 @@
-**e‑Voter (e‑Voting) Registration Process**
+**Summary of Key Information from test.pdf**
 
-The provided document explains that e‑voter registration depends on whether a shareholder is already registered with NSDL/CDSL facilities.
-
----
-
-### **1. Shareholders Registered on Easi / Easiest Facility**
-- Use existing Demat account login credentials provided by the Depository Participant (DP).
-- Log in with **User ID, Password, and Verification Code** on the NSDL/CDSL website.
-- After successful login, click on **“e‑vote”** in the action tab to access the e‑voting system [test.pdf, Page - 63](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Shareholders%20registered%20on%20Easi/Easiest)
+**Director Profile**
+- **Aarthi Subramanian** has extensive experience in technology, operations, compliance, and governance matters [test.pdf, Page - 63](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=1&search=Rich%20experience%20in%20various).
+- She is proposed for **re‑appointment under Section 152(6) of the Companies Act, 2013** and appointment as **Executive Director – President and Chief Operating Officer**, with detailed terms outlined in the Explanatory Statement for Item No. 4 [test.pdf, Page - 63](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=1&search=Re-appointment%20in%20terms%20of).
+- She holds a directorship in **Tata Electronics Private Limited** and has no committee memberships in other companies [test.pdf, Page - 63](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=1&search=Tata%20Electronics%20Private%20Limited).
+- She ceased to be a Non‑Executive Non‑Independent Director of **Tata Capital Limited** on **April 30, 2025** [test.pdf, Page - 63](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=1&search=Ceased%20to%20be%20a)
 
 ---
 
-### **2. Shareholders Not Registered on Easi / Easiest Facility**
-- Visit the NSDL/CDSL e‑voting website.
-- Click on the registration option **“Easi/Easiest”**.
-- Enter Demat account details, registered email ID, and mobile number.
-- Generate and enter the **OTP** received on the registered email ID and mobile number.
-- After registration, follow the same login steps as registered Easi/Easiest users [test.pdf, Page - 63](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Shareholders%20not%20registered%20on)
+**e‑Voting Registration and Process (NSDL/CDSL)**
+- Shareholders registered on **Easi/Easiest** can use their existing Demat login credentials and access e‑voting by clicking the **“e‑vote”** option after login [test.pdf, Page - 63](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Shareholders%20registered%20on%20Easi/Easiest).
+- Shareholders not registered on **Easi/Easiest** must complete registration by entering Demat details and authenticating via OTP, after which they can proceed to e‑voting [test.pdf, Page - 63](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Shareholders%20not%20registered%20on).
+- Shareholders not registered on **IDeAS** can access e‑voting by authenticating with BO ID and PAN, after which they are redirected to the e‑voting page [test.pdf, Page - 63](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Shareholders%20not%20registered%20on).
+- E‑voting can also be accessed directly through **https://www.evoting.nsdl.com** by entering User ID, password/OTP, and verification code [test.pdf, Page - 65](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=3&search=Visit%20website%20-%20https%3A//www.evoting.nsdl.com/)
 
 ---
 
-### **3. Shareholders Not Registered on IDeAS Facility**
-- Visit the e‑voting website.
-- Enter BO ID / Demat Account Number and PAN.
-- Complete OTP‑based authentication.
-- Click on the **e‑voting option**, which redirects to the e‑voting page [test.pdf, Page - 63](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Shareholders%20not%20registered%20on)
+**AGM and Important Dates**
+- The **AGM** will be held on **Thursday, June 19, 2025, at 3:00 p.m. (IST)** via **VC/OAVM** [test.pdf, Page - 66](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=4&search=Thursday%2C%20June%2019%2C%202025%2C)
+- The **cut‑off date for determining entitlement for e‑voting** is **Thursday, June 12, 2025** [test.pdf, Page - 66](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=4&search=Cut-off%20date%20to%20determine)
+- Members can attend the AGM through VC/OAVM by logging into the NSDL e‑voting system and selecting the **“Join Meeting”** option [test.pdf, Page - 65](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=3&search=Members%20may%20attend%20the)
 
 ---
 
-### **4. Registration / Access Through NSDL e‑Voting Website**
-- Visit **https://www.evoting.nsdl.com**.
-- Click on **“Login”** under the *Shareholder/Member* section.
-- Enter Demat details and complete OTP authentication.
-- Upon successful login, the e‑voting option becomes available [test.pdf, Page - 63-65](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Quick%20links%20to%20access)
-
----
-
-### **Important Eligibility Date**
-- **Cut‑off date to determine entitlement for e‑voting:** **Thursday, June 12, 2025** [test.pdf, Page - 66](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=4&search=Cut-off%20date%20to%20determine)
-
----
-
-### **Helpdesk for Registration Issues**
-- **NSDL Email:** evoting@nsdl.com
-- **NSDL Contact Number:** +91 22 48867000 [test.pdf, Page - 65](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=3&search=For%20queries%20relating%20to)
+**Helpdesk and Shareholder Support**
+- Shareholders may contact **NSDL** for e‑voting or AGM assistance at **evoting@nsdl.com** or **+91 22 48867000** [test.pdf, Page - 65](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=3&search=For%20queries%20relating%20to)
+- Assistance is also available from designated NSDL officials during or before the AGM [test.pdf, Page - 66](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=4&search=Members%20may%20connect%20with...)

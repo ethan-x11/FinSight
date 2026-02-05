@@ -96,7 +96,7 @@ class ChatService:
             user_message=user_content,
             system_message=system_prompt,
             history=history,
-            response_format= ChatResponseRaw,
+            response_format=ChatResponseRaw,
         )
         
         response = (
