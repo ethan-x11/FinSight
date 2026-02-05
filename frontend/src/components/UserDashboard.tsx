@@ -975,6 +975,8 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   const [titleDraft, setTitleDraft] = useState("");
   const [savingTitle, setSavingTitle] = useState(false);
 
+  const titleEditRef = useRef<HTMLDivElement | null>(null);
+
   const sessionsRef = useRef<AnalysisSession[]>([]);
   const refreshedInsightsRef = useRef<Record<string, boolean>>({});
 
@@ -985,6 +987,20 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     setTitleDraft(currentSession?.metadata?.title || "");
     setEditingTitle(false);
   }, [currentSession]);
+
+  useEffect(() => {
+    if (!editingTitle) return;
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (!titleEditRef.current) return;
+      if (titleEditRef.current.contains(event.target as Node)) return;
+      setTitleDraft(currentSession?.metadata?.title || "");
+      setEditingTitle(false);
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [editingTitle, currentSession]);
 
   const documentEntries = useMemo(
     () =>
@@ -1384,7 +1400,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                         <div className="flex items-center justify-between md:justify-start space-x-2">
                           <h2 className="text-lg font-bold text-slate-800 truncate max-w-[220px] md:max-w-xs">
                             {editingTitle ? (
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2" ref={titleEditRef}>
                                 <Input
                                   value={titleDraft}
                                   onChange={(e) => setTitleDraft(e.target.value)}
