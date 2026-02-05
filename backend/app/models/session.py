@@ -8,7 +8,7 @@ from typing import Annotated
 
 
 
-ProcessStage = Annotated[str, Field(pattern=r"^(pending|processing.*|completed|failed)$")]
+ProcessStage = Annotated[str, Field(pattern=r"^(pending|processing.*|completed|failed|cancelling|cancelled)$")]
 
 
 class ProcessingSteps(BaseModel):
@@ -23,6 +23,7 @@ class ProcessingStatus(BaseModel):
     overallStatus: ProcessStage = "pending"
     steps: ProcessingSteps = Field(default_factory=ProcessingSteps)
     errorMessage: Optional[str] = None
+    cancelRequested: bool = False
 
 
 class SessionMetadata(BaseModel):

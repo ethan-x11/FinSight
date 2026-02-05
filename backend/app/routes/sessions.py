@@ -9,6 +9,7 @@ from app.models.session import AnalysisSession, ProcessingStatus, SessionCreate,
 from app.models.user import UserInDB
 from app.services.blob_service import BlobService
 from app.services.search_service import SearchService
+from app.services.ingestion_service import IngestionService
 
 router = APIRouter(tags=["sessions"], dependencies=[Depends(get_current_user)])
 
@@ -37,7 +38,6 @@ async def get_session(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
     if not current_user.isAdmin and record["userId"] != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
-    
     return AnalysisSession.model_validate(record)
 
 
@@ -97,6 +97,12 @@ async def delete_session(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
     if not current_user.isAdmin and record["userId"] != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+
+    status_payload = record.get("systemStatus") or {}
+    status_payload["overallStatus"] = "cancelling"
+    status_payload["cancelRequested"] = True
+    repo.update_status(session_id, status_payload)
+    IngestionService.request_cancel(session_id)
 
     documents = record.get("sourceDocument") or []
     index_names = [doc.get("indexName") for doc in documents if doc.get("indexName")]

@@ -27,6 +27,8 @@ MAX_CHUNKS_PER_DOCUMENT = 220
 
 
 class IngestionService:
+    _cancelled_sessions: set[str] = set()
+
     def __init__(self) -> None:
         settings = get_settings()
         self.sessions_repo = SessionsRepository()
@@ -36,6 +38,38 @@ class IngestionService:
         self.chat_service = ChatService()
         self.analysis_service = AnalysisService()
         self.index_base_name = settings.search_index_name
+
+    @classmethod
+    def request_cancel(cls, session_id: str) -> None:
+        cls._cancelled_sessions.add(session_id)
+
+    @classmethod
+    def clear_cancel(cls, session_id: str) -> None:
+        cls._cancelled_sessions.discard(session_id)
+
+    def _should_abort(self, session_id: str) -> bool:
+        if session_id in self._cancelled_sessions:
+            return True
+        session = self.sessions_repo.get_by_id(session_id)
+        if not session:
+            return True
+        status = session.get("systemStatus") or {}
+        if status.get("cancelRequested"):
+            return True
+        overall = status.get("overallStatus")
+        if overall in {"cancelling", "cancelled"}:
+            return True
+        return False
+
+    def _mark_cancelled(self, session_id: str) -> None:
+        session = self.sessions_repo.get_by_id(session_id)
+        if not session:
+            return
+        status = session.get("systemStatus", {}) or {}
+        status["overallStatus"] = "cancelled"
+        status["cancelRequested"] = True
+        session["systemStatus"] = status
+        self.sessions_repo.upsert_session(session)
 
     @staticmethod
     def _pages_from_range(page_range: str | None) -> List[int]:
@@ -130,6 +164,9 @@ class IngestionService:
         if not session:
             logger.error("Session %s not found for ingestion", session_id)
             return
+        if self._should_abort(session_id):
+            self._mark_cancelled(session_id)
+            return
 
         status = session.get("systemStatus", {}) or {}
         steps = status.get("steps", {}) or {}
@@ -141,6 +178,10 @@ class IngestionService:
             steps["docIntelligenceTriggered"] = True
             status["steps"] = steps
             self.sessions_repo.update_status(session_id, status)
+
+            if self._should_abort(session_id):
+                self._mark_cancelled(session_id)
+                return
 
             # Use provided blob if already uploaded; otherwise upload now
             if not blob_url:
@@ -189,6 +230,10 @@ class IngestionService:
             status["steps"] = steps
             self.sessions_repo.update_status(session_id, status)
 
+            if self._should_abort(session_id):
+                self._mark_cancelled(session_id)
+                return
+
             text_content = doc_result.get("text", "")
             tables = doc_result.get("tables") or []
             footnotes = doc_result.get("footnotes") or []
@@ -223,6 +268,9 @@ class IngestionService:
 
             offset_cursor = 0
             for chunk_batch in tqdm(chunk_batches, desc="Ingesting Batches", unit="batch"):
+                if self._should_abort(session_id):
+                    self._mark_cancelled(session_id)
+                    return
                 chunk_infos: List[Dict[str, Any]] = []
                 local_cursor = max(offset_cursor, 0)
                 for chunk in chunk_batch:
@@ -320,6 +368,10 @@ class IngestionService:
             # if doc_result.get("tables"):
             
             insights = self.analysis_service.generate_insights(file_name=filename, index_name=index_name)
+
+            if self._should_abort(session_id):
+                self._mark_cancelled(session_id)
+                return
              
             if session["analysisOutput"] is None:
                 session["analysisOutput"] = [insights.model_dump()]

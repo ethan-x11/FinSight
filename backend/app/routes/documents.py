@@ -20,7 +20,7 @@ router = APIRouter(tags=["documents"], dependencies=[Depends(get_current_user)])
 async def upload_financial_doc(
     background_tasks: BackgroundTasks,
     files: list[UploadFile] = File(...),
-    title: str = "Untitled Session",
+    title: str = "",
     current_user: UserInDB = Depends(get_current_user),
     sessions_repo: SessionsRepository = Depends(get_sessions_repository),
 ) -> UploadResponse:
@@ -43,8 +43,7 @@ async def upload_financial_doc(
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Empty file upload")
 
         now = datetime.now(timezone.utc)
-        session_title = title or file.filename or "Untitled Session"
-        metadata = SessionMetadata(title=session_title, createdAt=now, lastAccessed=now, isActive=True)
+        
         blob_name, blob_url = blob_service.upload_file(f"{file.filename}", file_bytes, file.content_type)
         blob_data.append(BlobMeta(
             blobName=blob_name,
@@ -57,8 +56,11 @@ async def upload_financial_doc(
             blobPath=blob_name,
             blobContainer=blob_service.container_name,
         )
+        print("File", sourceDocument.model_dump())
 
         if not session_id:
+            session_title = title or file.filename or "Untitled Session"
+            metadata = SessionMetadata(title=session_title, createdAt=now, lastAccessed=now, isActive=True)
             session_payload = SessionCreate(userId=current_user.id, metadata=metadata, sourceDocument=[sourceDocument])
             session_record = sessions_repo.create_session(session_payload.model_dump(mode="json"))
             session_id = session_record["id"]

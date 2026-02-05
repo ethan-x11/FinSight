@@ -126,12 +126,12 @@ class SessionsRepository:
         self.container.upsert_item(normalized)
         return normalized
 
-    def append_source_document(self, session_id: str, source_document: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def append_source_document(self, session_id: str, source_document: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
         session = self.get_by_id(session_id)
         if not session:
             return None
         sources = session.get("sourceDocument", [])
-        sources.append(source_document)
+        sources.extend(source_document)
         session["sourceDocument"] = sources
         session["timestamp"] = datetime.now(timezone.utc).isoformat()
         normalized = self._normalize_datetimes(session)
