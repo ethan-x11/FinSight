@@ -53,14 +53,12 @@ import {
   Query,
 } from "../utils/dataHandlerAPI";
 import { marked } from "marked";
-import Markdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { dark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
-import remarkMath from 'remark-math';
-import 'katex/dist/katex.min.css';
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
+import remarkMath from "remark-math";
+import "katex/dist/katex.min.css";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
 import { Input } from "./ui/input";
@@ -70,6 +68,7 @@ import { QueryPlanButton } from "./ui/query-plan";
 import { ProfileDialog } from "./ProfileDialog";
 import { PasswordChangeDialog } from "./PasswordChangeDialog";
 import { APP_BRAND_NAME, APP_TAGLINE } from "../config/appConfig";
+import { MarkdownMessage } from "./MarkdownMessage";
 
 type DashboardTab = "dashboard" | "chat";
 
@@ -573,9 +572,10 @@ const InsightsNotesPanel = ({ notes }: { notes?: string | null }) => {
         <FileText className="w-4 h-4 text-blue-600" /> Auto Analysis Notes
       </div>
       <div className="text-sm leading-relaxed text-slate-700 [&>*]:mb-2 [&>*:last-child]:mb-0 [&>ul]:list-disc [&>ul]:ml-5 [&>ol]:list-decimal [&>ol]:ml-5">
-        <Markdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]}>
+        {/* <Markdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]}>
           {notes}
-        </Markdown>
+        </Markdown> */}
+        <MarkdownMessage text={notes || ""} />
       </div>
     </div>
   );
@@ -709,55 +709,7 @@ const ChatInterface = ({
                   <div
                     className={`text-sm leading-relaxed mt-1 [&>*]:mb-2 [&>*:last-child]:mb-0 [&>ul]:list-disc [&>ul]:ml-5 [&>ol]:list-decimal [&>ol]:ml-5 ${isUser ? "text-white" : "text-slate-800"}`}
                   >
-                    <Markdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]}
-                      children={msg.text || ""}
-                      components={{
-                        a(props) {
-                          const { href, children } = props;
-                          const pointer = msg.linkedCitations?.find((item) => item?.url && href && item.url === href);
-                          const snapshot = pointer?.text_snapshot?.trim();
-                          return (
-                            <span className="relative inline-flex items-center group">
-                              <a
-                                href={href}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:text-blue-500 hover:bg-slate-200"
-                              >
-                                {children}
-                              </a>
-                              {snapshot && (
-                                <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-72 -translate-x-1/2 rounded-lg border border-slate-200 bg-white p-3 text-[11px] text-slate-700 shadow-lg opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-                                  <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-1">
-                                    Citation preview
-                                  </span>
-                                  <span className="block max-h-40 overflow-auto whitespace-pre-wrap leading-relaxed">
-                                    {snapshot}
-                                  </span>
-                                </span>
-                              )}
-                            </span>
-                          );
-                        },
-                        code(props) {
-                          const { children, className } = props
-                          const match = /language-(\w+)/.exec(className || '')
-                          return match ? (
-                            <SyntaxHighlighter
-                              PreTag="div"
-                              language={match[1]}
-                            // style={dark}
-                            >
-                              {String(children).replace(/\n$/, '')}
-                            </SyntaxHighlighter>
-                          ) : (
-                            <code className={className}>
-                              {children}
-                            </code>
-                          )
-                        }
-                      }}
-                    />
+                    <MarkdownMessage text={msg.text || ""} linkedCitations={msg.linkedCitations} />
                   </div>
 
                   {msg.citations && msg.citations.length > 0 && (
