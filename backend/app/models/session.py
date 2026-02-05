@@ -59,6 +59,7 @@ class ChatMessage(BaseModel):
     messageId: str
     role: Literal["user", "assistant", "system"]
     content: str
+    reasoningSteps: List[ReasoningSteps] = Field(default_factory=list)
     timestamp: datetime
     queryPlan: Optional[List[Query]] = None
     citations: Optional[List[Citation]] = None
@@ -72,15 +73,19 @@ class AskRequest(BaseModel):
     top_k: int = 8
     use_query_planner: Optional[bool] = True
 
-class AskResponse(BaseModel):
-    messageId: str
+class ChatResponse(BaseModel):
     answer: str
-    queryPlan: Optional[List[Query]] = None
+    reasoningSteps: List[ReasoningSteps] = Field(default_factory=list)
     citations: List[Citation] = Field(default_factory=list)
     linkedCitations: List[SourcePointer] = Field(default_factory=list)
 
-
-
+class AskResponse(ChatResponse):
+    messageId: str
+    queryPlan: Optional[List[Query]] = None
+    
+class ReasoningSteps(BaseModel):
+    title: str
+    description: str
 
 class SourcePointer(BaseModel):
     raw_cite: str

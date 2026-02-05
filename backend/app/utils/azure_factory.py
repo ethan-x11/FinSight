@@ -28,7 +28,7 @@ class AzureFactory():
         system_message: Optional[str] = None,
         user_message_params: Optional[Any] = None,
         history: Optional[Iterable[Dict[str, Any]]] = None,
-    ) -> str | None:
+    ) -> Any:
                 
         history_messages: List[Dict[str, str]] = []
         if history:
@@ -50,10 +50,21 @@ class AzureFactory():
             {"role": "user", "content": user_message},
         )
         completion = self.client.chat.completions.create(
-            model=self.chat_model, messages=cast(Iterable[ChatCompletionMessageParam], messages), 
-            # temperature=0.2
+            model=self.chat_model, 
+            messages=cast(Iterable[ChatCompletionMessageParam], messages), 
+            # temperature=0.2,
+            reasoning_effort = "high",
         )
+        
         answer = completion.choices[0].message.content if completion.choices else ""
         
         return answer 
     
+
+if __name__ == "__main__":
+    azure_factory = AzureFactory()
+    response = azure_factory.run_chat(
+        user_message="Derive the formula for validating prime number of million digit numbers.",
+        system_message="You are a helpful assistant.",
+    )
+    print("Response:", response)

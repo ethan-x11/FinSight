@@ -31,5 +31,5 @@ class AnalysisService:
                 )
             ],
             risks= [],
-            notes= insights.get("answer", "No insights generated.")
+            notes= insights.answer,
         )

@@ -164,6 +164,7 @@ export interface ChatMessage {
 	}[];
 	queryPlan: Query[];
 	linkedCitations: SourcePointer[];
+	reasoningSteps: ReasoningSteps[];
 	userFeedback?: {
 		thumbRating: "up" | "down";
 		comment?: string;
@@ -197,6 +198,11 @@ export interface UploadDocumentsResponse {
 	createdAt: string;
 }
 
+export interface ReasoningSteps {
+	title: string;
+	description: string;
+}
+
 export interface ChatResponse {
 	answer: string;
 	messageId: string;
@@ -211,6 +217,7 @@ export interface ChatResponse {
 	}[];
 	queryPlan?: Query[];
 	linkedCitations?: SourcePointer[];
+	reasoningSteps: ReasoningSteps[];
 }
 
 export interface FeedbackResponse {

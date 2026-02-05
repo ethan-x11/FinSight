@@ -27,9 +27,13 @@ async def chat_flow(
 ) -> AskResponse:
     session = sessions_repo.get_by_id(session_id)
     if not session:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Session not found"
+        )
     if not current_user.isAdmin and session["userId"] != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized"
+        )
 
     search_service = SearchService()
     chat_service = ChatService()
@@ -46,10 +50,13 @@ async def chat_flow(
     results: List[Dict[str, Any]] = []
     max_workers = min(8, max(1, len(queries)))
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = [executor.submit(search_service.search, session_id, q, payload.top_k) for q in queries]
+        futures = [
+            executor.submit(search_service.search, session_id, q, payload.top_k)
+            for q in queries
+        ]
         for future in as_completed(futures):
             results.extend(future.result())
-    
+
     # Remove duplicates while preserving order
     seen = set()
     deduped_results = []
@@ -78,11 +85,12 @@ async def chat_flow(
     assistant_message = {
         "messageId": uuid4().hex,
         "role": "assistant",
-        "content": answer_payload["answer"],
+        "content": answer_payload.answer,
+        "reasoningSteps": [r.model_dump() for r in answer_payload.reasoningSteps],
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "queryPlan": [q.model_dump() for q in query_plan.queries],
-        "citations": answer_payload.get("citations"),
-        "linkedCitations": answer_payload.get("linkedCitations", []),
+        "citations": [citation.model_dump() for citation in answer_payload.citations],
+        "linkedCitations": [linkedCitation.model_dump() for linkedCitation in answer_payload.linkedCitations],
     }
     sessions_repo.append_chat_message(session_id, assistant_message)
 

@@ -51,6 +51,7 @@ import {
   deleteSession,
   submitFeedback,
   Query,
+  ReasoningSteps,
 } from "../utils/dataHandlerAPI";
 import { marked } from "marked";
 import Markdown from "react-markdown";
@@ -86,6 +87,7 @@ type SimpleMessage = {
   citations?: { name: string; url?: string }[];
   queryPlan?: Query[];
   linkedCitations?: SourcePointer[];
+  reasoningSteps?: ReasoningSteps[];
   userFeedback?: {
     thumbRating: "up" | "down";
     comment?: string;
@@ -1100,6 +1102,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
           })) || [],
         queryPlan: c.queryPlan,
         linkedCitations: c.linkedCitations,
+        reasoningSteps: c.reasoningSteps,
         userFeedback: c.userFeedback || undefined,
       };
     });
@@ -1189,6 +1192,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
         })) || [],
         queryPlan: resp.queryPlan,
         linkedCitations: resp.linkedCitations,
+        reasoningSteps: resp.reasoningSteps,
       };
       setMessages((prev) => [...prev, botMsg]);
       console.log("Chat response received", resp);
