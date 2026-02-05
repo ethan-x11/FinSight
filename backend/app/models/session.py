@@ -74,6 +74,10 @@ class AskRequest(BaseModel):
     top_k: int = 8
     use_query_planner: Optional[bool] = True
 
+class ChatResponseRaw(BaseModel):
+    answer: str
+    reasoningSteps: List[ReasoningSteps] = Field(default_factory=list)
+    
 class ChatResponse(BaseModel):
     answer: str
     reasoningSteps: List[ReasoningSteps] = Field(default_factory=list)

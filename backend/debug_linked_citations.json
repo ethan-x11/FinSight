@@ -1,0 +1,62 @@
+[
+    {
+        "raw_cite": "[test.pdf, Page 4, Chunk chunk-6, \"Shareholders registered on Easi/Easiest facility\"]",
+        "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Shareholders%20registered%20on%20Easi/Easiest",
+        "sourcefile": "test.pdf",
+        "page_start": 2,
+        "page_end": 2,
+        "chunk_id": "chunk-6",
+        "text_snapshot": "Shareholders registered on Easi/Easiest facility",
+        "page_range": "63"
+    },
+    {
+        "raw_cite": "[test.pdf, Page 4, Chunk chunk-6, \"Shareholders not registered on Easi/Easiest facility\"]",
+        "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Shareholders%20not%20registered%20on",
+        "sourcefile": "test.pdf",
+        "page_start": 2,
+        "page_end": 2,
+        "chunk_id": "chunk-6",
+        "text_snapshot": "Shareholders not registered on Easi/Easiest facility",
+        "page_range": "63"
+    },
+    {
+        "raw_cite": "[test.pdf, Page 4, Chunk chunk-6, \"Shareholders not registered on IDeAS facility\"]",
+        "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Shareholders%20not%20registered%20on",
+        "sourcefile": "test.pdf",
+        "page_start": 2,
+        "page_end": 2,
+        "chunk_id": "chunk-6",
+        "text_snapshot": "Shareholders not registered on IDeAS facility",
+        "page_range": "63"
+    },
+    {
+        "raw_cite": "[test.pdf, Page 65, Chunk chunk-9, \"Quick links to access e-voting system\"]",
+        "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Quick%20links%20to%20access",
+        "sourcefile": "test.pdf",
+        "page_start": 2,
+        "page_end": 3,
+        "chunk_id": "chunk-9",
+        "text_snapshot": "Quick links to access e-voting system",
+        "page_range": "63-65"
+    },
+    {
+        "raw_cite": "[test.pdf, Page 4, Chunk chunk-18, \"Cut-off date to determine entitlement for e-voting\"]",
+        "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=4&search=Cut-off%20date%20to%20determine",
+        "sourcefile": "test.pdf",
+        "page_start": 4,
+        "page_end": 4,
+        "chunk_id": "chunk-18",
+        "text_snapshot": "Cut-off date to determine entitlement for e-voting",
+        "page_range": "66"
+    },
+    {
+        "raw_cite": "[test.pdf, Page 3, Chunk chunk-13, \"For queries relating to e-voting\"]",
+        "url": "https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=3&search=For%20queries%20relating%20to",
+        "sourcefile": "test.pdf",
+        "page_start": 3,
+        "page_end": 3,
+        "chunk_id": "chunk-13",
+        "text_snapshot": "For queries relating to e-voting",
+        "page_range": "65"
+    }
+]

@@ -9,7 +9,7 @@ from openai.types.chat import ChatCompletionMessageParam
 from app.core.config import get_settings
 from app.utils.azure_factory import AzureFactory
 from app.utils.citation_utils import CitationUtils
-from app.models.session import ChatResponse, ReasoningSteps
+from app.models.session import ChatResponse, ChatResponseRaw, ReasoningSteps
 
 
 class ChatService:
@@ -96,9 +96,8 @@ class ChatService:
             user_message=user_content,
             system_message=system_prompt,
             history=history,
+            response_format= ChatResponseRaw,
         )
-
-        print("Raw Response from Azure OpenAI:", response)  # Debugging log
         
         response = (
             json.loads(response)
@@ -139,13 +138,22 @@ class ChatService:
             }
             for doc in context_docs
         ]
-
+        
         linked_citations = CitationUtils.build_linked_citations(answer or "", citations)
         # print("Linked Citations:", linked_citations)
         answer_with_links = CitationUtils.replace_citation_snapshots(
             answer or "", linked_citations
         )
         # print("Answer with Links:", answer_with_links)
+        
+        with open("debug_citations.json", "w", encoding="utf-8") as f:
+            json.dump(citations, f, ensure_ascii=False, indent=4)
+        with open("debug_linked_citations.json", "w", encoding="utf-8") as f:
+            json.dump(linked_citations, f, ensure_ascii=False, indent=4)
+        with open("debug_answer.txt", "w", encoding="utf-8") as f:
+            f.write(answer or "")
+        with open("debug_answer_with_links.txt", "w", encoding="utf-8") as f:
+            f.write(answer_with_links)
 
         result = {
             "answer": answer_with_links,

@@ -1,7 +1,7 @@
 from openai import AzureOpenAI
 from openai.types.chat import ChatCompletionMessageParam
-from typing import Any, Dict, Iterable, List, Optional, cast
-
+from typing import Any, Dict, Iterable, List, Optional, Type, cast
+from pydantic import BaseModel
 from app.core.config import get_settings
 
 class AzureFactory():
@@ -27,6 +27,7 @@ class AzureFactory():
         user_message: str,
         system_message: Optional[str] = None,
         user_message_params: Optional[Any] = None,
+        response_format: Optional[Type[BaseModel]] = None,
         history: Optional[Iterable[Dict[str, Any]]] = None,
     ) -> Any:
                 
@@ -49,12 +50,17 @@ class AzureFactory():
         messages.append(
             {"role": "user", "content": user_message},
         )
-        completion = self.client.chat.completions.create(
-            model=self.chat_model, 
-            messages=cast(Iterable[ChatCompletionMessageParam], messages), 
-            # temperature=0.2,
-            reasoning_effort = "high",
-        )
+        
+        request_kwargs: Dict[str, Any] = {
+            "model": self.chat_model,
+            "messages": cast(Iterable[ChatCompletionMessageParam], messages),
+            "reasoning_effort": "high",
+        }
+        
+        if response_format is not None:
+            request_kwargs["response_format"] = response_format
+        
+        completion = self.client.chat.completions.parse(**request_kwargs)
         
         answer = completion.choices[0].message.content if completion.choices else ""
         
@@ -63,8 +69,13 @@ class AzureFactory():
 
 if __name__ == "__main__":
     azure_factory = AzureFactory()
+    class SimpleResponse(BaseModel):
+        answer: str
+        reasoning: str
+        
     response = azure_factory.run_chat(
         user_message="Derive the formula for validating prime number of million digit numbers.",
         system_message="You are a helpful assistant.",
+        response_format=SimpleResponse,
     )
     print("Response:", response)

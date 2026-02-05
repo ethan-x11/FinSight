@@ -1,0 +1,46 @@
+**e‑Voter (e‑Voting) Registration Process**
+
+The provided document explains that e‑voter registration depends on whether a shareholder is already registered with NSDL/CDSL facilities.
+
+---
+
+### **1. Shareholders Registered on Easi / Easiest Facility**
+- Use existing Demat account login credentials provided by the Depository Participant (DP).
+- Log in with **User ID, Password, and Verification Code** on the NSDL/CDSL website.
+- After successful login, click on **“e‑vote”** in the action tab to access the e‑voting system [test.pdf, Page - 63](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Shareholders%20registered%20on%20Easi/Easiest)
+
+---
+
+### **2. Shareholders Not Registered on Easi / Easiest Facility**
+- Visit the NSDL/CDSL e‑voting website.
+- Click on the registration option **“Easi/Easiest”**.
+- Enter Demat account details, registered email ID, and mobile number.
+- Generate and enter the **OTP** received on the registered email ID and mobile number.
+- After registration, follow the same login steps as registered Easi/Easiest users [test.pdf, Page - 63](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Shareholders%20not%20registered%20on)
+
+---
+
+### **3. Shareholders Not Registered on IDeAS Facility**
+- Visit the e‑voting website.
+- Enter BO ID / Demat Account Number and PAN.
+- Complete OTP‑based authentication.
+- Click on the **e‑voting option**, which redirects to the e‑voting page [test.pdf, Page - 63](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Shareholders%20not%20registered%20on)
+
+---
+
+### **4. Registration / Access Through NSDL e‑Voting Website**
+- Visit **https://www.evoting.nsdl.com**.
+- Click on **“Login”** under the *Shareholder/Member* section.
+- Enter Demat details and complete OTP authentication.
+- Upon successful login, the e‑voting option becomes available [test.pdf, Page - 63-65](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=2&search=Quick%20links%20to%20access)
+
+---
+
+### **Important Eligibility Date**
+- **Cut‑off date to determine entitlement for e‑voting:** **Thursday, June 12, 2025** [test.pdf, Page - 66](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=4&search=Cut-off%20date%20to%20determine)
+
+---
+
+### **Helpdesk for Registration Issues**
+- **NSDL Email:** evoting@nsdl.com
+- **NSDL Contact Number:** +91 22 48867000 [test.pdf, Page - 65](https://strgaccforrndrg.blob.core.windows.net/financial-pdfs/uploads/cb05dbc35adc4078814385c60334823c_test.pdf?se=2036-02-03T20%3A23%3A42Z&sp=r&sv=2024-08-04&sr=b&sig=LOn9Qen4iuMXgmLLi32373Cv0/JrbM4Df7hSAMP5gcg%3D#page=3&search=For%20queries%20relating%20to)
