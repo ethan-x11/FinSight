@@ -63,6 +63,7 @@ class SearchService:
             SimpleField(name="documentUrl", type=SearchFieldDataType.String, filterable=True),
             SimpleField(name="pageRange", type=SearchFieldDataType.String, filterable=True),
             SimpleField(name="documentPageNumber", type=SearchFieldDataType.String, filterable=True),
+            SimpleField(name="notes", type=SearchFieldDataType.String, filterable=True),
             SearchField(name="embedding", type=SearchFieldDataType.Collection(SearchFieldDataType.Single), vector_search_dimensions=self.embed_dims, vector_search_profile_name="vector-profile"),
         ]
 
@@ -159,6 +160,7 @@ class SearchService:
                     "pageRange": item.get("pageRange"),
                     "documentUrl": item.get("documentUrl"),
                     "documentPageNumber": item.get("documentPageNumber"),
+                    "notes": item.get("notes"),
                 })
             search_data.extend(hits)
         return search_data
