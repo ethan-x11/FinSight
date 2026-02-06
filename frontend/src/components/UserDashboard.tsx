@@ -1395,7 +1395,6 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
         model: resp.model,
       };
       setMessages((prev) => [...prev, botMsg]);
-      console.log("Chat response received", resp);
     } catch (err: any) {
       toast.error(err?.message || "Failed to send message");
     } finally {
