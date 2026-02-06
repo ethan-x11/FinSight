@@ -37,7 +37,7 @@ class AzureFactory():
         response_format: Optional[Type[BaseModel]] = None,
         model: Optional[str] = None,
         history: Optional[Iterable[Dict[str, Any]]] = None,
-    ) -> Any:
+    ) -> dict[str, Any]:
                 
         history_messages: List[Dict[str, str]] = []
         if history:
@@ -70,9 +70,9 @@ class AzureFactory():
         
         completion = self.client.chat.completions.parse(**request_kwargs)
         
-        answer = completion.choices[0].message.content if completion.choices else ""
+        response = completion.choices[0].message.content if completion.choices else ""
         
-        return answer 
+        return {"response": response, "model": completion.model}
     
     def list_all_models(self) -> Any:
         #List all deployed models
@@ -96,13 +96,13 @@ if __name__ == "__main__":
         answer: str
         reasoning: str
         
-    # response = azure_factory.run_chat(
-    #     user_message="Derive the formula for validating prime number of million digit numbers.",
-    #     system_message="You are a helpful assistant.",
-    #     response_format=SimpleResponse,
-    # )
-    # print("Response:", response)
+    response = azure_factory.run_chat(
+        user_message="Derive the formula for validating prime number of million digit numbers.",
+        system_message="You are a helpful assistant.",
+        response_format=SimpleResponse,
+    )
+    print("Response:", response)
     
-    deployments = azure_factory.list_chat_deployments()
-    print("Chat Deployments:", deployments)
+    # deployments = azure_factory.list_chat_deployments()
+    # print("Chat Deployments:", deployments)
    

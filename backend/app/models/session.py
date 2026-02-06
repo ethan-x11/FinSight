@@ -73,6 +73,7 @@ class AskRequest(BaseModel):
     question: str
     top_k: int = 8
     use_query_planner: Optional[bool] = True
+    model: Optional[str] = None
 
 class ChatResponseRaw(BaseModel):
     answer: str
@@ -80,6 +81,7 @@ class ChatResponseRaw(BaseModel):
     
 class ChatResponse(BaseModel):
     answer: str
+    model: str
     reasoningSteps: List[ReasoningSteps] = Field(default_factory=list)
     citations: List[Citation] = Field(default_factory=list)
     linkedCitations: List[SourcePointer] = Field(default_factory=list)

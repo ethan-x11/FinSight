@@ -53,6 +53,7 @@ async def chat_flow(
         payload.question,
         results,
         history=session.get("chatHistory", []),
+        model = payload.model,
     )
 
     message = {
@@ -67,6 +68,7 @@ async def chat_flow(
         "messageId": uuid4().hex,
         "role": "assistant",
         "content": answer_payload.answer,
+        "model": answer_payload.model,
         "reasoningSteps": [r.model_dump() for r in answer_payload.reasoningSteps],
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "queryPlan": [q.model_dump() for q in query_plan.queries],
@@ -78,6 +80,7 @@ async def chat_flow(
     return AskResponse(
         messageId=assistant_message["messageId"],
         answer=assistant_message["content"],
+        model=assistant_message.get("model", ""),
         queryPlan=assistant_message["queryPlan"],
         citations=assistant_message["citations"],
         linkedCitations=assistant_message["linkedCitations"],

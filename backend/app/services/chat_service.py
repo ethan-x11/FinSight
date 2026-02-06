@@ -21,6 +21,7 @@ class ChatService:
         question: str,
         context_docs: List[Dict[str, Any]],
         history: Optional[Iterable[Dict[str, Any]]] = None,
+        model: Optional[str] = None,
     ) -> ChatResponse:
         context_str = "\n".join(
             [
@@ -97,10 +98,11 @@ class ChatService:
             system_message=system_prompt,
             history=history,
             response_format=ChatResponseRaw,
+            model=model,
         )
         
         response = (
-            json.loads(response)
+            json.loads(response.get("response", "{}"))
             if response
             else {"reasoning": [], "answer": "No answer generated."}
         )
@@ -157,6 +159,7 @@ class ChatService:
 
         result = {
             "answer": answer_with_links,
+            "model": response.get("model", ""),
             "reasoningSteps": reasoning,
             "citations": citations,
             "linkedCitations": linked_citations,
