@@ -76,11 +76,14 @@ async def chat_flow(
         "linkedCitations": [linkedCitation.model_dump() for linkedCitation in answer_payload.linkedCitations],
     }
     sessions_repo.append_chat_message(session_id, assistant_message)
+    
+    print("Assistant Message to be returned:", assistant_message)  # Debugging line
 
     return AskResponse(
         messageId=assistant_message["messageId"],
         answer=assistant_message["content"],
         model=assistant_message.get("model", ""),
+        reasoningSteps=assistant_message["reasoningSteps"],
         queryPlan=assistant_message["queryPlan"],
         citations=assistant_message["citations"],
         linkedCitations=assistant_message["linkedCitations"],

@@ -71,7 +71,7 @@ class ChatService:
             "**Example JSON Structure:**\n"
             "```json\n"
             "{\n"
-            '  "reasoning": [\n'
+            '  "reasoningSteps": [\n'
             "    {\n"
             '      "title": "Context Verification",\n'
             '      "description": "Checked provided chunks for Q3 revenue figures. Found data in Chunk 2 and Chunk 5."\n'
@@ -104,14 +104,14 @@ class ChatService:
         response = (
             json.loads(response.get("response", "{}"))
             if response
-            else {"reasoning": [], "answer": "No answer generated."}
+            else {"reasoningSteps": [], "answer": "No answer generated."}
         )
-
+        
         answer = response.get("answer", "")
 
-        reasoning = [
+        reasoningSteps = [
             ReasoningSteps.model_validate(step)
-            for step in response.get("reasoning", [])
+            for step in response.get("reasoningSteps", [])
             if isinstance(step, dict)
         ]
 
@@ -160,7 +160,7 @@ class ChatService:
         result = {
             "answer": answer_with_links,
             "model": response.get("model", ""),
-            "reasoningSteps": reasoning,
+            "reasoningSteps": reasoningSteps,
             "citations": citations,
             "linkedCitations": linked_citations,
         }
