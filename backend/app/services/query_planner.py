@@ -54,7 +54,7 @@ class QueryPlanner:
             response_format=QueryPlannerResponse,
         )
         
-        return QueryPlannerResponse.model_validate(json.loads(response) if response else {"queries": []})
+        return QueryPlannerResponse.model_validate(json.loads(response.get("response","")) if response else {"queries": []})
 
 
 if __name__ == "__main__":

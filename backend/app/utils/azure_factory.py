@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from app.core.config import get_settings
 from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential, AzureCliCredential
+# from azure.ai.projects.models import PromptAgentDefinition
 
 class AzureFactory():
     def __init__(self) -> None:
@@ -19,9 +20,9 @@ class AzureFactory():
         )
         self.chat_model = settings.azure_openai_chat_deployment
         self.embedding_model = settings.azure_openai_embedding_deployment
-        self.ai_client = AIProjectClient(
+        self.project_client = AIProjectClient(
             credential=DefaultAzureCredential() if settings.production else AzureCliCredential(),
-            endpoint=settings.azure_ai_agent_endpoint,
+            endpoint=settings.azure_ai_project_endpoint,
         )
 
     def embed_texts(self, texts: str | List[str] | Iterable[int] | Iterable[Iterable[int]]) -> List[List[float]]:
@@ -74,6 +75,18 @@ class AzureFactory():
         
         return {"response": response, "model": completion.model}
     
+    # def create_agent(
+    #     self, 
+    #     agent_name: str, 
+    #     instruction: Optional[str] = ""
+    #     ) -> Any:
+    #         agent = self.project_client.agents.create_agent(
+    #             agent_name=agent_name,
+    #             instruction=instruction,
+    #             )
+
+    
+    
     def list_all_models(self) -> Any:
         #List all deployed models
         response = self.client.models.list()
@@ -81,7 +94,7 @@ class AzureFactory():
     
     def list_chat_deployments(self) -> Any:
         #List all deployments
-        response = self.ai_client.deployments.list()
+        response = self.project_client.deployments.list()
         result: List[str] = []
         
         # for deployment in response:

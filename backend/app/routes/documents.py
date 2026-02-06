@@ -56,7 +56,6 @@ async def upload_financial_doc(
             blobPath=blob_name,
             blobContainer=blob_service.container_name,
         )
-        print("File", sourceDocument.model_dump())
 
         if not session_id:
             session_title = title or file.filename or "Untitled Session"

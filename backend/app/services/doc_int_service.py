@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 from azure.ai.documentintelligence import DocumentIntelligenceClient
-from azure.ai.documentintelligence.models import AnalyzeDocumentRequest, ContentFormat
+from azure.ai.documentintelligence.models import AnalyzeDocumentRequest, DocumentContentFormat
 from azure.core.exceptions import ResourceNotFoundError
 from azure.core.credentials import AzureKeyCredential
 
@@ -28,7 +28,7 @@ class DocumentIntelligenceService:
             poller = self.client.begin_analyze_document(
                 "prebuilt-layout",
                 AnalyzeDocumentRequest(url_source=blob_url),
-                output_content_format=ContentFormat.MARKDOWN,
+                output_content_format=DocumentContentFormat.MARKDOWN,
             )
         except ResourceNotFoundError as e:
             print("Document Intelligence 404. Likely blob SAS is invalid or expired. URL:", blob_url)
