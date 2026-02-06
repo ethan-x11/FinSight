@@ -101,6 +101,8 @@ class ChatService:
             model=model,
         )
         
+        model_from_response = response.get("model", "")
+        
         response = (
             json.loads(response.get("response", "{}"))
             if response
@@ -108,6 +110,8 @@ class ChatService:
         )
         
         answer = response.get("answer", "")
+        
+        print("Raw response from Azure OpenAI:", response) #debug
 
         reasoningSteps = [
             ReasoningSteps.model_validate(step)
@@ -159,7 +163,7 @@ class ChatService:
 
         result = {
             "answer": answer_with_links,
-            "model": response.get("model", ""),
+            "model": model_from_response,
             "reasoningSteps": reasoningSteps,
             "citations": citations,
             "linkedCitations": linked_citations,

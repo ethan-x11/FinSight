@@ -94,6 +94,7 @@ type SimpleMessage = {
     comment?: string;
     submittedAt?: string;
   };
+  model?: string;
 };
 
 marked.setOptions({ breaks: true });
@@ -765,7 +766,14 @@ const ChatInterface = ({
                   <div className={`flex items-center justify-between gap-2 text-[11px] uppercase tracking-[0.08em] font-semibold ${isUser ? "text-white/80" : "text-slate-500"}`}>
                     <div className="flex items-center gap-2">
                       {isUser ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
-                      <span>{isUser ? "You" : "Assistant"}</span>
+                        <span>
+                          {isUser ? "You" : "Assistant"}
+                          {!isUser && msg.model ? (
+                            <span className={`ml-1 text-[10px] font-semibold ${isUser ? "text-white/70" : "text-slate-400"}`}>
+                              ({msg.model})
+                            </span>
+                          ) : null}
+                        </span>
                     </div>
                     {canShowReasoning && msg.messageId && (
                       <button
@@ -1293,6 +1301,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
         linkedCitations: c.linkedCitations,
         reasoningSteps: c.reasoningSteps,
         userFeedback: c.userFeedback || undefined,
+        model: c.model,
       };
     });
 
@@ -1382,6 +1391,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
         queryPlan: resp.queryPlan,
         linkedCitations: resp.linkedCitations,
         reasoningSteps: resp.reasoningSteps,
+        model: resp.model,
       };
       setMessages((prev) => [...prev, botMsg]);
       console.log("Chat response received", resp);
