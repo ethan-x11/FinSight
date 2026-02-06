@@ -14,9 +14,17 @@ from app.models.user import UserInDB
 from app.services.chat_service import ChatService
 from app.services.search_service import SearchService
 from app.services.query_planner import QueryPlanner
+from app.utils.azure_factory import AzureFactory
 
 router = APIRouter(tags=["chat"], dependencies=[Depends(get_current_user)])
 
+@router.get("/deployments", response_model=List[str])
+async def get_deployments(
+    current_user: UserInDB = Depends(get_current_user),
+) -> List[str]:
+    azure_factory = AzureFactory()
+    deployments = azure_factory.list_chat_deployments()
+    return deployments
 
 @router.post("/session/{session_id}/chat", response_model=AskResponse)
 async def chat_flow(

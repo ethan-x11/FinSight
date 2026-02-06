@@ -35,6 +35,7 @@ import {
 import {
   askChatQuestion,
   fetchInsights,
+  fetchDeployments,
   fetchSession,
   fetchSessionStatus,
   fetchSessions,
@@ -174,6 +175,10 @@ const Sidebar = ({
   activeTab,
   setActiveTab,
   canChat,
+  deployments,
+  selectedDeployment,
+  onSelectDeployment,
+  loadingDeployments,
   isOpen,
   onClose,
 }: {
@@ -184,6 +189,10 @@ const Sidebar = ({
   activeTab: DashboardTab;
   setActiveTab: (tab: DashboardTab) => void;
   canChat: boolean;
+  deployments: string[];
+  selectedDeployment: string;
+  onSelectDeployment: (deployment: string) => void;
+  loadingDeployments: boolean;
   isOpen: boolean;
   onClose: () => void;
 }) => (
@@ -246,6 +255,34 @@ const Sidebar = ({
           <Bot className="w-4 h-4" />
           <span>RAG Chat</span>
         </button>
+        {activeTab === "chat" && (
+          <div className="mt-2 ml-7 space-y-2">
+            <label className="block text-[10px] uppercase tracking-[0.12em] text-slate-500 font-semibold">
+              Select Model
+            </label>
+            <select
+              value={selectedDeployment}
+              onChange={(e) => onSelectDeployment(e.target.value)}
+              className="w-full rounded-md border border-slate-700 bg-slate-900 text-xs text-slate-200 px-2 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              disabled={loadingDeployments}
+            >
+              {loadingDeployments && <option value="">Loading...</option>}
+              {!loadingDeployments && deployments.length === 0 && (
+                <option value="">No deployments found</option>
+              )}
+              {!loadingDeployments && deployments.length > 0 && (
+                <>
+                  <option value="">Default</option>
+                  {deployments.map((deployment) => (
+                    <option key={deployment} value={deployment}>
+                      {deployment}
+                    </option>
+                  ))}
+                </>
+              )}
+            </select>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-4 border-t border-slate-800/50 pt-4">
@@ -1035,6 +1072,9 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
   const [savingTitle, setSavingTitle] = useState(false);
+  const [deployments, setDeployments] = useState<string[]>([]);
+  const [selectedDeployment, setSelectedDeployment] = useState("");
+  const [loadingDeployments, setLoadingDeployments] = useState(false);
 
   const titleEditRef = useRef<HTMLDivElement | null>(null);
 
@@ -1210,6 +1250,31 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     };
   }, [activeTab, currentSessionId, updateStatusAndMaybeInsights]);
 
+  useEffect(() => {
+    if (deployments.length > 0) return;
+    let cancelled = false;
+
+    const loadDeployments = async () => {
+      setLoadingDeployments(true);
+      try {
+        const items = await fetchDeployments();
+        if (cancelled) return;
+        setDeployments(items);
+      } catch (err: any) {
+        if (!cancelled) {
+          toast.error(err?.message || "Failed to load deployments");
+        }
+      } finally {
+        if (!cancelled) setLoadingDeployments(false);
+      }
+    };
+
+    loadDeployments();
+    return () => {
+      cancelled = true;
+    };
+  }, [deployments.length]);
+
   const mapChat = (chat: ChatMessage[]): SimpleMessage[] =>
     chat.map((c) => {
       const baseId = c.messageId || crypto.randomUUID();
@@ -1303,7 +1368,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     setMessages((prev) => [...prev, userMsg]);
     setIsTyping(true);
     try {
-      const resp = await askChatQuestion(currentSessionId, text, topK, useQueryPlanner);
+      const resp = await askChatQuestion(currentSessionId, text, topK, useQueryPlanner, selectedDeployment || undefined);
       const botId = resp.messageId || crypto.randomUUID();
       const botMsg: SimpleMessage = {
         id: botId,
@@ -1397,6 +1462,10 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         canChat={Boolean(canChat)}
+        deployments={deployments}
+        selectedDeployment={selectedDeployment}
+        onSelectDeployment={setSelectedDeployment}
+        loadingDeployments={loadingDeployments}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
