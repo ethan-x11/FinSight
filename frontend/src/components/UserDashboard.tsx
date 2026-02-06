@@ -1265,7 +1265,8 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     const loadDeployments = async () => {
       setLoadingDeployments(true);
       try {
-        const items = await fetchDeployments();
+        // const items = await fetchDeployments();
+        const items = ["model-router"];
         if (cancelled) return;
         setDeployments(items);
       } catch (err: any) {

@@ -34,6 +34,7 @@ async def get_session(
     repo: SessionsRepository = Depends(get_sessions_repository),
 ) -> AnalysisSession:
     record = repo.get_by_id(session_id)
+    print(f"Fetched session record for ID {session_id}: {record}")
     if not record:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
     if not current_user.isAdmin and record["userId"] != current_user.id:

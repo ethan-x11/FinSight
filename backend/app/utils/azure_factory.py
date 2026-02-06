@@ -84,9 +84,9 @@ class AzureFactory():
         response = self.ai_client.deployments.list()
         result: List[str] = []
         
-        for deployment in response:
-            result.append(deployment.name) if deployment.get("capabilities").get("chat_completion") == "true" else None
-        return result
+        # for deployment in response:
+        #     result.append(deployment.name) if deployment.get("capabilities").get("chat_completion") == "true" else None
+        return response
 
     
 
@@ -96,13 +96,15 @@ if __name__ == "__main__":
         answer: str
         reasoning: str
         
-    response = azure_factory.run_chat(
-        user_message="Derive the formula for validating prime number of million digit numbers.",
-        system_message="You are a helpful assistant.",
-        response_format=SimpleResponse,
-    )
-    print("Response:", response)
+    # response = azure_factory.run_chat(
+    #     user_message="Derive the formula for validating prime number of million digit numbers.",
+    #     system_message="You are a helpful assistant.",
+    #     response_format=SimpleResponse,
+    # )
+    # print("Response:", response)
     
-    # deployments = azure_factory.list_chat_deployments()
-    # print("Chat Deployments:", deployments)
+    deployments = azure_factory.list_chat_deployments()
+    for deployment in deployments:
+        print(deployment)
+    print("Chat Deployments:", deployments)
    

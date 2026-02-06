@@ -111,8 +111,6 @@ class ChatService:
         
         answer = response.get("answer", "")
         
-        print("Raw response from Azure OpenAI:", response) #debug
-
         reasoningSteps = [
             ReasoningSteps.model_validate(step)
             for step in response.get("reasoningSteps", [])

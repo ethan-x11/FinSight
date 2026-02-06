@@ -165,7 +165,7 @@ export interface ChatMessage {
 	queryPlan: Query[];
 	linkedCitations: SourcePointer[];
 	reasoningSteps: ReasoningSteps[];
-	model?: string;
+	model: string;
 	userFeedback?: {
 		thumbRating: "up" | "down";
 		comment?: string;
@@ -218,7 +218,7 @@ export interface ChatResponse {
 	}[];
 	queryPlan?: Query[];
 	linkedCitations?: SourcePointer[];
-	model?: string;
+	model: string;
 	reasoningSteps: ReasoningSteps[];
 }
 

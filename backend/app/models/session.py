@@ -60,6 +60,7 @@ class ChatMessage(BaseModel):
     messageId: str
     role: Literal["user", "assistant", "system"]
     content: str
+    model: Optional[str] = None
     reasoningSteps: List[ReasoningSteps] = Field(default_factory=list)
     timestamp: datetime
     queryPlan: Optional[List[Query]] = None
@@ -81,7 +82,7 @@ class ChatResponseRaw(BaseModel):
     
 class ChatResponse(BaseModel):
     answer: str
-    model: str
+    model: Optional[str] = None
     reasoningSteps: List[ReasoningSteps] = Field(default_factory=list)
     citations: List[Citation] = Field(default_factory=list)
     linkedCitations: List[SourcePointer] = Field(default_factory=list)

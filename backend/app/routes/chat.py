@@ -85,7 +85,6 @@ async def chat_flow(
     }
     sessions_repo.append_chat_message(session_id, assistant_message)
     
-    print("Assistant Message to be returned:", assistant_message)  # Debugging line
 
     return AskResponse(
         messageId=assistant_message["messageId"],
