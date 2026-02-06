@@ -70,6 +70,22 @@ class Settings(BaseSettings):
     azure_openai_text_deployment: str = Field(default="", validation_alias="AZURE_OPENAI_TEXT_DEPLOYMENT_NAME")
     azure_openai_embedding_deployment: str = Field(default="", validation_alias="AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME")
     azure_openai_embed_dims: int = Field(default=1536, validation_alias="AZURE_OPENAI_EMBED_DIMS")
+    
+    # Azure AI Agent
+    azure_ai_agent_model_deployment_name: str = Field(
+        default="", validation_alias="AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME"
+    )
+    azure_ai_agent_endpoint: str = Field(default="", validation_alias="AZURE_AI_AGENT_ENDPOINT")
+    azure_ai_agent_subscription_id: str = Field(
+        default="", validation_alias="AZURE_AI_AGENT_SUBSCRIPTION_ID"
+    )
+    azure_ai_agent_resource_group_name: str = Field(
+        default="", validation_alias="AZURE_AI_AGENT_RESOURCE_GROUP_NAME"
+    )
+    azure_ai_agent_project_name: str = Field(
+        default="", validation_alias="AZURE_AI_AGENT_PROJECT_NAME"
+    )
+    
 
     # Feature flags
     production: bool = Field(default=False, validation_alias="PRODUCTION")

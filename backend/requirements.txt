@@ -10,6 +10,7 @@ azure-cosmos==4.7.0
 azure-storage-blob==12.21.0
 azure-ai-documentintelligence==1.0.0b4
 azure-search-documents==11.6.0
+azure-ai-projects
 openai==1.44.0
 langchain-text-splitters==0.3.0
 python-multipart

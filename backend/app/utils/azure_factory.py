@@ -1,8 +1,11 @@
+import json
 from openai import AzureOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 from typing import Any, Dict, Iterable, List, Optional, Type, cast
 from pydantic import BaseModel
 from app.core.config import get_settings
+from azure.ai.projects import AIProjectClient
+from azure.identity import DefaultAzureCredential, AzureCliCredential
 
 class AzureFactory():
     def __init__(self) -> None:
@@ -16,6 +19,10 @@ class AzureFactory():
         )
         self.chat_model = settings.azure_openai_chat_deployment
         self.embedding_model = settings.azure_openai_embedding_deployment
+        self.ai_client = AIProjectClient(
+            credential=DefaultAzureCredential() if settings.production else AzureCliCredential(),
+            endpoint=settings.azure_ai_agent_endpoint,
+        )
 
     def embed_texts(self, texts: str | List[str] | Iterable[int] | Iterable[Iterable[int]]) -> List[List[float]]:
         response = self.client.embeddings.create(model=self.embedding_model, input=texts)
@@ -28,6 +35,7 @@ class AzureFactory():
         system_message: Optional[str] = None,
         user_message_params: Optional[Any] = None,
         response_format: Optional[Type[BaseModel]] = None,
+        model: Optional[str] = None,
         history: Optional[Iterable[Dict[str, Any]]] = None,
     ) -> Any:
                 
@@ -52,7 +60,7 @@ class AzureFactory():
         )
         
         request_kwargs: Dict[str, Any] = {
-            "model": self.chat_model,
+            "model": model or self.chat_model,
             "messages": cast(Iterable[ChatCompletionMessageParam], messages),
             "reasoning_effort": "high",
         }
@@ -66,6 +74,21 @@ class AzureFactory():
         
         return answer 
     
+    def list_all_models(self) -> Any:
+        #List all deployed models
+        response = self.client.models.list()
+        return response.model_dump_json()
+    
+    def list_chat_deployments(self) -> Any:
+        #List all deployments
+        response = self.ai_client.deployments.list()
+        result: List[str] = []
+        
+        for deployment in response:
+            result.append(deployment.name) if deployment.get("capabilities").get("chat_completion") == "true" else None
+        return result
+
+    
 
 if __name__ == "__main__":
     azure_factory = AzureFactory()
@@ -73,9 +96,13 @@ if __name__ == "__main__":
         answer: str
         reasoning: str
         
-    response = azure_factory.run_chat(
-        user_message="Derive the formula for validating prime number of million digit numbers.",
-        system_message="You are a helpful assistant.",
-        response_format=SimpleResponse,
-    )
-    print("Response:", response)
+    # response = azure_factory.run_chat(
+    #     user_message="Derive the formula for validating prime number of million digit numbers.",
+    #     system_message="You are a helpful assistant.",
+    #     response_format=SimpleResponse,
+    # )
+    # print("Response:", response)
+    
+    deployments = azure_factory.list_chat_deployments()
+    print("Chat Deployments:", deployments)
+   
