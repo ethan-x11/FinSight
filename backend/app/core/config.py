@@ -61,7 +61,11 @@ class Settings(BaseSettings):
     search_admin_key: str = Field(default="", validation_alias="AZURE_SEARCH_ADMIN_KEY")
     search_index_name: str = Field(default="financials-chunks", validation_alias="AZURE_SEARCH_INDEX_NAME")
     search_indexer_name: str = Field(default="financials-indexer1", validation_alias="AZURE_SEARCH_INDEXER_NAME")
-
+    azure_search_connection_id: str = Field(
+        default="", validation_alias="AZURE_SEARCH_CONNECTION_ID"
+    )
+    
+    
     # Azure OpenAI
     azure_openai_api_key: str = Field(default="", validation_alias="AZURE_OPENAI_API_KEY")
     azure_openai_endpoint: str = Field(default="", validation_alias="AZURE_OPENAI_ENDPOINT")

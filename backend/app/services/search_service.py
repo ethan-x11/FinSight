@@ -21,7 +21,7 @@ from azure.search.documents.indexes.models import (
     SemanticPrioritizedFields, 
     SemanticField
 )
-
+from azure.ai.projects.models import AzureAISearchQueryType
 from app.core.config import get_settings
 from app.repositories.sessions import SessionsRepository
 
@@ -162,7 +162,7 @@ class SearchService:
             print("Searching in file / index: ", doc["fileName"]," / ", index_name)
             # self._ensure_index(index_name)
             search_client = self._get_search_client(index_name)
-            results = search_client.search(search_text=query, query_type="semantic", top=top)
+            results = search_client.search(search_text=query, query_type=AzureAISearchQueryType.SEMANTIC, top=top)
             hits: List[Dict[str, Any]] = []
             for item in results:
                 hits.append({
@@ -194,7 +194,7 @@ class SearchService:
     def search_single(self, index_name: str, query: str, top: int = 5) -> List[Dict[str, Any]]:
         search_data: List[Dict[str, Any]] = []
         search_client = self._get_search_client(index_name)
-        results = search_client.search(search_text=query, query_type="semantic", top=top)
+        results = search_client.search(search_text=query, query_type=AzureAISearchQueryType.SEMANTIC, top=top)
         hits: List[Dict[str, Any]] = []
         for item in results:
             hits.append({
