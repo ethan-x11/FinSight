@@ -375,11 +375,19 @@ export async function fetchDeployments(): Promise<string[]> {
 	return request<string[]>("/deployments", { authenticated: true });
 }
 
-export async function askChatQuestion(sessionId: string, question: string,  topK = 8, useQueryPlanner: boolean = true, model?: string): Promise<ChatResponse> {
+export async function askChatQuestion(
+	sessionId: string,
+	question: string,
+	topK = 8,
+	useQueryPlanner: boolean = true,
+	model?: string,
+	signal?: AbortSignal
+): Promise<ChatResponse> {
 	return request<ChatResponse>(`/session/${sessionId}/chat`, {
 		method: "POST",
 		body: { question, top_k: topK, use_query_planner: useQueryPlanner, model: model },
 		authenticated: true,
+		signal,
 	});
 }
 

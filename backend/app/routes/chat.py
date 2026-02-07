@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.core.auth import get_current_user
 from app.repositories.sessions import SessionsRepository, get_sessions_repository
@@ -30,6 +30,7 @@ async def get_deployments(
 async def chat_flow(
     session_id: str,
     payload: AskRequest,
+    request: Request,
     current_user: UserInDB = Depends(get_current_user),
     sessions_repo: SessionsRepository = Depends(get_sessions_repository),
 ) -> AskResponse:
@@ -43,6 +44,9 @@ async def chat_flow(
             status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized"
         )
 
+    if await request.is_disconnected():
+        raise HTTPException(status_code=499, detail="Client disconnected")
+
     search_service = SearchService()
     chat_service = ChatService()
     query_planner = QueryPlanner()
@@ -51,11 +55,17 @@ async def chat_flow(
     if payload.use_query_planner:
         query_plan = query_planner.plan_query(payload.question)
 
+    if await request.is_disconnected():
+        raise HTTPException(status_code=499, detail="Client disconnected")
+
     queries = [payload.question]
     if payload.use_query_planner:
         queries.extend([queryObj.query for queryObj in query_plan.queries])
 
     results = search_service.search_batch(session_id, queries, top=payload.top_k)
+
+    if await request.is_disconnected():
+        raise HTTPException(status_code=499, detail="Client disconnected")
         
     answer_payload = chat_service.generate_answer(
         payload.question,
@@ -64,6 +74,9 @@ async def chat_flow(
         model = payload.model,
         conversation_id=session.get("conversationId", ""),
     )
+
+    if await request.is_disconnected():
+        raise HTTPException(status_code=499, detail="Client disconnected")
 
     message = {
         "messageId": uuid4().hex,

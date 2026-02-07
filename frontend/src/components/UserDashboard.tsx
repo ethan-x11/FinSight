@@ -24,18 +24,17 @@ import {
   RefreshCcw,
   LogOut,
   User,
-  Lock,
   Inbox,
   FileSearch,
   Pencil,
   Check,
   Trash2,
   Search,
+  MessageCircleOff
 } from "lucide-react";
 import {
   askChatQuestion,
   fetchInsights,
-  fetchDeployments,
   fetchSession,
   fetchSessionStatus,
   fetchSessions,
@@ -54,12 +53,6 @@ import {
   Query,
   ReasoningSteps,
 } from "../utils/dataHandlerAPI";
-import { marked } from "marked";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeKatex from "rehype-katex";
-import rehypeRaw from "rehype-raw";
-import remarkMath from "remark-math";
 import "katex/dist/katex.min.css";
 import { Button } from "./ui/button";
 import {
@@ -108,7 +101,6 @@ type SimpleMessage = {
   model?: string;
 };
 
-marked.setOptions({ breaks: true });
 
 const WELCOME_MESSAGES: string[] = [
   "Hi there! Ask me anything about your uploaded documents.",
@@ -670,11 +662,13 @@ const ChatInterface = ({
   messages,
   onSendMessage,
   isTyping,
+  onAbortRequest,
   onSendFeedback,
 }: {
   messages: SimpleMessage[];
   onSendMessage: (text: string, topK: number, useQueryPlanner: boolean) => void;
   isTyping: boolean;
+  onAbortRequest: () => void;
   onSendFeedback: (messageId: string, thumbRating: "up" | "down", comment?: string) => Promise<void>;
 }) => {
   const [input, setInput] = useState("");
@@ -732,6 +726,10 @@ const ChatInterface = ({
   };
 
   const handleSend = () => {
+    if (isTyping) {
+      onAbortRequest();
+      return;
+    }
     if (!input.trim()) return;
     onSendMessage(input.trim(), topK, useQueryPlanner);
     setInput("");
@@ -798,11 +796,6 @@ const ChatInterface = ({
                       </button>
                     )}
                   </div>
-                  {/* <div
-                    className={`text-sm leading-relaxed mt-1 whitespace-pre-wrap [&>*]:mb-2 [&>*:last-child]:mb-0 [&>ul]:list-disc [&>ul]:ml-5 [&>ol]:list-decimal [&>ol]:ml-5 ${isUser ? "text-white" : "text-slate-800"}`}
-                    dangerouslySetInnerHTML={{ __html: marked.parse(msg.text || "") }}
-                  /> */}
-
 
                   {canShowReasoning && isReasoningOpen && (
                     <div className="mt-3 mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
@@ -982,9 +975,9 @@ const ChatInterface = ({
             rows={1}
             className="h-11 w-full resize-none rounded-md border border-default bg-slate-50 px-3 py-2 text-sm text-slate-900 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           />
-          <Button onClick={handleSend} disabled={!input.trim()} className="h-11 px-4">
-            <Send className="w-4 h-4 mr-2" />
-            Send
+          <Button onClick={handleSend} disabled={!isTyping && !input.trim()} className="h-11 px-4">
+            {isTyping ? <MessageCircleOff className="w-4 h-4 mr-2" /> : <Send className="w-4 h-4 mr-2" />}
+            {isTyping ? "Stop" : "Send"}
           </Button>
         </div>
       </div>
@@ -1098,6 +1091,8 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   const [deleteBusy, setDeleteBusy] = useState(false);
 
   const titleEditRef = useRef<HTMLDivElement | null>(null);
+  const chatAbortRef = useRef<AbortController | null>(null);
+  const abortRequestedRef = useRef(false);
 
   const sessionsRef = useRef<AnalysisSession[]>([]);
   const refreshedInsightsRef = useRef<Record<string, boolean>>({});
@@ -1388,12 +1383,23 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     if (!session || session.systemStatus?.overallStatus !== "completed") {
       return toast.error("Session processing is not completed yet. Please wait for status to finish.");
     }
+    if (isTyping) return;
     const userId = crypto.randomUUID();
     const userMsg: SimpleMessage = { id: userId, messageId: userId, role: "user", text };
     setMessages((prev) => [...prev, userMsg]);
     setIsTyping(true);
+    abortRequestedRef.current = false;
+    const controller = new AbortController();
+    chatAbortRef.current = controller;
     try {
-      const resp = await askChatQuestion(currentSessionId, text, topK, useQueryPlanner, selectedDeployment || undefined);
+      const resp = await askChatQuestion(
+        currentSessionId,
+        text,
+        topK,
+        useQueryPlanner,
+        selectedDeployment || undefined,
+        controller.signal
+      );
       const botId = resp.messageId || crypto.randomUUID();
       const botMsg: SimpleMessage = {
         id: botId,
@@ -1411,10 +1417,26 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
       };
       setMessages((prev) => [...prev, botMsg]);
     } catch (err: any) {
+      if (err?.name === "AbortError") {
+        if (!abortRequestedRef.current) {
+          toast.info("Request aborted");
+        }
+        return;
+      }
       toast.error(err?.message || "Failed to send message");
     } finally {
       setIsTyping(false);
+      chatAbortRef.current = null;
+      abortRequestedRef.current = false;
     }
+  };
+
+  const handleAbortChat = () => {
+    if (!isTyping) return;
+    abortRequestedRef.current = true;
+    chatAbortRef.current?.abort();
+    chatAbortRef.current = null;
+    setIsTyping(false);
   };
 
   const handleSubmitFeedback = async (messageId: string, thumbRating: "up" | "down", comment?: string) => {
@@ -1697,6 +1719,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                       messages={messages}
                       onSendMessage={handleSendMessage}
                       isTyping={isTyping}
+                      onAbortRequest={handleAbortChat}
                       onSendFeedback={handleSubmitFeedback}
                     />
                   )}
