@@ -11,7 +11,7 @@ azure-cosmos
 azure-storage-blob
 azure-ai-documentintelligence
 azure-search-documents
-azure-ai-projects
+azure-ai-projects --pre
 openai
 langchain-text-splitters
 python-multipart
