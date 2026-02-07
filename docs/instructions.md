@@ -41,10 +41,13 @@ Create a .env file at the repo root (same folder as package.json) with required 
 ## Setup
 
 ### Backend
-1) Run setup:
+1) Install Azure CLI:
+   - Windows: ```winget install --exact --id Microsoft.AzureCLI```
+2) Run setup:
+   - Windows: ```az login```
    - Windows: ```setup_backend```
       - (alternative) ```run setup_backend.bat```
-2) (Optional) Create/activate your venv and install manually:
+3) (Optional) Create/activate your venv and install manually:
    - ```python -m venv backend/.venv```
    - ```backend/.venv/Scripts/activate```
    - ```pip install -r backend/requirements.txt```

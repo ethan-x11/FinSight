@@ -19,6 +19,30 @@ export function MarkdownMessage({ text, linkedCitations }: MarkdownMessageProps)
       rehypePlugins={[rehypeRaw, rehypeKatex]}
       children={text}
       components={{
+        table(props) {
+          const { className, children } = props;
+          return (
+            <table className={`w-full border-collapse ${className ?? ""}`.trim()}>
+              {children}
+            </table>
+          );
+        },
+        th(props) {
+          const { className, children } = props;
+          return (
+            <th className={`px-3 py-1 text-left align-top ${className ?? ""}`.trim()}>
+              {children}
+            </th>
+          );
+        },
+        td(props) {
+          const { className, children } = props;
+          return (
+            <td className={`px-3 py-3 align-top ${className ?? ""}`.trim()}>
+              {children}
+            </td>
+          );
+        },
         a(props) {
           const { href, children } = props;
           const pointer = linkedCitations?.find((item) => item?.url && href && item.url === href);

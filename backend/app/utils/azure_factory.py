@@ -138,6 +138,7 @@ class AzureFactory():
                 update_delay=1,
             ))
             
+        
         def test_tool(input: str) -> str:
             return f"Test tool received input: {input}"
         
@@ -202,8 +203,8 @@ class AzureFactory():
         response = self.project_client.deployments.list()
         result: List[str] = []
         
-        # for deployment in response:
-        #     result.append(deployment.name) if deployment.get("capabilities").get("chat_completion") == "true" else None
+        for deployment in response:
+            result.append(deployment.name) if deployment.get("capabilities").get("chat_completion") == "true" else None
         return response
 
     
@@ -220,17 +221,17 @@ if __name__ == "__main__":
     #     response_format=SimpleResponse,
     # )
     # print("Response:", response)
-    session_id = "testst"
-    memory = azure_factory.create_or_retrieve_memory_store("test-memory-store")
+    session_id = "23d78b6fd50c4559806efa8e51d67334"
+    memory = azure_factory.create_or_retrieve_memory_store(session_id)
     print("Memory Store Name:", memory)
     agent = azure_factory.create_or_retrieve_agent(
-        name="test-agent",
+        name=session_id,
         instructions="You are a helpful assistant that can use the provided memory store to answer questions.",
         memory_store_name=memory,
         memory_scope="all",
     )
     print("Agent Name:", agent)
-    conversation = azure_factory.create_or_retrieve_conversation("mwoq")
+    conversation = azure_factory.create_or_retrieve_conversation(session_id)
     print("Conversation ID:", conversation)
     response = azure_factory.run_agent(
         agent_name=agent,
