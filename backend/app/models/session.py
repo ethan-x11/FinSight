@@ -31,7 +31,6 @@ class SessionMetadata(BaseModel):
     createdAt: datetime
     lastAccessed: datetime
     isActive: bool = True
-    conversationId: Optional[str] = None
 
 
 class SourceDocument(BaseModel):
@@ -151,6 +150,7 @@ class AnalysisSession(BaseModel):
     systemStatus: ProcessingStatus
     analysisOutput: Optional[List[AnalysisOutput]] = Field(default_factory=list)
     chatHistory: List[ChatMessage] = Field(default_factory=list)
+    conversationId: Optional[str] = None
 
 
 class SessionCreate(BaseModel):
@@ -158,10 +158,12 @@ class SessionCreate(BaseModel):
     userId: str
     metadata: SessionMetadata
     sourceDocument: List[SourceDocument]
+    conversationId: Optional[str] = None
 
 
 class SessionUpdate(BaseModel):
     metadata: Optional[SessionMetadata] = None
+    conversationId: Optional[str] = None
     sourceDocument: Optional[List[SourceDocument]] = None
     systemStatus: Optional[ProcessingStatus] = None
     analysisOutput: Optional[AnalysisOutput] = None

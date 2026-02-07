@@ -62,8 +62,8 @@ async def upload_financial_doc(
         if not session_id:
             session_title = title or file.filename or "Untitled Session"
             conversation_id = azure_factory.create_or_retrieve_conversation()
-            metadata = SessionMetadata(title=session_title, createdAt=now, lastAccessed=now, isActive=True, conversationId=conversation_id)
-            session_payload = SessionCreate(userId=current_user.id, metadata=metadata, sourceDocument=[sourceDocument])
+            metadata = SessionMetadata(title=session_title, createdAt=now, lastAccessed=now, isActive=True)
+            session_payload = SessionCreate(userId=current_user.id, metadata=metadata, sourceDocument=[sourceDocument], conversationId=conversation_id)
             session_record = sessions_repo.create_session(session_payload.model_dump(mode="json"))
             session_id = session_record["id"]
         else:
