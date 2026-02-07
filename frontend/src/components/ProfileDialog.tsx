@@ -206,7 +206,7 @@ export function ProfileDialog({ open, onClose }: ProfileDialogProps) {
               <Button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white"
+                className="flex-1 bg-slate-800 hover:bg-slate-700 text-white"
               >
                 {isSaving ? "Saving..." : "Save Changes"}
               </Button>

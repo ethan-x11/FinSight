@@ -226,7 +226,7 @@ export function PasswordChangeDialog({ open, onClose }: PasswordChangeDialogProp
           <Button
             onClick={handleChangePassword}
             disabled={isChanging || !passwordRequirements.every(req => req.met)}
-            className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white"
+            className="flex-1 bg-slate-800 hover:bg-slate-700 text-white"
           >
             {isChanging ? "Changing..." : "Change Password"}
           </Button>

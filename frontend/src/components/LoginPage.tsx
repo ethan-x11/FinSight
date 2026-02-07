@@ -216,7 +216,7 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
               <>
                 <Button
                   onClick={handleSignup}
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white"
+                  className="w-full bg-slate-800 hover:bg-slate-700 text-white"
                   disabled={isSubmitting === "signup"}
                 >
                   {isSubmitting === "signup" ? "Signing up..." : "Sign Up"}
@@ -234,7 +234,7 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
               <>
                 <Button
                   onClick={handleLogin}
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white"
+                  className="w-full bg-slate-800 hover:bg-slate-700 text-white"
                   disabled={isSubmitting === "login"}
                 >
                   {isSubmitting === "login" ? "Logging in..." : "Login"}
@@ -287,7 +287,7 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
           <CardFooter className="flex flex-col gap-3">
             <Button
               onClick={handleForgotPassword}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white"
+              className="w-full bg-slate-800 hover:bg-slate-700 text-white"
             >
               Send Reset Link
             </Button>

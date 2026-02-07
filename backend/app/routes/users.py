@@ -45,6 +45,6 @@ async def change_password(
         )
     stored = repo.get_by_id(current_user.id)
     if not stored or not verify_password(request.currentPassword, stored["password"]):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect password")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Incorrect password")
     repo.set_password(current_user.id, request.newPassword)
     return {"message": "Password updated successfully"}
