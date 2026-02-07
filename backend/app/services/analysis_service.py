@@ -17,8 +17,6 @@ class AnalysisService:
         prompt = "Generate key insights and risk factors based on the analyzed document."
         query_plan = self.query_planner.plan_query(prompt)
         
-        conversation_id = "conv_74f34cba90dae9b100fCnR8eHj0OOr3XxI9A8J677Bnhns3J2c"
-        
         queries = [prompt]
         queries.extend([queryObj.query for queryObj in query_plan.queries])
         
@@ -27,7 +25,6 @@ class AnalysisService:
         insights = self.chat_service.generate_answer(
             prompt,
             results,
-            conversation_id=conversation_id,
         )
         
         # print("Generated Insights:", insights)

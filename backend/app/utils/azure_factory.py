@@ -238,7 +238,7 @@ class AzureFactory:
         self,
         agent_name: str,
         prompt: str,
-        conversation_id: str,
+        conversation_id: Optional[str] = None,
     ) -> dict[str, Any]:
         openai_client = self.project_client.get_openai_client()
 
