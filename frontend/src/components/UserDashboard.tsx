@@ -62,6 +62,17 @@ import rehypeRaw from "rehype-raw";
 import remarkMath from "remark-math";
 import "katex/dist/katex.min.css";
 import { Button } from "./ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./ui/alert-dialog";
 import { toast } from "sonner";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
@@ -1083,6 +1094,8 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   const [deployments, setDeployments] = useState<string[]>([]);
   const [selectedDeployment, setSelectedDeployment] = useState("");
   const [loadingDeployments, setLoadingDeployments] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const titleEditRef = useRef<HTMLDivElement | null>(null);
 
@@ -1340,11 +1353,11 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
 
   const handleDeleteSession = async () => {
     if (!currentSessionId) return;
-    const confirmed = window.confirm("Delete this session and its blobs/index entries?");
-    if (!confirmed) return;
     try {
+      setDeleteBusy(true);
       await deleteSession(currentSessionId);
       toast.success("Session deleted");
+      setDeleteDialogOpen(false);
 
       setSessions((prev) => {
         const filtered = prev.filter((s) => s.id !== currentSessionId);
@@ -1364,6 +1377,8 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
       });
     } catch (err: any) {
       toast.error(err?.message || "Failed to delete session");
+    } finally {
+      setDeleteBusy(false);
     }
   };
 
@@ -1632,12 +1647,33 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                             >
                               <RefreshCcw className="w-3 h-3 mr-1 inline" /> Refresh Status
                             </button>
-                            <button
-                              onClick={handleDeleteSession}
-                              className="flex w-full md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap bg-white text-red-500 shadow-sm hover:text-slate-900 justify-center text-center"
-                            >
-                              <Trash2 className="w-3 h-3 mr-1 inline" /> Delete Session
-                            </button>
+                            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                              <AlertDialogTrigger asChild>
+                                <button
+                                  disabled={!currentSessionId}
+                                  className="flex w-full md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap bg-white text-red-500 shadow-sm hover:text-slate-900 justify-center text-center disabled:opacity-60 disabled:cursor-not-allowed"
+                                >
+                                  <Trash2 className="w-3 h-3 mr-1 inline" /> Delete Session
+                                </button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-white">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete this session?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will remove the session and its blobs/index entries. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel disabled={deleteBusy}>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={handleDeleteSession}
+                                    className="bg-red-600 text-white hover:bg-red-500"
+                                  >
+                                    {deleteBusy ? "Deleting..." : "Delete Session"}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </div>
                       </div>
