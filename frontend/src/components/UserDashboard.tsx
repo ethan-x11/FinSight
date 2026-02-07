@@ -662,12 +662,14 @@ const ChatInterface = ({
   messages,
   onSendMessage,
   isTyping,
+  isLoading,
   onAbortRequest,
   onSendFeedback,
 }: {
   messages: SimpleMessage[];
   onSendMessage: (text: string, topK: number, useQueryPlanner: boolean) => void;
   isTyping: boolean;
+  isLoading: boolean;
   onAbortRequest: () => void;
   onSendFeedback: (messageId: string, thumbRating: "up" | "down", comment?: string) => Promise<void>;
 }) => {
@@ -753,7 +755,10 @@ const ChatInterface = ({
       </div>
       <div className="flex-1 overflow-y-auto p-4 md:p-6">
         <div className="space-y-4">
-          {messages.map((msg) => {
+          {isLoading ? (
+            <ChatMessagesSkeleton />
+          ) : (
+            messages.map((msg) => {
             const isUser = msg.role === "user";
             const feedbackTargetId = msg.messageId;
             const showFeedback = !isUser && Boolean(feedbackTargetId);
@@ -904,7 +909,7 @@ const ChatInterface = ({
                 </div>
               </div>
             );
-          })}
+          }))}
           {isTyping && (
             <div className="flex justify-start">
               <div className="bg-white border border-default px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex items-center space-x-2">
@@ -1064,6 +1069,70 @@ const ChatInterface = ({
     </div>
   );
 };
+
+const ChatMessagesSkeleton = () => (
+  <div className="space-y-4 animate-pulse">
+    <div className="flex justify-start">
+      <div className="w-3/4 max-w-xl rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+        <div className="h-3 w-24 rounded bg-slate-200" />
+        <div className="mt-3 space-y-2">
+          <div className="h-3 w-full rounded bg-slate-200" />
+          <div className="h-3 w-5/6 rounded bg-slate-200" />
+          <div className="h-3 w-2/3 rounded bg-slate-200" />
+        </div>
+      </div>
+    </div>
+    <div className="flex justify-end">
+      <div className="w-2/3 max-w-lg rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+        <div className="h-3 w-20 rounded bg-slate-200" />
+        <div className="mt-3 space-y-2">
+          <div className="h-3 w-full rounded bg-slate-200" />
+          <div className="h-3 w-4/5 rounded bg-slate-200" />
+        </div>
+      </div>
+    </div>
+    <div className="flex justify-start">
+      <div className="w-4/5 max-w-2xl rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+        <div className="h-3 w-28 rounded bg-slate-200" />
+        <div className="mt-3 space-y-2">
+          <div className="h-3 w-full rounded bg-slate-200" />
+          <div className="h-3 w-11/12 rounded bg-slate-200" />
+          <div className="h-3 w-3/4 rounded bg-slate-200" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const OverviewSkeleton = () => (
+  <div className="space-y-4 animate-pulse">
+    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+      <div className="h-4 w-40 rounded bg-slate-200" />
+      <div className="mt-4 space-y-3">
+        <div className="h-3 w-full rounded bg-slate-200" />
+        <div className="h-3 w-5/6 rounded bg-slate-200" />
+        <div className="h-3 w-2/3 rounded bg-slate-200" />
+      </div>
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: 3 }).map((_, idx) => (
+          <div key={idx} className="rounded-xl border border-slate-200 p-4">
+            <div className="h-3 w-20 rounded bg-slate-200" />
+            <div className="mt-3 h-4 w-32 rounded bg-slate-200" />
+            <div className="mt-2 h-3 w-24 rounded bg-slate-200" />
+          </div>
+        ))}
+      </div>
+    </div>
+    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+      <div className="h-4 w-44 rounded bg-slate-200" />
+      <div className="mt-4 space-y-2">
+        <div className="h-3 w-full rounded bg-slate-200" />
+        <div className="h-3 w-11/12 rounded bg-slate-200" />
+        <div className="h-3 w-4/5 rounded bg-slate-200" />
+      </div>
+    </div>
+  </div>
+);
 
 export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboardProps) {
   const [sessions, setSessions] = useState<AnalysisSession[]>([]);
@@ -1642,15 +1711,19 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                         <div className="lg:col-span-2 space-y-4">
                           {dashboardView === "overview" ? (
-                            <div className="space-y-4">
-                              <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-                                <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                                  <FileText className="w-4 h-4 text-blue-600" /> Insights &amp; Data
-                                </h3>
-                                <InsightsPanel insights={insights?.find(insight => insight.fileName === activeDocId) ?? null} />
+                            loadingSession ? (
+                              <OverviewSkeleton />
+                            ) : (
+                              <div className="space-y-4">
+                                <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+                                  <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                                    <FileText className="w-4 h-4 text-blue-600" /> Insights &amp; Data
+                                  </h3>
+                                  <InsightsPanel insights={insights?.find(insight => insight.fileName === activeDocId) ?? null} />
+                                </div>
+                                <InsightsNotesPanel notes={(insights?.find(insight => insight.fileName === activeDocId) ?? null)?.notes ?? null} />
                               </div>
-                              <InsightsNotesPanel notes={(insights?.find(insight => insight.fileName === activeDocId) ?? null)?.notes ?? null} />
-                            </div>
+                            )
                           ) : (
                             <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
                               <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
@@ -1719,6 +1792,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                       messages={messages}
                       onSendMessage={handleSendMessage}
                       isTyping={isTyping}
+                      isLoading={loadingSession}
                       onAbortRequest={handleAbortChat}
                       onSendFeedback={handleSubmitFeedback}
                     />

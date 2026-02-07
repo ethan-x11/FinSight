@@ -159,6 +159,7 @@ class AzureFactory:
         model: Optional[str] = None,
     ) -> str:
         name = name or self.azure_ai_agent_default_name
+        model = model or self.chat_model
         existing_agents = self.project_client.agents.list()
         print("Retrieving Agent: ", name)
         for agent in existing_agents:
