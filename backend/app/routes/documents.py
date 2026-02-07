@@ -57,6 +57,7 @@ async def upload_financial_doc(
             fileSize=f"{len(file_bytes) / 1024:.2f}KB",
             blobPath=blob_name,
             blobContainer=blob_service.container_name,
+            blobUrl=blob_url,
         )
 
         if not session_id:
