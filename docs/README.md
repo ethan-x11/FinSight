@@ -1,92 +1,91 @@
-# AI Co-Scientist FullStack
+# FinSight FullStack
 
-A comprehensive platform for hypothesis validation and research paper discovery powered by AI.
+A comprehensive platform for financial document analysis.
 
 ## 🚀 Quick Start
 
-### Prerequisites
+# FinSight setup and run
 
-- Node.js 18+ with npm (frontend tooling)
-- Python 3.10+ (backend runtime)
-- Azure Cosmos DB account (SQL API)
+## Prereqs
+- Node.js 18+ (for frontend)
+- Python 3.10+ (for backend)
+- Azure service credentials in .env (see "Environment" below)
 
-### Windows helper scripts
+## Environment
+Create a .env file at the repo root (same folder as package.json) with required values:
 
-From the repository root you can bootstrap and run both services:
+- COSMOS_ENDPOINT
+- COSMOS_KEY
+- COSMOS_DATABASE
+- AZURE_STORAGE_CONNECTION_STRING
+- BLOB_CONTAINER_NAME
+- AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT
+- AZURE_DOCUMENT_INTELLIGENCE_KEY
+- AZURE_DOCUMENT_INTELLIGENCE_API_VERSION
+- AZURE_SEARCH_ENDPOINT
+- AZURE_SEARCH_ADMIN_KEY
+- AZURE_SEARCH_INDEX_NAME
+- AZURE_SEARCH_INDEXER_NAME
+- AZURE_OPENAI_API_KEY
+- AZURE_OPENAI_ENDPOINT
+- AZURE_OPENAI_API_VERSION
+- AZURE_OPENAI_CHAT_DEPLOYMENT_NAME
+- AZURE_OPENAI_TEXT_DEPLOYMENT_NAME
+- AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME
+- AZURE_OPENAI_EMBED_DIMS
+- AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME
+- AZURE_AI_AGENT_ENDPOINT
+- AZURE_AI_AGENT_SUBSCRIPTION_ID
+- AZURE_AI_AGENT_RESOURCE_GROUP_NAME
+- AZURE_AI_AGENT_PROJECT_NAME
+- JWT_SECRET_KEY
+- ADMIN_USER_ID
+- ADMIN_NAME
+- ADMIN_EMAIL
+- ADMIN_PASSWORD
 
-1. `setup_backend.bat` – creates `.venv` and installs backend dependencies.
-2. `setup_frontend.bat` – installs frontend npm modules.
-3. `run_backend.bat` – starts the FastAPI server on `http://localhost:8000` with auto-reload.
-4. `run_frontend.bat` – starts the Vite dev server on `http://localhost:5173`.
+## Setup
 
-Stop either service with `Ctrl+C` in its terminal window.
+### Backend
+1) Install Azure CLI:
+   - Windows: ```winget install --exact --id Microsoft.AzureCLI```
+2) Run setup:
+   - Windows: ```az login```
+   - Windows: ```setup_backend```
+      - (alternative) ```run setup_backend.bat```
+3) (Optional) Create/activate your venv and install manually:
+   - ```python -m venv backend/.venv```
+   - ```backend/.venv/Scripts/activate```
+   - ```pip install -r backend/requirements.txt```
 
-### Manual setup (all platforms)
+### Frontend
+1) Run setup:
+   - Windows: ```setup_frontend``` 
+      - (alternative) ```run setup_frontend.bat```
+2) (Optional) Install manually:
+   - ```cd frontend```
+   - ```npm install```
 
-#### Backend
+## Run
 
-```cmd
-cd backend
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-```
+### Backend
+- Windows: ```run_backend``` 
+   - (alternatively) ```run run_backend.bat```
+- Manual:
+  - ```cd backend```
+  - ```uvicorn app.main:app --host 0.0.0.0 --port 8000```
 
-> macOS/Linux: replace the last two lines with `source .venv/bin/activate`.
+### Frontend
+- Windows: ```run_frontend```
+   -  (alternatively) ```run run_frontend.bat```
+- Manual:
+  - ```cd frontend```
+  - ```npm run dev```
 
-Create `backend/.env` with your credentials (examples shown with placeholder values):
+## Notes
+- Frontend expects backend at http://localhost:8000/api unless overridden by VITE_API_URL / VITE_API_BASE_URL.
+- Use Azure CLI login for local Azure AI Agent access if production flag is false.
 
-```env
-COSMOS_ENDPOINT=https://<your-account>.documents.azure.com:443/
-COSMOS_KEY=<your-cosmos-key>
-COSMOS_DATABASE=ai-coscientist
-JWT_SECRET_KEY=change-me
-ACCESS_TOKEN_EXPIRE_MINUTES=720
-ADMIN_PASSWORD=admin123
-SEED_MOCK_RESULTS=true
-```
-
-Additional Azure OpenAI or agent configuration variables can also live in this file when needed. When the file is ready, launch the API:
-
-```cmd
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Interactive docs are available at `http://localhost:8000/docs`.
-
-#### Frontend
-
-```cmd
-cd frontend
-npm install
-```
-
-Create `frontend/.env` (you can start from `.env.example`) and point the client to your backend:
-
-```env
-VITE_API_URL=http://localhost:8000/api
-```
-
-If you copy the template, rename the placeholder variable `VITE_API_BASE_URL` to `VITE_API_URL` to match the codebase expectation.
-
-Finally, start the Vite dev server:
-
-```cmd
-npm run dev
-```
-
-The UI is served at `http://localhost:5173`.
-
-## 📚 Documentation
-
-- **[Backend README](../backend/README.md)** - Backend setup and API documentation
-
-## 🔑 Default Credentials
-
-- **Username**: `admin`
-- **Password**: `admin123`
-
-⚠️ **Important**: Change the admin password after first login!
 
 ## 🏗️ Architecture
 
