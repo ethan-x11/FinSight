@@ -137,6 +137,11 @@ class AzureFactory():
                 scope=memory_scope if memory_scope else "all",
                 update_delay=1,
             ))
+            
+        def test_tool(input: str) -> str:
+            return f"Test tool received input: {input}"
+        
+        tools.append(test_tool)
         
         agent = self.project_client.agents.create_version(
             agent_name=name,
@@ -161,11 +166,14 @@ class AzureFactory():
         conversation_id: str,
     ) -> str:
         openai_client = self.project_client.get_openai_client()
-        conversations = openai_client.conversations.retrieve(conversation_id)
-        if conversations:
-            return conversations.id
-        conversation = openai_client.conversations.create()
+        try:
+            conversation = openai_client.conversations.retrieve(conversation_id)
+            if conversation:
+                return conversation.id
+        except Exception:
+            conversation = openai_client.conversations.create()
         return conversation.id
+        
         
     
     def run_agent(
@@ -212,17 +220,17 @@ if __name__ == "__main__":
     #     response_format=SimpleResponse,
     # )
     # print("Response:", response)
-    
-    memory = azure_factory.create_or_retrieve_memory_store("test_memory_store")
+    session_id = "testst"
+    memory = azure_factory.create_or_retrieve_memory_store("test-memory-store")
     print("Memory Store Name:", memory)
     agent = azure_factory.create_or_retrieve_agent(
-        name="test_agent",
+        name="test-agent",
         instructions="You are a helpful assistant that can use the provided memory store to answer questions.",
         memory_store_name=memory,
         memory_scope="all",
     )
     print("Agent Name:", agent)
-    conversation = azure_factory.create_or_retrieve_conversation("test_conversation")
+    conversation = azure_factory.create_or_retrieve_conversation("mwoq")
     print("Conversation ID:", conversation)
     response = azure_factory.run_agent(
         agent_name=agent,
@@ -230,8 +238,8 @@ if __name__ == "__main__":
         conversation_id=conversation,
     )
     print("Agent Response:", response)
-    time.sleep(65)
-    new_conversation = azure_factory.create_or_retrieve_conversation("test_conversation1")
+    # time.sleep(65)
+    new_conversation = azure_factory.create_or_retrieve_conversation(conversation)
     print("New Conversation ID:", new_conversation)
     response2 = azure_factory.run_agent(
         agent_name=agent,
