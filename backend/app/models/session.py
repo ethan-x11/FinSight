@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Annotated
 
 
@@ -31,6 +31,7 @@ class SessionMetadata(BaseModel):
     createdAt: datetime
     lastAccessed: datetime
     isActive: bool = True
+    conversationId: Optional[str] = None
 
 
 class SourceDocument(BaseModel):
@@ -79,6 +80,7 @@ class AskRequest(BaseModel):
 class ChatResponseRaw(BaseModel):
     answer: str
     reasoningSteps: List[ReasoningSteps] = Field(default_factory=list)
+    model_config = ConfigDict(extra='forbid')
     
 class ChatResponse(BaseModel):
     answer: str
@@ -94,6 +96,7 @@ class AskResponse(ChatResponse):
 class ReasoningSteps(BaseModel):
     title: str
     description: str
+    model_config = ConfigDict(extra='forbid')
 
 class SourcePointer(BaseModel):
     raw_cite: str

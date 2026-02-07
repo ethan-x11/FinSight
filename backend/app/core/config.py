@@ -90,6 +90,14 @@ class Settings(BaseSettings):
         default="", validation_alias="AZURE_AI_AGENT_PROJECT_NAME"
     )
     
+    # Azure AI Agent - Optional defaults
+    azure_ai_agent_default_name: str = Field(
+        default="FinsightAgent", validation_alias="AZURE_AI_AGENT_DEFAULT_NAME"
+    )
+    azure_ai_default_memory_store_name: str = Field(
+        default="FinsightAgentMemory", validation_alias="AZURE_AI_DEFAULT_MEMORY_STORE_NAME"
+    )
+    
 
     # Feature flags
     production: bool = Field(default=False, validation_alias="PRODUCTION")

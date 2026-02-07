@@ -22,6 +22,9 @@ class ChatService:
         context_docs: List[Dict[str, Any]],
         history: Optional[Iterable[Dict[str, Any]]] = None,
         model: Optional[str] = None,
+        memory_store_name: Optional[str] = None,
+        conversation_id: Optional[str] = None,
+        agent_name: Optional[str] = None,
     ) -> ChatResponse:
         context_str = "\n".join(
             [
@@ -29,61 +32,75 @@ class ChatService:
                 for doc in context_docs
             ]
         )
+        
         system_prompt = (
             "### **Role & Persona**\n"
             "You are a senior **Financial Analyst AI**, an expert in interpreting complex financial documents "
             "(10-Ks, Annual Reports, Balance Sheets, and Cash Flow Statements). Your goal is to provide accurate, "
             "data-driven answers to the user's questions based *strictly* on the retrieved context provided to you.\n\n"
+
             "### **Core Instructions**\n"
             "1.  **Strict Context Adherence:**\n"
-            '    * You must answer the user\'s question using **ONLY** the "Context Data" provided below.\n'
+            "    * You must answer the user's question using **ONLY** the \"Context Data\" provided below.\n"
             "    * Do **NOT** use your internal knowledge base to answer questions about specific company financials "
             "unless that information is explicitly in the context.\n"
-            '    * If the context does not contain the answer, state clearly: *"The provided documents do not contain '
-            'information regarding [Topic]."* Do not guess or hallucinate figures.\n\n'
+            "    * If the context does not contain the answer, state clearly: *\"The provided documents do not contain "
+            "information regarding [Topic].\"* Do not guess or hallucinate figures.\n\n"
+
             "2.  **Citation Requirement:**\n"
             "    * Every financial figure, risk factor, or qualitative statement you output must include a citation.\n"
             "    * **Format:** Use brackets at the end of the sentence. "
             "Pattern: `[PDF Name, Page Number, Chunk Number, content_snapshot]`\n"
-            '    * **Example:** `Net income rose by 12% [10-K_2023.pdf, Page 12, Chunk 3, "starting text of the chunk..."]`\n\n'
+            "    * **Example:** `Net income rose by 12% [10-K_2023.pdf, Page 12, Chunk 3, \"starting text of the chunk...\"]`\n\n"
+
             "3.  **Response Formatting (Inside JSON):**\n"
-            '    * **Financials:** Always format currency and large numbers clearly (e.g., "$4.5 billion" or "$4,500M", '
-            'not "4500000000").\n'
-            '    * **Tables:** If the user asks for a comparison (e.g., "Compare 2023 vs 2024 revenue"), present the data '
+            "    * **Financials:** Always format currency and large numbers clearly (e.g., \"$4.5 billion\" or \"$4,500M\", "
+            "not \"4500000000\").\n"
+            "    * **Tables:** If the user asks for a comparison (e.g., \"Compare 2023 vs 2024 revenue\"), present the data "
             "in a Markdown table.\n"
-            '    * **Lists:** Use bullet points for qualitative summaries like "Risk Factors" or "Key Strategic Initiatives".\n'
+            "    * **Lists:** Use bullet points for qualitative summaries like \"Risk Factors\" or \"Key Strategic Initiatives\".\n"
             "    * **Number Format:** Numbers in brackets are treated as negative numbers.\n"
             "    * **Spacing:** Ensure proper spacing between paragraphs and table rows for readability.\n\n"
+
             "4.  **Tone & Style:**\n"
             "    * Professional, objective, and concise.\n"
-            '    * Avoid conversational filler (e.g., "Here is what I found"). Go straight to the data.\n'
+            "    * Avoid conversational filler (e.g., \"Here is what I found\"). Go straight to the data.\n"
             "    * When discussing risks, use neutral language.\n\n"
+
+            "5.  **Memory & Conversation History:**\n"
+            "    * **Contextual Awareness:** You have access to a memory tool and conversation history. Refer to this history FIRST to understand the context of the user's query.\n"
+            "    * **Reference Resolution:** If the user asks follow-up questions (e.g., \"What about the previous year?\", \"Compare that to Apple\"), use the conversation history to resolve what \"that\" or \"previous\" refers to.\n\n"
+
             "### **Thinking Process & Output Format**\n"
             "You must document your thinking steps before formulating the final answer. "
             "Your output must be a **strictly valid JSON object** containing exactly two keys:\n\n"
+            
             "**1. `reasoning`** (List of Objects):\n"
             "Document your logical steps to derive the answer. Each step must have:\n"
-            '   * `"title"`: A short title for the reasoning step (e.g., "Context Verification", "Data Extraction", "Calculation").\n'
-            '   * `"description"`: A detailed description of what you analyzed in this step.\n\n'
+            "   * `\"title\"`: A short title for the reasoning step (e.g., \"Context Verification\", \"Data Extraction\", \"Calculation\").\n"
+            "   * `\"description\"`: A detailed description of what you analyzed in this step.\n\n"
+            
             "**2. `answer`** (String):\n"
             "Answer should be formatted in Markdown, including all required citations as specified above.\n\n"
             "The final response to the user in **JSON** format, adhering to all strict citation and formatting rules mentioned above.\n\n"
+
             "**Example JSON Structure:**\n"
             "```json\n"
             "{\n"
-            '  "reasoningSteps": [\n'
+            "  \"reasoningSteps\": [\n"
             "    {\n"
-            '      "title": "Context Verification",\n'
-            '      "description": "Checked provided chunks for Q3 revenue figures. Found data in Chunk 2 and Chunk 5."\n'
+            "      \"title\": \"Context Verification\",\n"
+            "      \"description\": \"Checked provided chunks for Q3 revenue figures. Found data in Chunk 2 and Chunk 5.\"\n"
             "    },\n"
             "    {\n"
-            '      "title": "Data Normalization",\n'
-            '      "description": "Converted 4,500 million mentioned in text to $4.5B for clarity."\n'
+            "      \"title\": \"Data Normalization\",\n"
+            "      \"description\": \"Converted 4,500 million mentioned in text to $4.5B for clarity.\"\n"
             "    }\n"
             "  ],\n"
-            '  "answer": "**Revenue Analysis**\\n\\nRevenue for Q3 was **$4.5B**, an increase of 12% YoY [10-K.pdf, Page 4, Chunk 2, \\"Revenue increased by...\\"]..."\n'
+            "  \"answer\": \"**Revenue Analysis**\\n\\nRevenue for Q3 was **$4.5B**, an increase of 12% YoY [10-K.pdf, Page 4, Chunk 2, \\\"Revenue increased by...\\\"]...\"\n"
             "}\n"
             "```\n\n"
+
             "### **Context Data (Retrieval-Augmented Generation)**\n"
             "The following snippets have been retrieved from the uploaded financial documents:\n\n"
             "{{CONTEXT_DATA}}\n\n"
@@ -93,24 +110,45 @@ class ChatService:
 
         user_content = f"Context:\n{context_str}\n\nQuestion: {question}"
 
-        response = self.azure_factory.run_chat(
-            user_message=user_content,
-            system_message=system_prompt,
-            history=history,
+        memory_store = self.azure_factory.create_or_retrieve_memory_store(
+            name=memory_store_name, model=model
+        )
+        
+        agent = self.azure_factory.create_or_retrieve_agent(
+            instructions=system_prompt,
+            name=agent_name,
             response_format=ChatResponseRaw,
+            memory_store_name=memory_store,
+            memory_scope="session_id",
             model=model,
         )
         
-        model_from_response = response.get("model", "")
+        conversation_id = self.azure_factory.create_or_retrieve_conversation(conversation_id)
         
+        response = self.azure_factory.run_agent(
+            agent_name=agent,
+            prompt=user_content,
+            conversation_id=conversation_id,
+        )
+
+        # response = self.azure_factory.run_chat(
+        #     user_message=user_content,
+        #     system_message=system_prompt,
+        #     history=history,
+        #     response_format=ChatResponseRaw,
+        #     model=model,
+        # )
+
+        model_from_response = response.get("model", "")
+
         response = (
             json.loads(response.get("response", "{}"))
             if response
             else {"reasoningSteps": [], "answer": "No answer generated."}
         )
-        
+
         answer = response.get("answer", "")
-        
+
         reasoningSteps = [
             ReasoningSteps.model_validate(step)
             for step in response.get("reasoningSteps", [])
@@ -142,14 +180,14 @@ class ChatService:
             }
             for doc in context_docs
         ]
-        
+
         linked_citations = CitationUtils.build_linked_citations(answer or "", citations)
         # print("Linked Citations:", linked_citations)
         answer_with_links = CitationUtils.replace_citation_snapshots(
             answer or "", linked_citations
         )
         # print("Answer with Links:", answer_with_links)
-        
+
         # with open("debug_citations.json", "w", encoding="utf-8") as f:
         #     json.dump(citations, f, ensure_ascii=False, indent=4)
         # with open("debug_linked_citations.json", "w", encoding="utf-8") as f:
@@ -168,3 +206,20 @@ class ChatService:
         }
 
         return ChatResponse.model_validate(result)
+
+
+if __name__ == "__main__":
+    # Example usage
+    chat_service = ChatService()
+    example_question = "What was the revenue for Q3 2023?"
+    example_context_docs = [
+        {
+            "sourcefile": "10-K_2023.pdf",
+            "chunkId": "1",
+            "content": "In Q3 2023, the company reported a revenue of $4.5 billion, which was a 12% increase from the previous year.",
+            "documentUrl": "https://example.com/10-K_2023.pdf",
+            "documentPageNumber": "12",
+        }
+    ]
+    response = chat_service.generate_answer(example_question, example_context_docs)
+    print(response.model_dump_json(indent=4))

@@ -8,7 +8,7 @@ from openai.types.responses import (
     ResponseTextConfigParam,
 )
 from typing import Any, Dict, Iterable, List, Optional, Type, cast
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from app.core.config import get_settings
 from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential, AzureCliCredential
@@ -38,6 +38,8 @@ class AzureFactory:
         )
         self.chat_model = settings.azure_openai_chat_deployment
         self.embedding_model = settings.azure_openai_embedding_deployment
+        self.azure_ai_agent_default_name = settings.azure_ai_agent_default_name
+        self.azure_ai_default_memory_store_name = settings.azure_ai_default_memory_store_name
         self.project_client = AIProjectClient(
             credential=(
                 DefaultAzureCredential()
@@ -105,10 +107,14 @@ class AzureFactory:
         return {"response": response, "model": completion.model}
 
     def create_or_retrieve_memory_store(
-        self, name: str, model: Optional[str] = None
+        self, 
+        name: Optional[str] = None, 
+        model: Optional[str] = None
     ) -> str:
         # Check if a memory store with the given name already exists
+        name = name or self.azure_ai_default_memory_store_name
         existing_stores = self.project_client.memory_stores.list()
+        print("Retrieving Memory Store: ", name)
         for store in existing_stores:
             if store.name == name:
                 return store.name
@@ -126,6 +132,7 @@ class AzureFactory:
             options=options,
         )
 
+        print("Creating Memory Store: ", name)
         memory_store = self.project_client.memory_stores.create(
             name=name,
             definition=definition,
@@ -144,14 +151,16 @@ class AzureFactory:
 
     def create_or_retrieve_agent(
         self,
-        name: str,
         instructions: str,
+        name: Optional[str] = None,
         response_format: Optional[Type[BaseModel]] = None,
         memory_store_name: Optional[str] = None,
         memory_scope: Optional[str] = None,
         model: Optional[str] = None,
     ) -> str:
+        name = name or self.azure_ai_agent_default_name
         existing_agents = self.project_client.agents.list()
+        print("Retrieving Agent: ", name)
         for agent in existing_agents:
             if agent.name == name:
                 return agent.name
@@ -167,14 +176,17 @@ class AzureFactory:
             )
 
         request_kwargs: Dict[str, Any] = {
-                "model":model or self.chat_model,
-                "instructions":instructions,
-                "tools":tools,
+            "model": model or self.chat_model,
+            "instructions": instructions,
+            "tools": tools,
         }
-            
+
         if response_format:
             schema = response_format.model_json_schema()
-            schema["additionalProperties"] = False
+            # schema["additionalProperties"] = False
+            properties = schema.get("properties", {})
+            if properties:
+                schema["required"] = list(properties.keys())
             request_kwargs["text"] = ResponseTextConfigParam(
                 format=ResponseFormatTextJSONSchemaConfigParam(
                     name=(
@@ -186,12 +198,11 @@ class AzureFactory:
                     type="json_schema",
                 )
             )
-
-
+            
+        print("Creating Agent: ", name)
         agent = self.project_client.agents.create_version(
             agent_name=name,
-            definition=PromptAgentDefinition(**request_kwargs
-            ),
+            definition=PromptAgentDefinition(**request_kwargs),
         )
 
         return agent.name
@@ -205,16 +216,23 @@ class AzureFactory:
 
     def create_or_retrieve_conversation(
         self,
-        conversation_id: str,
+        conversation_id: Optional[str] = None,
     ) -> str:
+        
         openai_client = self.project_client.get_openai_client()
-        try:
+        if conversation_id:
+            print("Retrieving conversation: ", conversation_id)
             conversation = openai_client.conversations.retrieve(conversation_id)
             if conversation:
                 return conversation.id
-        except Exception:
+        else:
+            print("Creating new conversation")
             conversation = openai_client.conversations.create()
         return conversation.id
+    
+    def delete_conversation(self, conversation_id: str) -> None:
+        openai_client = self.project_client.get_openai_client()
+        openai_client.conversations.delete(conversation_id)
 
     def run_agent(
         self,
@@ -229,7 +247,7 @@ class AzureFactory:
             conversation=conversation_id,
             extra_body={"agent": {"name": agent_name, "type": "agent_reference"}},
         )
-        
+
         return {"response": response.output_text, "model": response.model}
 
     def list_all_models(self) -> Any:
@@ -257,6 +275,7 @@ if __name__ == "__main__":
     class SimpleResponse(BaseModel):
         answer: str
         reasoning: str
+        model_config = ConfigDict(extra='forbid')
 
     # response = azure_factory.run_chat(
     #     user_message="Derive the formula for validating prime number of million digit numbers.",
@@ -275,12 +294,13 @@ if __name__ == "__main__":
         response_format=SimpleResponse,
     )
     print("Agent Name:", agent)
-    conversation = azure_factory.create_or_retrieve_conversation(session_id)
+    conversation = azure_factory.create_or_retrieve_conversation()
     print("Conversation ID:", conversation)
 
     class AgentResponse(BaseModel):
         answer: str
         reasoningSteps: List[str]
+        model_config = ConfigDict(extra='forbid')
 
     response = azure_factory.run_agent(
         agent_name=agent,

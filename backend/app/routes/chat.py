@@ -56,12 +56,13 @@ async def chat_flow(
         queries.extend([queryObj.query for queryObj in query_plan.queries])
 
     results = search_service.search_batch(session_id, queries, top=payload.top_k)
-
+        
     answer_payload = chat_service.generate_answer(
         payload.question,
         results,
-        history=session.get("chatHistory", []),
+        # history=session.get("chatHistory", []),
         model = payload.model,
+        conversation_id=session.get("conversationId", ""),
     )
 
     message = {
