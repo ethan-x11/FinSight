@@ -163,7 +163,8 @@ class AzureFactory:
         print("Retrieving Agent: ", name)
         for agent in existing_agents:
             if agent.name == name:
-                return agent.name
+                if agent.versions.latest.definition.get("model","") == model or model is None :       
+                    return agent.name
 
         tools = []
         if memory_store_name:
@@ -213,6 +214,13 @@ class AzureFactory:
             if agent.name == name:
                 self.project_client.agents.delete(agent.id)
                 return
+            
+    def find_agent_by_name(self, name: str) :
+        existing_agents = self.project_client.agents.list()
+        for agent in existing_agents:
+            if agent.name == name:
+                return agent
+        return None
 
     def create_or_retrieve_conversation(
         self,
@@ -284,37 +292,40 @@ if __name__ == "__main__":
     # )
     # print("Response:", response)
     session_id = "23d78b6fd50c4559806efa8e51d67334"
-    memory = azure_factory.create_or_retrieve_memory_store(session_id)
-    print("Memory Store Name:", memory)
-    agent = azure_factory.create_or_retrieve_agent(
-        name=session_id,
-        instructions="You are a helpful assistant that can use the provided memory store to answer questions.",
-        memory_store_name=memory,
-        memory_scope="session_id",
-        response_format=SimpleResponse,
-    )
-    print("Agent Name:", agent)
-    conversation = azure_factory.create_or_retrieve_conversation()
-    print("Conversation ID:", conversation)
+    # memory = azure_factory.create_or_retrieve_memory_store(session_id)
+    # print("Memory Store Name:", memory)
+    # agent = azure_factory.create_or_retrieve_agent(
+    #     name=session_id,
+    #     instructions="You are a helpful assistant that can use the provided memory store to answer questions.",
+    #     memory_store_name=memory,
+    #     memory_scope="session_id",
+    #     response_format=SimpleResponse,
+    # )
+    # print("Agent Name:", agent)
+    # conversation = azure_factory.create_or_retrieve_conversation()
+    # print("Conversation ID:", conversation)
 
-    class AgentResponse(BaseModel):
-        answer: str
-        reasoningSteps: List[str]
-        model_config = ConfigDict(extra='forbid')
+    # class AgentResponse(BaseModel):
+    #     answer: str
+    #     reasoningSteps: List[str]
+    #     model_config = ConfigDict(extra='forbid')
 
-    response = azure_factory.run_agent(
-        agent_name=agent,
-        prompt="summerize the document using the search tool. most recently uploaded document",
-        conversation_id=conversation,
-    )
+    # response = azure_factory.run_agent(
+    #     agent_name=agent,
+    #     prompt="summerize the document using the search tool. most recently uploaded document",
+    #     conversation_id=conversation,
+    # )
 
-    print("Agent Response:", response)
-    # time.sleep(65)
-    new_conversation = azure_factory.create_or_retrieve_conversation(conversation)
-    print("New Conversation ID:", new_conversation)
-    response2 = azure_factory.run_agent(
-        agent_name=agent,
-        prompt="Please order my usual coffee",
-        conversation_id=new_conversation,
-    )
-    print("Agent Response 2:", response2)
+    # print("Agent Response:", response)
+    # # time.sleep(65)
+    # new_conversation = azure_factory.create_or_retrieve_conversation(conversation)
+    # print("New Conversation ID:", new_conversation)
+    # response2 = azure_factory.run_agent(
+    #     agent_name=agent,
+    #     prompt="Please order my usual coffee",
+    #     conversation_id=new_conversation,
+    # )
+    # print("Agent Response 2:", response2)
+
+    agent = azure_factory.find_agent_by_name(session_id)
+    print("Found Agent:", agent.versions.latest.definition.model) #type: ignore

@@ -125,19 +125,26 @@ class ChatService:
         
         conversation_id = self.azure_factory.create_or_retrieve_conversation(conversation_id)
         
-        response = self.azure_factory.run_agent(
-            agent_name=agent,
-            prompt=user_content,
-            conversation_id=conversation_id,
-        )
+        response: dict[str, Any] = {}
+        
+        try:
+            response = self.azure_factory.run_agent(
+                agent_name=agent,
+                prompt=user_content,
+                conversation_id=conversation_id,
+            )
+        except Exception as e:
+            print(f"Error running Agent.\n Failback to direct chat completion with AzureOpenAI.\n Refer to debug_agent_error.log for details.")
+            with open("debug_agent_error.log", "w", encoding="utf-8") as f:
+                f.write(f"Error: {str(e)}\n")
 
-        # response = self.azure_factory.run_chat(
-        #     user_message=user_content,
-        #     system_message=system_prompt,
-        #     history=history,
-        #     response_format=ChatResponseRaw,
-        #     model=model,
-        # )
+            response = self.azure_factory.run_chat(
+                user_message=user_content,
+                system_message=system_prompt,
+                history=history,
+                response_format=ChatResponseRaw,
+                model=model,
+            )
 
         model_from_response = response.get("model", "")
 
