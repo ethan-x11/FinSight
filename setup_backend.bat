@@ -47,7 +47,7 @@ python -m pip install --upgrade pip
 if errorlevel 1 goto backend_fail
 
 echo [INFO] Installing backend dependencies...
-python -m pip install -r requirements.txt
+python -m pip install -r requirements.txt && pip uninstall azure-ai-projects -y && pip install azure-ai-projects --pre
 if errorlevel 1 goto backend_fail
 
 echo [SUCCESS] Backend setup complete.
