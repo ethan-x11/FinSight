@@ -73,3 +73,31 @@
     *   "FinSight provides a robust foundation for automated financial research."
     *   "Future updates will include comparing multiple documents simultaneously and deeper table analysis."
     *   "Thank you for watching."
+
+
+## Presentation Dialogs
+Financial Report Analysis & RAG Assistant: A web application that ingests multi-format financial documents, extracts structured data using Azure Document Intelligence, indexed using Azure AI Search and enables natural language Q&A using a RAG (Retrieval-Augmented Generation) architecture.
+
+Upload: "The user creates a session and uploads a financial report (e.g., a 10-K)."
+Storage: "The raw PDF is securely stored in Azure Blob Storage."
+Extraction: "Azure Document Intelligence analyzes the document layout, extracting text, tables, and headers with high fidelity."
+Indexing: "The extracted text is 'chunked' into semantic pieces. These chunks are generated into vector embeddings and stored in Azure AI Search."
+Ready State: "Once indexed, the document is ready for real-time analysis."
+
+This is the Retrieval-Augmented Generation (RAG) flow."
+User asks: "What is the total profit and loss for fy 24 and 25"
+
+"When a user asks a question, we don't just send it to gpt."
+"First, we query Azure AI Search to find the specific chunks of the document."
+"We package pertinent chunks along with the user's question and send them to the Azure OpenAI model."
+"The model acts as a financial analyst, synthesizing the answer strictly from the provided context."
+Chat Agent with RAG System retrieves chunks and Generates answer with Citations.
+User can ask related question regarding the previous answer also and the Agent will answer them with proper context.
+User asks: provide this data for both consolidated and standalone version.
+
+Chat Agent refer to the previous conversation and related context to answer the question.
+
+
+"Beyond simple chat, the system proactively generates insights."
+"It identifies Risk Factors and summarizes Key Financials immediately after ingestion."
+"Every claim in the chat response is backed by citations, allowing the user to verify facts against the original source text."
