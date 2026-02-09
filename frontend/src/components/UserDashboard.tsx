@@ -289,7 +289,7 @@ const Sidebar = ({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-4 border-t border-slate-800/50 pt-4">
+      <div className="flex-1 overflow-y-auto px-4 pb-4 border-t border-slate-800/50 pt-4 scrollbar-slim">
         <p className="px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center">
           <History className="w-3 h-3 mr-1.5" /> History
         </p>
