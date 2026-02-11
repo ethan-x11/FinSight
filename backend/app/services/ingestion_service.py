@@ -18,7 +18,7 @@ from app.utils.chunking import semantic_chunk_text
 from app.core.config import get_settings
 import re
 
-from app.models.user import UserAttributes
+from app.models.user import UserAttribute
 
 logger = logging.getLogger(__name__)
 
@@ -159,7 +159,7 @@ class IngestionService:
         content_type: str | None,
         blob_url: str | None = None,
         blob_name: str | None = None,
-        attributes: Optional[List[UserAttributes]] = None,
+        attributes: Optional[List[UserAttribute]] = None,
         file_index: Optional[str] = "",
     ) -> None:
         session = self.sessions_repo.get_by_id(session_id)

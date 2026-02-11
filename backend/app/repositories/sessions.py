@@ -117,11 +117,23 @@ class SessionsRepository:
         self.container.upsert_item(normalized)
         return normalized
 
-    def update_analysis(self, session_id: str, analysis_output: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def update_analysis(self, session_id: str, analysis_output: Any) -> Optional[Dict[str, Any]]:
         session = self.get_by_id(session_id)
         if not session:
             return None
-        session["analysisOutput"] = analysis_output
+        existing = session.get("analysisOutput") or []
+        if isinstance(existing, dict):
+            existing = [existing]
+
+        incoming = analysis_output
+        if incoming is None:
+            incoming_items = []
+        elif isinstance(incoming, list):
+            incoming_items = incoming
+        else:
+            incoming_items = [incoming]
+
+        session["analysisOutput"] = existing + incoming_items
         session["timestamp"] = datetime.now(timezone.utc).isoformat()
         normalized = self._normalize_datetimes(session)
         self.container.upsert_item(normalized)

@@ -109,7 +109,7 @@ class SourcePointer(BaseModel):
 
 
 class Insight(BaseModel):
-    category: str
+    name: str
     value: str
     trend: str
     citation: str
@@ -117,7 +117,8 @@ class Insight(BaseModel):
 
 class KeyInsight(BaseModel):
     id: str
-    category: str
+    name: str
+    description: str
     value: str
     trend: Optional[str] = None
     confidenceScore: Optional[float] = Field(default=0.0, ge=0.0, le=1.0)

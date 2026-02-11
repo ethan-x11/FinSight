@@ -14,7 +14,7 @@ class UserBase(BaseModel):
     joinDate: Optional[datetime] = None
     sessionCount: int = 0
     lastActive: Optional[datetime] = None
-    attributes: Optional[List[UserAttributes]] = None
+    attributes: Optional[List[UserAttribute]] = None
 
 
 class UserPublic(UserBase):
@@ -30,12 +30,12 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
 
 
-class UserAttributes(BaseModel):
+class UserAttribute(BaseModel):
     name: str = Field(min_length=1, max_length=80)
     description: str = Field(default="", max_length=500)
 
 
-class UserAttributesUpdate(BaseModel):
+class UserAttributeUpdate(BaseModel):
     name: str = Field(min_length=1, max_length=80)
     description: Optional[str] = Field(default=None, max_length=500)
 

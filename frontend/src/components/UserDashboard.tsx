@@ -36,7 +36,9 @@ import {
 import {
   askChatQuestion,
   createUserAttribute,
+  createSessionAttributeInsight,
   deleteUserAttribute,
+  deleteSessionKeyInsight,
   fetchInsights,
   fetchSession,
   fetchSessionStatus,
@@ -553,7 +555,7 @@ const InsightsPanel = ({ insights }: { insights: AnalysisOutput | null }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {keyInsights.map((item: KeyInsight) => (
             <div key={item.id} className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-              <p className="text-xs text-slate-500 uppercase font-semibold">{item.category || "Insight"}</p>
+              <p className="text-xs text-slate-500 uppercase font-semibold">{item.name || item.category || "Insight"}</p>
               <p className="text-md font-semibold text-slate-900 mt-1">{item.value}</p>
               {item.trend && <p className="text-xs text-slate-500">Trend: {item.trend}</p>}
               {/* {item.confidenceScore && typeof item.confidenceScore === "number" && (
@@ -1173,11 +1175,16 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [showDefaultAttributes, setShowDefaultAttributes] = useState(false);
+  const [showSessionAttributes, setShowSessionAttributes] = useState(false);
   const [attributesDraft, setAttributesDraft] = useState<EditableAttribute[]>([]);
   const [editingAttributeId, setEditingAttributeId] = useState<string | null>(null);
   const [attributeDraft, setAttributeDraft] = useState({ name: "", description: "" });
   const [attributeSavingId, setAttributeSavingId] = useState<string | null>(null);
   const [attributeDeletingId, setAttributeDeletingId] = useState<string | null>(null);
+  const [sessionAttributeDraft, setSessionAttributeDraft] = useState({ name: "", description: "" });
+  const [sessionAttributeSaving, setSessionAttributeSaving] = useState(false);
+  const [sessionAttributeDeletingId, setSessionAttributeDeletingId] = useState<string | null>(null);
+  const [showSessionAttributeForm, setShowSessionAttributeForm] = useState(false);
 
   const titleEditRef = useRef<HTMLDivElement | null>(null);
   const chatAbortRef = useRef<AbortController | null>(null);
@@ -1243,6 +1250,12 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     if (!currentSession?.sourceDocument) return null;
     return currentSession.sourceDocument.find((doc, idx) => getDocumentId(doc, idx) === activeDocId) || null;
   }, [currentSession, activeDocId]);
+
+  const sessionAttributes = useMemo(() => {
+    if (!activeDocId) return [];
+    const output = insights?.find((item) => item.fileName === activeDocId) ?? null;
+    return output?.keyInsights || [];
+  }, [insights, activeDocId]);
 
   useEffect(() => {
     sessionsRef.current = sessions;
@@ -1707,6 +1720,50 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     }
   };
 
+  const handleAddSessionAttribute = async () => {
+    if (!currentSessionId || !activeDocId) {
+      toast.error("Select a session and document first");
+      return;
+    }
+    const trimmedName = sessionAttributeDraft.name.trim();
+    const trimmedDescription = sessionAttributeDraft.description.trim();
+    if (!trimmedName) {
+      toast.error("Attribute name is required");
+      return;
+    }
+
+    setSessionAttributeSaving(true);
+    try {
+      const updated = await createSessionAttributeInsight(currentSessionId, activeDocId, {
+        name: trimmedName,
+        description: trimmedDescription || undefined,
+      });
+      setInsights(updated || null);
+      setRefreshedInsightsSessions((prev) => ({ ...prev, [currentSessionId]: true }));
+      setSessionAttributeDraft({ name: "", description: "" });
+      toast.success("Attribute added");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to add attribute");
+    } finally {
+      setSessionAttributeSaving(false);
+    }
+  };
+
+  const handleDeleteSessionAttribute = async (insightId: string) => {
+    if (!currentSessionId) return;
+    setSessionAttributeDeletingId(insightId);
+    try {
+      const updated = await deleteSessionKeyInsight(currentSessionId, insightId);
+      setInsights(updated || null);
+      setRefreshedInsightsSessions((prev) => ({ ...prev, [currentSessionId]: true }));
+      toast.success("Attribute deleted");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete attribute");
+    } finally {
+      setSessionAttributeDeletingId(null);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-white font-sans text-slate-900 selection:bg-blue-100">
       <Sidebar
@@ -1884,6 +1941,12 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                             >
                               <RefreshCcw className="w-3 h-3 mr-1 inline" /> Refresh Status
                             </button>
+                            <button
+                              onClick={() => setShowSessionAttributes(true)}
+                              className="flex w-full md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap bg-white text-slate-500 shadow-sm hover:text-slate-900 justify-center text-center"
+                            >
+                              <List className="w-3 h-3 mr-1 inline" /> Edit Attributes
+                            </button>
                             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                               <AlertDialogTrigger asChild>
                                 <button
@@ -1956,7 +2019,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                 <DialogTitle className="text-slate-900 flex items-center gap-2">
                   <List className="w-5 h-5 text-blue-600" /> Default Attributes
                 </DialogTitle>
-                <Button variant="outline" size="sm" onClick={handleAddAttribute}>
+                <Button variant="outline" className="mr-6" size="sm" onClick={handleAddAttribute}>
                   <Plus className="w-4 h-4 mr-1" /> New Attribute
                 </Button>
               </div>
@@ -2025,6 +2088,114 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                 })}
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+      )}
+      {showSessionAttributes && (
+        <Dialog
+          open={showSessionAttributes}
+          onOpenChange={(open) => {
+            setShowSessionAttributes(open);
+            if (!open) {
+              setShowSessionAttributeForm(false);
+              setSessionAttributeDraft({ name: "", description: "" });
+            }
+          }}
+        >
+          <DialogContent className="w-lg bg-white rounded-xl p-6 shadow-xl border border-slate-200">
+            <DialogHeader>
+              <div className="flex items-center justify-between gap-3">
+                <DialogTitle className="text-slate-900 flex items-center gap-2">
+                  <List className="w-5 h-5 text-blue-600" /> Session Attributes
+                </DialogTitle>
+              </div>
+              <DialogDescription className="text-slate-500">
+                Attributes extracted for the selected document.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              {!showSessionAttributeForm ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSessionAttributeForm(true)}
+                >
+                  <Plus className="w-4 h-4 mr-1" /> Add Attribute
+                </Button>
+              ) : (
+                <div className="rounded-lg border border-slate-200 p-3 bg-slate-50">
+                  <div className="text-sm font-semibold text-slate-800 mb-2">Add attribute</div>
+                  <div className="space-y-2">
+                    <Input
+                      value={sessionAttributeDraft.name}
+                      onChange={(e) => setSessionAttributeDraft((prev) => ({ ...prev, name: e.target.value }))}
+                      className="h-8 text-sm"
+                      placeholder="Attribute name"
+                    />
+                    <textarea
+                      value={sessionAttributeDraft.description}
+                      onChange={(e) => setSessionAttributeDraft((prev) => ({ ...prev, description: e.target.value }))}
+                      className="w-full min-h-[70px] rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 shadow-inner focus:border-blue-400 focus:outline-none"
+                      placeholder="Description"
+                    />
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAddSessionAttribute}
+                        disabled={sessionAttributeSaving}
+                      >
+                        {sessionAttributeSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
+                        Add Attribute
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setShowSessionAttributeForm(false);
+                          setSessionAttributeDraft({ name: "", description: "" });
+                        }}
+                        disabled={sessionAttributeSaving}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {sessionAttributes.length === 0 ? (
+                <div className="text-sm text-slate-500">No session attributes found.</div>
+              ) : (
+                <div className="space-y-3">
+                  {sessionAttributes.map((attr) => (
+                    <div key={attr.id} className="rounded-lg border border-slate-200 p-3 bg-slate-50">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-sm font-semibold text-slate-800">
+                            {attr.name || attr.category || "Unnamed attribute"}
+                          </div>
+                          <div className="text-xs text-slate-600 mt-1">
+                            {attr.description || "No description provided."}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteSessionAttribute(attr.id)}
+                          disabled={sessionAttributeDeletingId === attr.id}
+                          className="p-2 rounded-md border border-slate-200 bg-white text-slate-600 hover:text-red-600 hover:bg-red-50 disabled:opacity-60"
+                          title="Delete"
+                        >
+                          {sessionAttributeDeletingId === attr.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </DialogContent>
         </Dialog>
       )}

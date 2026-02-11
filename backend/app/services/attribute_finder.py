@@ -26,6 +26,7 @@ class AttributeFinder:
             "### **Core Instructions**\n"
             "1.  **Strict Context Adherence:**\n"
             '    * Extract data using **ONLY** the "Context Data" provided below.\n'
+            '    * If the Context Data does not contain information relevant to this specific insight, set "Not Found".\n'
             "    * Do **NOT** use internal knowledge. If the specific metric requested is not found, do not invent it.\n\n"
             "2.  **Citation Requirement:**\n"
             "    * Every extracted insight must include a citation strictly adhering to the format.\n"
@@ -33,7 +34,7 @@ class AttributeFinder:
             '    * **Example:** `[10-K_2023.pdf, Page 12, Chunk 3, "Net income rose by..."]`\n\n'
             "3.  **Data Formatting:**\n"
             '    * **Category:** Use the provided "Insight Name" (`{{NAME}}`) as the category.\n'
-            '    * **Value:** Normalize numbers for readability (e.g., convert "4,500 million" to "$4.5B").\n'
+            '    * **Value:** Use the exact value from the context data along with used format(e.g. "$4.5B").\n'
             '    * **Trend:** Capture direction and magnitude (e.g., "+12% YoY", "-50 bps", "Stable"). If no trend is stated, use "N/A".\n\n'
             "4.  **Memory & Conversation History:**\n"
             "    * **Contextual Awareness:** Refer to conversation history to understand specific nuances if the description is vague.\n\n"

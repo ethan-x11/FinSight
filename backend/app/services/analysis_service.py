@@ -6,7 +6,7 @@ from app.services.chat_service import ChatService
 from app.services.search_service import SearchService
 from app.services.query_planner import QueryPlanner
 from app.services.attribute_finder import AttributeFinder
-from app.models.user import UserAttributes
+from app.models.user import UserAttribute
 
 
 class AnalysisService:
@@ -20,7 +20,7 @@ class AnalysisService:
         self,
         file_name: str,
         index_name: str,
-        attributes: Optional[List[UserAttributes]] = None,
+        attributes: Optional[List[UserAttribute]] = None,
     ) -> AnalysisOutput:
         prompt = (
             "Generate key insights and risk factors based on the analyzed document."
@@ -39,35 +39,34 @@ class AnalysisService:
 
         # print("Generated Insights:", insights)
 
-        attribute_values: List[Insight] = []
+        key_insights: List[KeyInsight] = []
 
         if attributes:
             for attr in attributes:
-                attribute_values.append(
-                    self.attribute_finder.find_attribute(
-                        name=attr.name,
+                attribute_value = self.attribute_finder.find_attribute(
+                    name=attr.name,
+                    description=attr.description,
+                    index_name=index_name,
+                )
+                key_insights.append(
+                    KeyInsight(
+                        id=uuid4().hex,
+                        name=attribute_value.name,
                         description=attr.description,
-                        index_name=index_name,
+                        value=attribute_value.value,
+                        trend=attribute_value.trend,
+                        citation=attribute_value.citation,
                     )
                 )
 
-        key_insights = [
-            KeyInsight(
-                id=uuid4().hex,
-                category=attr.category,
-                value=attr.value,
-                trend=attr.trend,
-                citation=attr.citation,
-            )
-            for attr in attribute_values
-        ]
-
         return AnalysisOutput(
             fileName=file_name,
-            keyInsights = key_insights or [
+            keyInsights=key_insights
+            or [
                 KeyInsight(
                     id=uuid4().hex,
-                    category="Auto Insight",
+                    name="Auto Insight",
+                    description="Automatically generated insight based on document content",
                     value="Document processed",
                     trend=None,
                     confidenceScore=0.85,

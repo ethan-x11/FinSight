@@ -7,8 +7,8 @@ from app.core.auth import get_current_admin, get_current_user
 from app.repositories.users import UsersRepository, get_users_repository
 from app.models.user import (
     PasswordChangeRequest,
-    UserAttributes,
-    UserAttributesUpdate,
+    UserAttribute,
+    UserAttributeUpdate,
     UserInDB,
     UserPublic,
     UserUpdate,
@@ -42,7 +42,7 @@ async def update_profile(
 
 @router.post("/user/me/attribute", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 async def create_user_attribute(
-    attribute: UserAttributes,
+    attribute: UserAttribute,
     current_user: UserInDB = Depends(get_current_user),
     repo: UsersRepository = Depends(get_users_repository),
 ) -> UserPublic:
@@ -57,7 +57,7 @@ async def create_user_attribute(
 @router.patch("/user/me/attribute/{name}", response_model=UserPublic)
 async def update_user_attribute(
     name: str,
-    updates: UserAttributesUpdate,
+    updates: UserAttributeUpdate,
     current_user: UserInDB = Depends(get_current_user),
     repo: UsersRepository = Depends(get_users_repository),
 ) -> UserPublic:

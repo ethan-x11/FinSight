@@ -113,6 +113,8 @@ export interface ProcessingStatus {
 
 export interface KeyInsight {
 	id: string;
+	name?: string;
+	description?: string;
 	category?: string;
 	value: string;
 	trend?: string;
@@ -418,6 +420,25 @@ export async function askChatQuestion(
 
 export async function fetchInsights(sessionId: string): Promise<AnalysisOutput[]> {
 	return request(`/insights/${sessionId}`, { authenticated: true });
+}
+
+export async function createSessionAttributeInsight(
+	sessionId: string,
+	fileName: string,
+	attribute: UserAttribute
+): Promise<AnalysisOutput[]> {
+	return request<AnalysisOutput[]>(`/insights/${sessionId}`, {
+		method: "POST",
+		body: { fileName, attribute },
+		authenticated: true,
+	});
+}
+
+export async function deleteSessionKeyInsight(sessionId: string, insightId: string): Promise<AnalysisOutput[]> {
+	return request<AnalysisOutput[]>(`/insights/${sessionId}/keyinsight/${encodeURIComponent(insightId)}`, {
+		method: "DELETE",
+		authenticated: true,
+	});
 }
 
 export async function submitFeedback(params: {
