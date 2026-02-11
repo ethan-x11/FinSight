@@ -387,7 +387,7 @@ const DocumentUploader = ({ onUpload }: { onUpload: (files: FileList) => Promise
       if (step >= steps.length) {
         clearInterval(interval);
       }
-    }, 800);
+    }, 8000);
 
     try {
       await onUpload(files);
