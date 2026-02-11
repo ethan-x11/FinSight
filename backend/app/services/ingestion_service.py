@@ -18,6 +18,8 @@ from app.utils.chunking import semantic_chunk_text
 from app.core.config import get_settings
 import re
 
+from app.models.user import UserAttributes
+
 logger = logging.getLogger(__name__)
 
 CHUNK_BATCH_SIZE = 50
@@ -157,6 +159,7 @@ class IngestionService:
         content_type: str | None,
         blob_url: str | None = None,
         blob_name: str | None = None,
+        attributes: Optional[List[UserAttributes]] = None,
         file_index: Optional[str] = "",
     ) -> None:
         session = self.sessions_repo.get_by_id(session_id)
@@ -367,7 +370,7 @@ class IngestionService:
             session["systemStatus"] = {"overallStatus": "completed", "steps": steps}
             # if doc_result.get("tables"):
             
-            insights = self.analysis_service.generate_insights(file_name=filename, index_name=index_name)
+            insights = self.analysis_service.generate_insights(file_name=filename, index_name=index_name, attributes=attributes)
 
             if self._should_abort(session_id):
                 self._mark_cancelled(session_id)

@@ -31,6 +31,8 @@ async def upload_financial_doc(
     blob_service = BlobService()
     ingestion_service = IngestionService()
     azure_factory = AzureFactory()
+    
+    attributes = current_user.attributes
 
     session_id = ""
     blob_data: list[BlobMeta] = []
@@ -80,6 +82,7 @@ async def upload_financial_doc(
             blob_url,
             blob_name,
             file_index= f"{idx + 1}/{len(files)}",
+            attributes=attributes,
         )
         
         print(f"Started ingestion for session {session_id} for file {file.filename}")

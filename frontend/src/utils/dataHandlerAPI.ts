@@ -62,6 +62,12 @@ export interface ApiUser {
 	joinDate: string;
 	sessionCount: number;
 	lastActive: string;
+	attributes?: UserAttribute[] | UserAttribute | null;
+}
+
+export interface UserAttribute {
+	name?: string;
+	description?: string;
 }
 
 export interface AuthenticatedResponse {
@@ -314,6 +320,25 @@ export async function fetchCurrentUser(): Promise<ApiUser> {
 
 export async function updateProfile(updates: Partial<Pick<ApiUser, "name" | "email">>): Promise<ApiUser> {
 	return request<ApiUser>("/user/me", { method: "PATCH", body: updates, authenticated: true });
+}
+
+export async function createUserAttribute(attribute: UserAttribute): Promise<ApiUser> {
+	return request<ApiUser>("/user/me/attribute", { method: "POST", body: attribute, authenticated: true });
+}
+
+export async function updateUserAttribute(name: string, updates: UserAttribute): Promise<ApiUser> {
+	return request<ApiUser>(`/user/me/attribute/${encodeURIComponent(name)}`, {
+		method: "PATCH",
+		body: updates,
+		authenticated: true,
+	});
+}
+
+export async function deleteUserAttribute(name: string): Promise<ApiUser> {
+	return request<ApiUser>(`/user/me/attribute/${encodeURIComponent(name)}`, {
+		method: "DELETE",
+		authenticated: true,
+	});
 }
 
 export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {

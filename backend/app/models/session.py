@@ -108,14 +108,20 @@ class SourcePointer(BaseModel):
     page_range: Optional[str] = None
 
 
+class Insight(BaseModel):
+    category: str
+    value: str
+    trend: str
+    citation: str
+    
 
 class KeyInsight(BaseModel):
     id: str
     category: str
     value: str
     trend: Optional[str] = None
-    confidenceScore: float = Field(default=0.0, ge=0.0, le=1.0)
-
+    confidenceScore: Optional[float] = Field(default=0.0, ge=0.0, le=1.0)
+    citation: Optional[str] = None
 
 class RiskFactor(BaseModel):
     severity: Literal["Low", "Medium", "High"]
@@ -176,3 +182,4 @@ class Query(BaseModel):
 
 class QueryPlannerResponse(BaseModel):
     queries: List[Query] = Field(default_factory=list)
+    

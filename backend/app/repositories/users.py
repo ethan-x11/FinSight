@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from azure.cosmos import exceptions as cosmos_exceptions  # type: ignore[import]
 
@@ -67,6 +67,72 @@ class UsersRepository:
         user["password"] = hash_password(password)
         self.container.replace_item(user, user)
         return True
+
+    def delete_user_attribute(self, user_id: str, name: str) -> Tuple[Optional[Dict[str, Any]], bool]:
+        user = self.get_by_id(user_id)
+        if not user:
+            return None, False
+        existing = user.get("attributes")
+        if not isinstance(existing, list) or not existing:
+            return user, False
+
+        cleaned = [attr for attr in existing if not isinstance(attr, dict) or attr.get("name") != name]
+        removed = len(cleaned) != len(existing)
+        if not removed:
+            return user, False
+
+        user["attributes"] = cleaned
+        self.container.replace_item(user, user)
+        return user, True
+
+    def add_user_attribute(self, user_id: str, attribute: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], bool]:
+        user = self.get_by_id(user_id)
+        if not user:
+            return None, False
+
+        existing = user.get("attributes")
+        attributes = existing if isinstance(existing, list) else []
+
+        name = attribute.get("name")
+        if any(isinstance(attr, dict) and attr.get("name") == name for attr in attributes):
+            return user, False
+
+        attributes.append({"name": name, "description": attribute.get("description")})
+        user["attributes"] = attributes
+        self.container.replace_item(user, user)
+        return user, True
+
+    def update_user_attribute(
+        self, user_id: str, name: str, updates: Dict[str, Any]
+    ) -> Tuple[Optional[Dict[str, Any]], bool, bool]:
+        user = self.get_by_id(user_id)
+        if not user:
+            return None, False, False
+
+        existing = user.get("attributes")
+        if not isinstance(existing, list) or not existing:
+            return user, False, False
+
+        index = next(
+            (i for i, attr in enumerate(existing) if isinstance(attr, dict) and attr.get("name") == name),
+            None,
+        )
+        if index is None:
+            return user, False, False
+
+        new_name = updates.get("name", name)
+        if new_name != name and any(
+            isinstance(attr, dict) and attr.get("name") == new_name for attr in existing
+        ):
+            return user, False, True
+
+        updated = dict(existing[index])
+        updated.update({k: v for k, v in updates.items() if v is not None})
+        updated["name"] = new_name
+        existing[index] = updated
+        user["attributes"] = existing
+        self.container.replace_item(user, user)
+        return user, True, False
 
     def touch_last_active(self, user_id: str) -> None:
         user = self.get_by_id(user_id)

@@ -30,10 +30,13 @@ import {
   Check,
   Trash2,
   Search,
-  MessageCircleOff
+  MessageCircleOff,
+  List
 } from "lucide-react";
 import {
   askChatQuestion,
+  createUserAttribute,
+  deleteUserAttribute,
   fetchInsights,
   fetchSession,
   fetchSessionStatus,
@@ -52,9 +55,12 @@ import {
   submitFeedback,
   Query,
   ReasoningSteps,
+  UserAttribute,
+  updateUserAttribute,
 } from "../utils/dataHandlerAPI";
 import "katex/dist/katex.min.css";
 import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -99,6 +105,14 @@ type SimpleMessage = {
     submittedAt?: string;
   };
   model?: string;
+};
+
+type EditableAttribute = {
+  _id: string;
+  _isNew?: boolean;
+  _originalName?: string;
+  name: string;
+  description: string;
 };
 
 
@@ -542,9 +556,9 @@ const InsightsPanel = ({ insights }: { insights: AnalysisOutput | null }) => {
               <p className="text-xs text-slate-500 uppercase font-semibold">{item.category || "Insight"}</p>
               <p className="text-md font-semibold text-slate-900 mt-1">{item.value}</p>
               {item.trend && <p className="text-xs text-slate-500">Trend: {item.trend}</p>}
-              {typeof item.confidenceScore === "number" && (
+              {/* {item.confidenceScore && typeof item.confidenceScore === "number" && (
                 <div className="text-xs text-slate-500 mt-1">Confidence: {(item.confidenceScore * 100).toFixed(0)}%</div>
-              )}
+              )} */}
             </div>
           ))}
         </div>
@@ -1158,6 +1172,12 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   const [loadingDeployments, setLoadingDeployments] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [showDefaultAttributes, setShowDefaultAttributes] = useState(false);
+  const [attributesDraft, setAttributesDraft] = useState<EditableAttribute[]>([]);
+  const [editingAttributeId, setEditingAttributeId] = useState<string | null>(null);
+  const [attributeDraft, setAttributeDraft] = useState({ name: "", description: "" });
+  const [attributeSavingId, setAttributeSavingId] = useState<string | null>(null);
+  const [attributeDeletingId, setAttributeDeletingId] = useState<string | null>(null);
 
   const titleEditRef = useRef<HTMLDivElement | null>(null);
   const chatAbortRef = useRef<AbortController | null>(null);
@@ -1168,6 +1188,11 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
 
   const currentSession = useMemo(() => sessions.find((s) => s.id === currentSessionId) || null, [sessions, currentSessionId]);
   const canChat = currentSession?.systemStatus?.overallStatus === "completed";
+  const defaultAttributes = useMemo(() => {
+    const raw = (user.attributes ?? null) as UserAttribute[] | UserAttribute | null;
+    if (!raw) return [];
+    return Array.isArray(raw) ? raw : [raw];
+  }, [user.attributes]);
 
   useEffect(() => {
     setTitleDraft(currentSession?.metadata?.title || "");
@@ -1187,6 +1212,21 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [editingTitle, currentSession]);
+
+  useEffect(() => {
+    if (!showDefaultAttributes) return;
+    setAttributesDraft(
+      defaultAttributes.map((attr) => ({
+        _id: crypto.randomUUID(),
+        _isNew: false,
+        _originalName: attr.name || "",
+        name: attr.name || "",
+        description: attr.description || "",
+      }))
+    );
+    setEditingAttributeId(null);
+    setAttributeDraft({ name: "", description: "" });
+  }, [defaultAttributes, showDefaultAttributes]);
 
   const documentEntries = useMemo(
     () =>
@@ -1568,6 +1608,105 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     }
   };
 
+  const handleAddAttribute = () => {
+    const id = crypto.randomUUID();
+    const newAttr: EditableAttribute = { _id: id, _isNew: true, name: "", description: "" };
+    setAttributesDraft((prev) => [newAttr, ...prev]);
+    setEditingAttributeId(id);
+    setAttributeDraft({ name: "", description: "" });
+  };
+
+  const handleStartEditAttribute = (attr: EditableAttribute) => {
+    setEditingAttributeId(attr._id);
+    setAttributeDraft({ name: attr.name || "", description: attr.description || "" });
+  };
+
+  const handleConfirmAttribute = async (attr: EditableAttribute) => {
+    const trimmedName = attributeDraft.name.trim();
+    const trimmedDescription = attributeDraft.description.trim();
+
+    if (!trimmedName) {
+      toast.error("Attribute name is required");
+      return;
+    }
+
+    setAttributeSavingId(attr._id);
+    try {
+      if (attr._isNew) {
+        await createUserAttribute({
+          name: trimmedName,
+          description: trimmedDescription || undefined,
+        });
+        toast.success("Attribute created");
+        setAttributesDraft((prev) =>
+          prev.map((item) =>
+            item._id === attr._id
+              ? {
+                  ...item,
+                  name: trimmedName,
+                  description: trimmedDescription,
+                  _isNew: false,
+                  _originalName: trimmedName,
+                }
+              : item
+          )
+        );
+      } else {
+        const originalName = attr._originalName || attr.name;
+        if (!originalName) {
+          toast.error("Attribute name is missing");
+          return;
+        }
+        await updateUserAttribute(originalName, {
+          name: trimmedName,
+          description: trimmedDescription || undefined,
+        });
+        toast.success("Attribute updated");
+        setAttributesDraft((prev) =>
+          prev.map((item) =>
+            item._id === attr._id
+              ? {
+                  ...item,
+                  name: trimmedName,
+                  description: trimmedDescription,
+                  _originalName: trimmedName,
+                }
+              : item
+          )
+        );
+      }
+      setEditingAttributeId(null);
+      setAttributeDraft({ name: "", description: "" });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to save attribute");
+    } finally {
+      setAttributeSavingId(null);
+    }
+  };
+
+  const handleDeleteAttribute = async (attr: EditableAttribute) => {
+    const targetName = attr._originalName || attr.name;
+    if (!targetName) {
+      toast.error("Attribute name is missing");
+      return;
+    }
+
+    setAttributeDeletingId(attr._id);
+    try {
+      await deleteUserAttribute(targetName);
+      toast.success("Attribute deleted");
+      setAttributesDraft((prev) => prev.filter((item) => item._id !== attr._id));
+      if (editingAttributeId === attr._id) {
+        setEditingAttributeId(null);
+        setAttributeDraft({ name: "", description: "" });
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete attribute");
+    } finally {
+      setAttributeDeletingId(null);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-white font-sans text-slate-900 selection:bg-blue-100">
       <Sidebar
@@ -1609,6 +1748,9 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                 <Shield className="w-3 h-3" /> Admin
               </Badge>
             )}
+            <Button variant="ghost" size="sm" onClick={() => setShowDefaultAttributes(true)}>
+              <List className="w-4 h-4 mr-1" /> Default Attributes
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => setShowProfile(true)}>
               <User className="w-4 h-4 mr-1" />
               {user.name}
@@ -1806,6 +1948,86 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
 
       {showProfile && <ProfileDialog open={showProfile} onClose={() => setShowProfile(false)} />}
       {showPasswordChange && <PasswordChangeDialog open={showPasswordChange} onClose={() => setShowPasswordChange(false)} />}
+      {showDefaultAttributes && (
+        <Dialog open={showDefaultAttributes} onOpenChange={(open) => setShowDefaultAttributes(open)}>
+          <DialogContent className="w-lg bg-white rounded-xl p-6 shadow-xl border border-slate-200">
+            <DialogHeader>
+              <div className="flex items-center justify-between gap-3">
+                <DialogTitle className="text-slate-900 flex items-center gap-2">
+                  <List className="w-5 h-5 text-blue-600" /> Default Attributes
+                </DialogTitle>
+                <Button variant="outline" size="sm" onClick={handleAddAttribute}>
+                  <Plus className="w-4 h-4 mr-1" /> New Attribute
+                </Button>
+              </div>
+              <DialogDescription className="text-slate-500">
+                Attributes already stored for your account.
+              </DialogDescription>
+            </DialogHeader>
+            {attributesDraft.length === 0 ? (
+              <div className="text-sm text-slate-500">No default attributes found.</div>
+            ) : (
+              <div className="space-y-3">
+                {attributesDraft.map((attr) => {
+                  const isEditing = editingAttributeId === attr._id;
+                  const isSaving = attributeSavingId === attr._id;
+                  const isDeleting = attributeDeletingId === attr._id;
+                  return (
+                    <div key={attr._id} className="rounded-lg border border-slate-200 p-3 bg-slate-50">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 space-y-2">
+                          {isEditing ? (
+                            <Input
+                              value={attributeDraft.name}
+                              onChange={(e) => setAttributeDraft((prev) => ({ ...prev, name: e.target.value }))}
+                              className="h-8 text-sm"
+                              placeholder="Attribute name"
+                            />
+                          ) : (
+                            <div className="text-sm font-semibold text-slate-800">
+                              {attr.name || "Unnamed attribute"}
+                            </div>
+                          )}
+                          {isEditing ? (
+                            <textarea
+                              value={attributeDraft.description}
+                              onChange={(e) => setAttributeDraft((prev) => ({ ...prev, description: e.target.value }))}
+                              className="w-full min-h-[70px] rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 shadow-inner focus:border-blue-400 focus:outline-none"
+                              placeholder="Description"
+                            />
+                          ) : (
+                            <div className="text-xs text-slate-600">
+                              {attr.description || "No description provided."}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => (isEditing ? handleConfirmAttribute(attr) : handleStartEditAttribute(attr))}
+                            disabled={isSaving || isDeleting}
+                            className="p-2 rounded-md border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 disabled:opacity-60"
+                            title={isEditing ? "Confirm" : "Edit"}
+                          >
+                            {isEditing ? <Check className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteAttribute(attr)}
+                            disabled={isSaving || isDeleting}
+                            className="p-2 rounded-md border border-slate-200 bg-white text-slate-600 hover:text-red-600 hover:bg-red-50 disabled:opacity-60"
+                            title="Delete"
+                          >
+                            {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
