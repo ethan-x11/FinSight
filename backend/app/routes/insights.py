@@ -9,16 +9,12 @@ from pydantic import BaseModel
 
 from app.core.auth import get_current_user
 from app.repositories.sessions import SessionsRepository, get_sessions_repository
-from app.models.session import AnalysisOutput, KeyInsight
+from app.models.session import AnalysisOutput, KeyInsight, AttributeInsightRequest
 from app.models.user import UserAttribute, UserInDB
 from app.services.attribute_finder import AttributeFinder
 
 router = APIRouter(tags=["insights"], dependencies=[Depends(get_current_user)])
 
-
-class AttributeInsightRequest(BaseModel):
-    fileName: str
-    attribute: UserAttribute
 
 
 @router.get("/insights/{session_id}", response_model=List[AnalysisOutput])

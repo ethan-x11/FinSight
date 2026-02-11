@@ -1176,6 +1176,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [showDefaultAttributes, setShowDefaultAttributes] = useState(false);
   const [showSessionAttributes, setShowSessionAttributes] = useState(false);
+  const [defaultAttributesState, setDefaultAttributesState] = useState<UserAttribute[]>([]);
   const [attributesDraft, setAttributesDraft] = useState<EditableAttribute[]>([]);
   const [editingAttributeId, setEditingAttributeId] = useState<string | null>(null);
   const [attributeDraft, setAttributeDraft] = useState({ name: "", description: "" });
@@ -1195,10 +1196,15 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
 
   const currentSession = useMemo(() => sessions.find((s) => s.id === currentSessionId) || null, [sessions, currentSessionId]);
   const canChat = currentSession?.systemStatus?.overallStatus === "completed";
-  const defaultAttributes = useMemo(() => {
+  const defaultAttributes = useMemo(() => defaultAttributesState, [defaultAttributesState]);
+
+  useEffect(() => {
     const raw = (user.attributes ?? null) as UserAttribute[] | UserAttribute | null;
-    if (!raw) return [];
-    return Array.isArray(raw) ? raw : [raw];
+    if (!raw) {
+      setDefaultAttributesState([]);
+      return;
+    }
+    setDefaultAttributesState(Array.isArray(raw) ? raw : [raw]);
   }, [user.attributes]);
 
   useEffect(() => {
@@ -1651,6 +1657,10 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
           description: trimmedDescription || undefined,
         });
         toast.success("Attribute created");
+        setDefaultAttributesState((prev) => [
+          { name: trimmedName, description: trimmedDescription || undefined },
+          ...prev,
+        ]);
         setAttributesDraft((prev) =>
           prev.map((item) =>
             item._id === attr._id
@@ -1675,6 +1685,13 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
           description: trimmedDescription || undefined,
         });
         toast.success("Attribute updated");
+        setDefaultAttributesState((prev) =>
+          prev.map((item) =>
+            (item.name || "") === originalName
+              ? { ...item, name: trimmedName, description: trimmedDescription || undefined }
+              : item
+          )
+        );
         setAttributesDraft((prev) =>
           prev.map((item) =>
             item._id === attr._id
@@ -1708,6 +1725,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     try {
       await deleteUserAttribute(targetName);
       toast.success("Attribute deleted");
+      setDefaultAttributesState((prev) => prev.filter((item) => (item.name || "") !== targetName));
       setAttributesDraft((prev) => prev.filter((item) => item._id !== attr._id));
       if (editingAttributeId === attr._id) {
         setEditingAttributeId(null);

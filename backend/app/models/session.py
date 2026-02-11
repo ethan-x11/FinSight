@@ -6,6 +6,8 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Annotated
 
+from app.models.user import UserAttribute
+
 
 
 ProcessStage = Annotated[str, Field(pattern=r"^(pending|processing.*|completed|failed|cancelling|cancelled)$")]
@@ -184,3 +186,7 @@ class Query(BaseModel):
 class QueryPlannerResponse(BaseModel):
     queries: List[Query] = Field(default_factory=list)
     
+
+class AttributeInsightRequest(BaseModel):
+    fileName: str
+    attribute: UserAttribute
