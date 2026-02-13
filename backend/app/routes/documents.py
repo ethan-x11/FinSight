@@ -7,7 +7,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Up
 from app.core.auth import get_current_user
 from app.repositories.sessions import SessionsRepository, get_sessions_repository
 from app.models.document import BlobMeta, UploadResponse
-from app.models.session import SessionCreate, SessionMetadata, SessionUpdate, SourceDocument
+from app.models.session import SessionCreate, SessionMetadata, SessionRuleSet, SessionUpdate, SourceDocument
 from app.models.user import UserInDB
 from app.services.blob_service import BlobService
 
@@ -65,8 +65,9 @@ async def upload_financial_doc(
         if not session_id:
             session_title = title or file.filename or "Untitled Session"
             conversation_id = azure_factory.create_or_retrieve_conversation()
+            rule_sets = [rule_set.model_dump() for rule_set in current_user.ruleSets] if current_user.ruleSets else []
             metadata = SessionMetadata(title=session_title, createdAt=now, lastAccessed=now, isActive=True)
-            session_payload = SessionCreate(userId=current_user.id, metadata=metadata, sourceDocument=[sourceDocument], conversationId=conversation_id)
+            session_payload = SessionCreate(userId=current_user.id, metadata=metadata, sourceDocument=[sourceDocument], conversationId=conversation_id, ruleSets=[SessionRuleSet.model_validate(rule_set) for rule_set in rule_sets])
             session_record = sessions_repo.create_session(session_payload.model_dump(mode="json"))
             session_id = session_record["id"]
         else:

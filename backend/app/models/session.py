@@ -166,8 +166,8 @@ class AnalysisSession(BaseModel):
 class SessionRuleSet(BaseModel):
     name: str
     description: str
-    originalDataRef: str
-    correctedDataRef: str
+    originalDataRef: Optional[str] = None
+    correctedDataRef: Optional[str] = None
     
 
 class SessionCreate(BaseModel):
@@ -176,6 +176,7 @@ class SessionCreate(BaseModel):
     metadata: SessionMetadata
     sourceDocument: List[SourceDocument]
     conversationId: Optional[str] = None
+    ruleSets: Optional[List[SessionRuleSet]] = Field(default_factory=list)
 
 
 class SessionUpdate(BaseModel):
@@ -185,6 +186,7 @@ class SessionUpdate(BaseModel):
     systemStatus: Optional[ProcessingStatus] = None
     analysisOutput: Optional[AnalysisOutput] = None
     chatHistory: Optional[List[ChatMessage]] = None
+    ruleSets: Optional[List[SessionRuleSet]] = Field(default_factory=list)
 
 
 class Query(BaseModel):

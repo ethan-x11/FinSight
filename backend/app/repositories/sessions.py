@@ -37,6 +37,7 @@ class SessionsRepository:
             "version": session_data.get("version", "1.0"),
             "metadata": session_data["metadata"],
             "conversationId": session_data.get("conversationId"),
+            "ruleSets": session_data.get("ruleSets"),
             "sourceDocument": session_data["sourceDocument"],
             "systemStatus": session_data.get("systemStatus")
             or {
