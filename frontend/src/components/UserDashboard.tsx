@@ -555,6 +555,7 @@ const SessionStatus = ({ session }: { session: AnalysisSession }) => {
 };
 
 const InsightsPanel = ({ insights }: { insights: AnalysisOutput | null }) => {
+  console.log("InsightsPanel render", insights);
   if (!insights) return <div className="text-sm text-slate-500">No insights available yet.</div>;
 
   // const tables = insights.structuredTables || [];
@@ -563,6 +564,9 @@ const InsightsPanel = ({ insights }: { insights: AnalysisOutput | null }) => {
 
   return (
     <div className="space-y-6">
+      {keyInsights.length == 0 && (
+        <div className="text-sm text-slate-500">No key attribute extracted from the documents.</div>
+      )}
       {keyInsights.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {keyInsights.map((item: KeyInsight) => (

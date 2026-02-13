@@ -195,7 +195,12 @@ class Query(BaseModel):
 
 class QueryPlannerResponse(BaseModel):
     queries: List[Query] = Field(default_factory=list)
+    model_config = ConfigDict(extra='forbid')
     
+class RuleSetResponse(BaseModel):
+    name: str
+    description: str
+    model_config = ConfigDict(extra='forbid')
 
 class AttributeInsightRequest(BaseModel):
     fileName: str
