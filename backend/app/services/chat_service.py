@@ -9,7 +9,7 @@ from openai.types.chat import ChatCompletionMessageParam
 from app.core.config import get_settings
 from app.utils.azure_factory import AzureFactory
 from app.utils.citation_utils import CitationUtils
-from app.models.session import ChatResponse, ChatResponseRaw, ReasoningSteps
+from app.models.session import ChatResponse, ChatResponseRaw, ReasoningSteps, SessionRuleSet
 
 
 class ChatService:
@@ -25,6 +25,7 @@ class ChatService:
         memory_store_name: Optional[str] = None,
         conversation_id: Optional[str] = None,
         agent_name: Optional[str] = None,
+        rule_sets: Optional[List[SessionRuleSet]] = None
     ) -> ChatResponse:
         context_str = "\n".join(
             [
@@ -71,6 +72,9 @@ class ChatService:
             "    * **Contextual Awareness:** You have access to a memory tool and conversation history. Refer to this history FIRST to understand the context of the user's query.\n"
             "    * **Reference Resolution:** If the user asks follow-up questions (e.g., \"What about the previous year?\", \"Compare that to Apple\"), use the conversation history to resolve what \"that\" or \"previous\" refers to.\n\n"
 
+            "6.  **Ruleset Priority:**\n"
+            "    * If a specific **Ruleset** is provided, you must prioritize and strictly adhere to those rules above all others.\n\n"
+            "{{RULESETS}}\n\n"
             "### **Thinking Process & Output Format**\n"
             "You must document your thinking steps before formulating the final answer. "
             "Your output must be a **strictly valid JSON object** containing exactly two keys:\n\n"
@@ -109,6 +113,11 @@ class ChatService:
         )
 
         user_content = f"Context:\n{context_str}\n\nQuestion: {question}"
+        
+        if rule_sets:
+            user_content += "\n\n### **Rulesets:**\n"
+            for rule in rule_sets:
+                user_content += f"- **{rule.name}**: {rule.description}\n"
 
         memory_store = self.azure_factory.create_or_retrieve_memory_store(
             name=memory_store_name, model=model

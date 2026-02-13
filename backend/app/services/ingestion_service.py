@@ -19,6 +19,7 @@ from app.core.config import get_settings
 import re
 
 from app.models.user import UserAttribute
+from app.models.session import SessionRuleSet
 
 logger = logging.getLogger(__name__)
 
@@ -161,6 +162,7 @@ class IngestionService:
         blob_name: str | None = None,
         attributes: Optional[List[UserAttribute]] = None,
         file_index: Optional[str] = "",
+        
     ) -> None:
         session = self.sessions_repo.get_by_id(session_id)
         index_name = self._build_index_name(session_id + filename)
@@ -370,7 +372,10 @@ class IngestionService:
             session["systemStatus"] = {"overallStatus": "completed", "steps": steps}
             # if doc_result.get("tables"):
             
-            insights = self.analysis_service.generate_insights(file_name=filename, index_name=index_name, attributes=attributes)
+            
+            rule_sets: List[SessionRuleSet] = [SessionRuleSet.model_validate(ruleSet) for ruleSet in session.get("ruleSets", [])]
+
+            insights = self.analysis_service.generate_insights(file_name=filename, index_name=index_name, attributes=attributes, rule_sets=rule_sets)
 
             if self._should_abort(session_id):
                 self._mark_cancelled(session_id)

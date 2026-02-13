@@ -1,7 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
-from app.models.session import AnalysisOutput, Insight, KeyInsight
+from app.models.session import AnalysisOutput, Insight, KeyInsight, SessionRuleSet
 from app.services.chat_service import ChatService
 from app.services.search_service import SearchService
 from app.services.query_planner import QueryPlanner
@@ -21,6 +21,7 @@ class AnalysisService:
         file_name: str,
         index_name: str,
         attributes: Optional[List[UserAttribute]] = None,
+        rule_sets: Optional[List[SessionRuleSet]] = None
     ) -> AnalysisOutput:
         prompt = (
             "Generate key insights and risk factors based on the analyzed document."
@@ -31,10 +32,11 @@ class AnalysisService:
         queries.extend([queryObj.query for queryObj in query_plan.queries])
 
         results = self.search_service.search_single_batch(index_name, queries, top=8)
-
+        
         insights = self.chat_service.generate_answer(
-            prompt,
-            results,
+            question=prompt,
+            context_docs=results,
+            rule_sets=rule_sets
         )
 
         # print("Generated Insights:", insights)

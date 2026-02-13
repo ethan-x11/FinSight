@@ -31,7 +31,8 @@ import {
   Trash2,
   Search,
   MessageCircleOff,
-  List
+  List,
+  TextSearch
 } from "lucide-react";
 import {
   askChatQuestion,
@@ -2129,7 +2130,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
               <List className="w-4 h-4 mr-1" /> Default RuleSet
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setShowDefaultAttributes(true)}>
-              <List className="w-4 h-4 mr-1" /> Default Attributes
+              <TextSearch className="w-4 h-4 mr-1" /> Default Attributes
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setShowProfile(true)}>
               <User className="w-4 h-4 mr-1" />
@@ -2274,7 +2275,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                               onClick={() => setShowSessionAttributes(true)}
                               className="flex w-full md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap bg-white text-slate-500 shadow-sm hover:text-slate-900 justify-center text-center"
                             >
-                              <List className="w-3 h-3 mr-1 inline" /> Session Attributes
+                              <TextSearch className="w-3 h-3 mr-1 inline" /> Session Attributes
                             </button>
                             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                               <AlertDialogTrigger asChild>
