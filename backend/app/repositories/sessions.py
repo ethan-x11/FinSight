@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from azure.cosmos import exceptions as cosmos_exceptions  # type: ignore[import]
@@ -139,6 +139,86 @@ class SessionsRepository:
         normalized = self._normalize_datetimes(session)
         self.container.upsert_item(normalized)
         return normalized
+
+    def delete_session_ruleset(self, session_id: str, name: str) -> Tuple[Optional[Dict[str, Any]], bool]:
+        session = self.get_by_id(session_id)
+        if not session:
+            return None, False
+
+        existing = session.get("ruleSets")
+        if not isinstance(existing, list) or not existing:
+            return session, False
+
+        cleaned = [ruleset for ruleset in existing if not isinstance(ruleset, dict) or ruleset.get("name") != name]
+        removed = len(cleaned) != len(existing)
+        if not removed:
+            return session, False
+
+        session["ruleSets"] = cleaned
+        session["timestamp"] = datetime.now(timezone.utc).isoformat()
+        normalized = self._normalize_datetimes(session)
+        self.container.upsert_item(normalized)
+        return normalized, True
+
+    def add_session_ruleset(self, session_id: str, ruleset: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], bool]:
+        session = self.get_by_id(session_id)
+        if not session:
+            return None, False
+
+        existing = session.get("ruleSets")
+        rulesets = existing if isinstance(existing, list) else []
+
+        name = ruleset.get("name")
+        if any(isinstance(item, dict) and item.get("name") == name for item in rulesets):
+            return session, False
+
+        rulesets.append(
+            {
+                "name": name,
+                "description": ruleset.get("description"),
+                "originalDataRef": ruleset.get("originalDataRef"),
+                "correctedDataRef": ruleset.get("correctedDataRef"),
+            }
+        )
+        session["ruleSets"] = rulesets
+        session["timestamp"] = datetime.now(timezone.utc).isoformat()
+        normalized = self._normalize_datetimes(session)
+        self.container.upsert_item(normalized)
+        return normalized, True
+
+    def update_session_ruleset(
+        self, session_id: str, name: str, updates: Dict[str, Any]
+    ) -> Tuple[Optional[Dict[str, Any]], bool, bool]:
+        session = self.get_by_id(session_id)
+        if not session:
+            return None, False, False
+
+        existing = session.get("ruleSets")
+        if not isinstance(existing, list) or not existing:
+            return session, False, False
+
+        index = next(
+            (i for i, ruleset in enumerate(existing) if isinstance(ruleset, dict) and ruleset.get("name") == name),
+            None,
+        )
+        if index is None:
+            return session, False, False
+
+        new_name = updates.get("name", name)
+        if new_name != name and any(
+            isinstance(ruleset, dict) and ruleset.get("name") == new_name for ruleset in existing
+        ):
+            return session, False, True
+
+        updated = dict(existing[index])
+        updated.update({k: v for k, v in updates.items() if v is not None})
+        updated["name"] = new_name
+        existing[index] = updated
+        session["ruleSets"] = existing
+        session["timestamp"] = datetime.now(timezone.utc).isoformat()
+        normalized = self._normalize_datetimes(session)
+        self.container.upsert_item(normalized)
+        return normalized, True, False
 
     def append_source_document(self, session_id: str, source_document: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
         session = self.get_by_id(session_id)

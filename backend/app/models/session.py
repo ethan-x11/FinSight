@@ -168,6 +168,13 @@ class SessionRuleSet(BaseModel):
     description: str
     originalDataRef: Optional[str] = None
     correctedDataRef: Optional[str] = None
+
+
+class SessionRuleSetUpdate(BaseModel):
+    name: str
+    description: str
+    originalDataRef: Optional[str] = None
+    correctedDataRef: Optional[str] = None
     
 
 class SessionCreate(BaseModel):

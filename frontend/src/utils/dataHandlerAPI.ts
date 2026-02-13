@@ -203,7 +203,15 @@ export interface AnalysisSession {
 	systemStatus: ProcessingStatus;
 	analysisOutput: AnalysisOutput[] | null;
 	chatHistory: ChatMessage[];
+	ruleSets?: SessionRuleSet[] | null;
 	resultsCount?: number;
+}
+
+export interface SessionRuleSet {
+	name?: string;
+	description?: string;
+	originalDataRef?: string;
+	correctedDataRef?: string;
 }
 
 export interface UploadDocumentsResponse {
@@ -403,6 +411,33 @@ export async function updateSession(sessionId: string, updates: Partial<Analysis
 
 export async function deleteSession(sessionId: string): Promise<{ message: string; deletedIndices?: string[]; deletedBlobs?: string[] }> {
 	return request<{ message: string; deletedIndices?: string[]; deletedBlobs?: string[] }>(`/session/${sessionId}`, {
+		method: "DELETE",
+		authenticated: true,
+	});
+}
+
+export async function createSessionRuleSet(sessionId: string, ruleset: SessionRuleSet): Promise<AnalysisSession> {
+	return request<AnalysisSession>(`/session/${sessionId}/ruleset`, {
+		method: "POST",
+		body: ruleset,
+		authenticated: true,
+	});
+}
+
+export async function updateSessionRuleSet(
+	sessionId: string,
+	name: string,
+	updates: SessionRuleSet
+): Promise<AnalysisSession> {
+	return request<AnalysisSession>(`/session/${sessionId}/ruleset/${encodeURIComponent(name)}`, {
+		method: "PATCH",
+		body: updates,
+		authenticated: true,
+	});
+}
+
+export async function deleteSessionRuleSet(sessionId: string, name: string): Promise<AnalysisSession> {
+	return request<AnalysisSession>(`/session/${sessionId}/ruleset/${encodeURIComponent(name)}`, {
 		method: "DELETE",
 		authenticated: true,
 	});

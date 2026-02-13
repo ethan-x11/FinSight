@@ -51,6 +51,7 @@ import {
   type KeyInsight,
   type RiskFactor,
   type SourcePointer,
+  type SessionRuleSet,
   type UserRuleSet,
   uploadDocuments,
   updateSession,
@@ -59,7 +60,10 @@ import {
   Query,
   ReasoningSteps,
   UserAttribute,
+  createSessionRuleSet,
   createUserRuleSet,
+  updateSessionRuleSet,
+  deleteSessionRuleSet,
   deleteUserRuleSet,
   updateUserAttribute,
   updateUserRuleset,
@@ -1192,6 +1196,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [showDefaultRuleSet, setShowDefaultRuleSet] = useState(false);
   const [showDefaultAttributes, setShowDefaultAttributes] = useState(false);
+  const [showSessionRuleSets, setShowSessionRuleSets] = useState(false);
   const [showSessionAttributes, setShowSessionAttributes] = useState(false);
   const [defaultRuleSetsState, setDefaultRuleSetsState] = useState<UserRuleSet[]>([]);
   const [defaultAttributesState, setDefaultAttributesState] = useState<UserAttribute[]>([]);
@@ -1205,6 +1210,13 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   const [attributeSavingId, setAttributeSavingId] = useState<string | null>(null);
   const [ruleSetDeletingId, setRuleSetDeletingId] = useState<string | null>(null);
   const [attributeDeletingId, setAttributeDeletingId] = useState<string | null>(null);
+  const [sessionRuleSetsDraft, setSessionRuleSetsDraft] = useState<EditableRuleSet[]>([]);
+  const [editingSessionRuleSetId, setEditingSessionRuleSetId] = useState<string | null>(null);
+  const [sessionRuleSetDraft, setSessionRuleSetDraft] = useState({ name: "", description: "" });
+  const [sessionRuleSetSaving, setSessionRuleSetSaving] = useState(false);
+  const [sessionRuleSetSavingId, setSessionRuleSetSavingId] = useState<string | null>(null);
+  const [sessionRuleSetDeletingId, setSessionRuleSetDeletingId] = useState<string | null>(null);
+  const [showSessionRuleSetForm, setShowSessionRuleSetForm] = useState(false);
   const [sessionAttributeDraft, setSessionAttributeDraft] = useState({ name: "", description: "" });
   const [sessionAttributeSaving, setSessionAttributeSaving] = useState(false);
   const [sessionAttributeDeletingId, setSessionAttributeDeletingId] = useState<string | null>(null);
@@ -1310,6 +1322,23 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     const output = insights?.find((item) => item.fileName === activeDocId) ?? null;
     return output?.keyInsights || [];
   }, [insights, activeDocId]);
+
+  const sessionRuleSets = useMemo<SessionRuleSet[]>(() => currentSession?.ruleSets || [], [currentSession]);
+
+  useEffect(() => {
+    if (!showSessionRuleSets) return;
+    setSessionRuleSetsDraft(
+      sessionRuleSets.map((ruleset) => ({
+        _id: crypto.randomUUID(),
+        _isNew: false,
+        _originalName: ruleset.name || "",
+        name: ruleset.name || "",
+        description: ruleset.description || "",
+      }))
+    );
+    setEditingSessionRuleSetId(null);
+    setSessionRuleSetDraft({ name: "", description: "" });
+  }, [sessionRuleSets, showSessionRuleSets]);
 
   useEffect(() => {
     sessionsRef.current = sessions;
@@ -1941,6 +1970,120 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     }
   };
 
+  const handleAddSessionRuleSet = async () => {
+    if (!currentSessionId) {
+      toast.error("Select a session first");
+      return;
+    }
+    const trimmedName = sessionRuleSetDraft.name.trim();
+    const trimmedDescription = sessionRuleSetDraft.description.trim();
+    if (!trimmedName) {
+      toast.error("Ruleset name is required");
+      return;
+    }
+
+    setSessionRuleSetSaving(true);
+    setEditingSessionRuleSetId(null);
+    try {
+      const updated = await createSessionRuleSet(currentSessionId, {
+        name: trimmedName,
+        description: trimmedDescription || undefined,
+      });
+      setSessions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+      setSessionRuleSetsDraft(
+        (updated.ruleSets || []).map((ruleset) => ({
+          _id: crypto.randomUUID(),
+          _isNew: false,
+          _originalName: ruleset.name || "",
+          name: ruleset.name || "",
+          description: ruleset.description || "",
+        }))
+      );
+      setSessionRuleSetDraft({ name: "", description: "" });
+      toast.success("Ruleset added");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to add ruleset");
+    } finally {
+      setSessionRuleSetSaving(false);
+    }
+  };
+
+  const handleStartEditSessionRuleSet = (ruleset: EditableRuleSet) => {
+    setEditingSessionRuleSetId(ruleset._id);
+    setSessionRuleSetDraft({ name: ruleset.name || "", description: ruleset.description || "" });
+    setShowSessionRuleSetForm(false);
+  };
+
+  const handleConfirmSessionRuleSet = async (ruleset: EditableRuleSet) => {
+    if (!currentSessionId) return;
+    const trimmedName = sessionRuleSetDraft.name.trim();
+    const trimmedDescription = sessionRuleSetDraft.description.trim();
+
+    if (!trimmedName) {
+      toast.error("Ruleset name is required");
+      return;
+    }
+
+    const originalName = ruleset._originalName || ruleset.name;
+    if (!originalName) {
+      toast.error("Ruleset name is missing");
+      return;
+    }
+
+    setSessionRuleSetSavingId(ruleset._id);
+    try {
+      const updated = await updateSessionRuleSet(currentSessionId, originalName, {
+        name: trimmedName,
+        description: trimmedDescription || undefined,
+      });
+      setSessions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+      setSessionRuleSetsDraft(
+        (updated.ruleSets || []).map((item) => ({
+          _id: crypto.randomUUID(),
+          _isNew: false,
+          _originalName: item.name || "",
+          name: item.name || "",
+          description: item.description || "",
+        }))
+      );
+      setEditingSessionRuleSetId(null);
+      setSessionRuleSetDraft({ name: "", description: "" });
+      toast.success("Ruleset updated");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update ruleset");
+    } finally {
+      setSessionRuleSetSavingId(null);
+    }
+  };
+
+  const handleDeleteSessionRuleSet = async (ruleset: EditableRuleSet) => {
+    if (!currentSessionId) return;
+    const targetName = ruleset._originalName || ruleset.name;
+    if (!targetName) {
+      toast.error("Ruleset name is missing");
+      return;
+    }
+    setSessionRuleSetDeletingId(ruleset._id);
+    try {
+      const updated = await deleteSessionRuleSet(currentSessionId, targetName);
+      setSessions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+      setSessionRuleSetsDraft(
+        (updated.ruleSets || []).map((item) => ({
+          _id: crypto.randomUUID(),
+          _isNew: false,
+          _originalName: item.name || "",
+          name: item.name || "",
+          description: item.description || "",
+        }))
+      );
+      toast.success("Ruleset deleted");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete ruleset");
+    } finally {
+      setSessionRuleSetDeletingId(null);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-white font-sans text-slate-900 selection:bg-blue-100">
       <Sidebar
@@ -2120,6 +2263,12 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                               className="flex w-full md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap bg-white text-slate-500 shadow-sm hover:text-slate-900 justify-center text-center"
                             >
                               <RefreshCcw className="w-3 h-3 mr-1 inline" /> Refresh Status
+                            </button>
+                            <button
+                              onClick={() => setShowSessionRuleSets(true)}
+                              className="flex w-full md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap bg-white text-slate-500 shadow-sm hover:text-slate-900 justify-center text-center"
+                            >
+                              <List className="w-3 h-3 mr-1 inline" /> Session RuleSets
                             </button>
                             <button
                               onClick={() => setShowSessionAttributes(true)}
@@ -2348,6 +2497,144 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                 })}
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+      )}
+      {showSessionRuleSets && (
+        <Dialog
+          open={showSessionRuleSets}
+          onOpenChange={(open) => {
+            setShowSessionRuleSets(open);
+            if (!open) {
+              setShowSessionRuleSetForm(false);
+              setEditingSessionRuleSetId(null);
+              setSessionRuleSetDraft({ name: "", description: "" });
+            }
+          }}
+        >
+          <DialogContent className="w-lg bg-white rounded-xl p-6 shadow-xl border border-slate-200">
+            <DialogHeader>
+              <div className="flex items-center justify-between gap-3">
+                <DialogTitle className="text-slate-900 flex items-center gap-2">
+                  <List className="w-5 h-5 text-blue-600" /> Session RuleSets
+                </DialogTitle>
+              </div>
+              <DialogDescription className="text-slate-500">
+                Rulesets attached to this session.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              {!showSessionRuleSetForm ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSessionRuleSetForm(true)}
+                >
+                  <Plus className="w-4 h-4 mr-1" /> Add RuleSet
+                </Button>
+              ) : (
+                <div className="rounded-lg border border-slate-200 p-3 bg-slate-50">
+                  <div className="text-sm font-semibold text-slate-800 mb-2">Add ruleset</div>
+                  <div className="space-y-2">
+                    <Input
+                      value={sessionRuleSetDraft.name}
+                      onChange={(e) => setSessionRuleSetDraft((prev) => ({ ...prev, name: e.target.value }))}
+                      className="h-8 text-sm"
+                      placeholder="Ruleset name"
+                    />
+                    <textarea
+                      value={sessionRuleSetDraft.description}
+                      onChange={(e) => setSessionRuleSetDraft((prev) => ({ ...prev, description: e.target.value }))}
+                      className="w-full min-h-[70px] rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 shadow-inner focus:border-blue-400 focus:outline-none"
+                      placeholder="Description"
+                    />
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAddSessionRuleSet}
+                        disabled={sessionRuleSetSaving}
+                      >
+                        {sessionRuleSetSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
+                        Add RuleSet
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setShowSessionRuleSetForm(false);
+                          setSessionRuleSetDraft({ name: "", description: "" });
+                        }}
+                        disabled={sessionRuleSetSaving}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {sessionRuleSetsDraft.length === 0 ? (
+                <div className="text-sm text-slate-500">No session rulesets found.</div>
+              ) : (
+                <div className="space-y-3">
+                  {sessionRuleSetsDraft.map((ruleset) => {
+                    const isEditing = editingSessionRuleSetId === ruleset._id;
+                    const isSaving = sessionRuleSetSavingId === ruleset._id;
+                    const isDeleting = sessionRuleSetDeletingId === ruleset._id;
+                    return (
+                      <div key={ruleset._id} className="rounded-lg border border-slate-200 p-3 bg-slate-50">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 space-y-2">
+                            {isEditing ? (
+                              <Input
+                                value={sessionRuleSetDraft.name}
+                                onChange={(e) => setSessionRuleSetDraft((prev) => ({ ...prev, name: e.target.value }))}
+                                className="h-8 text-sm"
+                                placeholder="Ruleset name"
+                              />
+                            ) : (
+                              <div className="text-sm font-semibold text-slate-800">
+                                {ruleset.name || "Unnamed ruleset"}
+                              </div>
+                            )}
+                            {isEditing ? (
+                              <textarea
+                                value={sessionRuleSetDraft.description}
+                                onChange={(e) => setSessionRuleSetDraft((prev) => ({ ...prev, description: e.target.value }))}
+                                className="w-full min-h-[70px] rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 shadow-inner focus:border-blue-400 focus:outline-none"
+                                placeholder="Description"
+                              />
+                            ) : (
+                              <div className="text-xs text-slate-600">
+                                {ruleset.description || "No description provided."}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => (isEditing ? handleConfirmSessionRuleSet(ruleset) : handleStartEditSessionRuleSet(ruleset))}
+                              disabled={isSaving || isDeleting}
+                              className="p-2 rounded-md border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 disabled:opacity-60"
+                              title={isEditing ? "Confirm" : "Edit"}
+                            >
+                              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : isEditing ? <Check className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSessionRuleSet(ruleset)}
+                              disabled={isSaving || isDeleting}
+                              className="p-2 rounded-md border border-slate-200 bg-white text-slate-600 hover:text-red-600 hover:bg-red-50 disabled:opacity-60"
+                              title="Delete"
+                            >
+                              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </DialogContent>
         </Dialog>
       )}

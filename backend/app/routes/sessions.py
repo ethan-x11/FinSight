@@ -5,7 +5,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from app.core.auth import get_current_user
 from app.repositories.sessions import SessionsRepository, get_sessions_repository
 from app.repositories.users import UsersRepository, get_users_repository
-from app.models.session import AnalysisSession, ProcessingStatus, SessionCreate, SessionUpdate
+from app.models.session import (
+    AnalysisSession,
+    ProcessingStatus,
+    SessionCreate,
+    SessionRuleSet,
+    SessionRuleSetUpdate,
+    SessionUpdate,
+)
 from app.models.user import UserInDB
 from app.services.blob_service import BlobService
 from app.services.search_service import SearchService
@@ -71,6 +78,74 @@ async def update_session(
     return AnalysisSession.model_validate(updated)
 
 
+@router.post("/session/{session_id}/ruleset", response_model=AnalysisSession, status_code=status.HTTP_201_CREATED)
+async def create_session_ruleset(
+    session_id: str,
+    payload: SessionRuleSet,
+    current_user: UserInDB = Depends(get_current_user),
+    repo: SessionsRepository = Depends(get_sessions_repository),
+) -> AnalysisSession:
+    record = repo.get_by_id(session_id)
+    if not record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+    if not current_user.isAdmin and record["userId"] != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+
+    updated, created = repo.add_session_ruleset(session_id, payload.model_dump())
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+    if not created:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Ruleset already exists")
+    return AnalysisSession.model_validate(updated)
+
+
+@router.patch("/session/{session_id}/ruleset/{name}", response_model=AnalysisSession)
+async def update_session_ruleset(
+    session_id: str,
+    name: str,
+    payload: SessionRuleSetUpdate,
+    current_user: UserInDB = Depends(get_current_user),
+    repo: SessionsRepository = Depends(get_sessions_repository),
+) -> AnalysisSession:
+    record = repo.get_by_id(session_id)
+    if not record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+    if not current_user.isAdmin and record["userId"] != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+
+    updated, changed, conflict = repo.update_session_ruleset(
+        session_id, name, payload.model_dump(exclude_unset=True)
+    )
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+    if conflict:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Ruleset name already exists")
+    if not changed:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ruleset not found")
+    return AnalysisSession.model_validate(updated)
+
+
+@router.delete("/session/{session_id}/ruleset/{name}", response_model=AnalysisSession)
+async def delete_session_ruleset(
+    session_id: str,
+    name: str,
+    current_user: UserInDB = Depends(get_current_user),
+    repo: SessionsRepository = Depends(get_sessions_repository),
+) -> AnalysisSession:
+    record = repo.get_by_id(session_id)
+    if not record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+    if not current_user.isAdmin and record["userId"] != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+
+    updated, removed = repo.delete_session_ruleset(session_id, name)
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+    if not removed:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ruleset not found")
+    return AnalysisSession.model_validate(updated)
+
+
 @router.get("/session/{session_id}/status", response_model=ProcessingStatus)
 async def get_session_status(
     session_id: str,
@@ -119,3 +194,5 @@ async def delete_session(
 
     repo.delete_session(session_id, record["userId"])
     return {"message": "Session deleted", "deletedIndices": deleted_indices, "deletedBlobs": deleted_blobs}
+
+
