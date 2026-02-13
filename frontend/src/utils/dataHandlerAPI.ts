@@ -63,9 +63,15 @@ export interface ApiUser {
 	sessionCount: number;
 	lastActive: string;
 	attributes?: UserAttribute[] | UserAttribute | null;
+	ruleSets?: UserRuleSet[] | UserRuleSet | null;
 }
 
 export interface UserAttribute {
+	name?: string;
+	description?: string;
+}
+
+export interface UserRuleSet {
 	name?: string;
 	description?: string;
 }
@@ -322,6 +328,25 @@ export async function fetchCurrentUser(): Promise<ApiUser> {
 
 export async function updateProfile(updates: Partial<Pick<ApiUser, "name" | "email">>): Promise<ApiUser> {
 	return request<ApiUser>("/user/me", { method: "PATCH", body: updates, authenticated: true });
+}
+
+export async function createUserRuleSet(ruleset: UserRuleSet): Promise<ApiUser> {
+	return request<ApiUser>("/user/me/ruleset", { method: "POST", body: ruleset, authenticated: true });
+}
+
+export async function updateUserRuleset(name: string, updates: UserRuleSet): Promise<ApiUser> {
+	return request<ApiUser>(`/user/me/ruleset/${encodeURIComponent(name)}`, {
+		method: "PATCH",
+		body: updates,
+		authenticated: true,
+	});
+}
+
+export async function deleteUserRuleSet(name: string): Promise<ApiUser> {
+	return request<ApiUser>(`/user/me/ruleset/${encodeURIComponent(name)}`, {
+		method: "DELETE",
+		authenticated: true,
+	});
 }
 
 export async function createUserAttribute(attribute: UserAttribute): Promise<ApiUser> {

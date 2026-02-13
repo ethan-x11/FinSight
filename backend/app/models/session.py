@@ -160,7 +160,15 @@ class AnalysisSession(BaseModel):
     analysisOutput: Optional[List[AnalysisOutput]] = Field(default_factory=list)
     chatHistory: List[ChatMessage] = Field(default_factory=list)
     conversationId: Optional[str] = None
+    ruleSets: Optional[List[SessionRuleSet]] = Field(default_factory=list)
 
+
+class SessionRuleSet(BaseModel):
+    name: str
+    description: str
+    originalDataRef: str
+    correctedDataRef: str
+    
 
 class SessionCreate(BaseModel):
     id: Optional[str] = None

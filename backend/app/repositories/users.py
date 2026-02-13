@@ -134,6 +134,72 @@ class UsersRepository:
         self.container.replace_item(user, user)
         return user, True, False
 
+    def delete_user_ruleset(self, user_id: str, name: str) -> Tuple[Optional[Dict[str, Any]], bool]:
+        user = self.get_by_id(user_id)
+        if not user:
+            return None, False
+        existing = user.get("ruleSets")
+        if not isinstance(existing, list) or not existing:
+            return user, False
+
+        cleaned = [ruleset for ruleset in existing if not isinstance(ruleset, dict) or ruleset.get("name") != name]
+        removed = len(cleaned) != len(existing)
+        if not removed:
+            return user, False
+
+        user["ruleSets"] = cleaned
+        self.container.replace_item(user, user)
+        return user, True
+
+    def add_user_ruleset(self, user_id: str, ruleset: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], bool]:
+        user = self.get_by_id(user_id)
+        if not user:
+            return None, False
+
+        existing = user.get("ruleSets")
+        rulesets = existing if isinstance(existing, list) else []
+
+        name = ruleset.get("name")
+        if any(isinstance(item, dict) and item.get("name") == name for item in rulesets):
+            return user, False
+
+        rulesets.append({"name": name, "description": ruleset.get("description")})
+        user["ruleSets"] = rulesets
+        self.container.replace_item(user, user)
+        return user, True
+
+    def update_user_ruleset(
+        self, user_id: str, name: str, updates: Dict[str, Any]
+    ) -> Tuple[Optional[Dict[str, Any]], bool, bool]:
+        user = self.get_by_id(user_id)
+        if not user:
+            return None, False, False
+
+        existing = user.get("ruleSets")
+        if not isinstance(existing, list) or not existing:
+            return user, False, False
+
+        index = next(
+            (i for i, ruleset in enumerate(existing) if isinstance(ruleset, dict) and ruleset.get("name") == name),
+            None,
+        )
+        if index is None:
+            return user, False, False
+
+        new_name = updates.get("name", name)
+        if new_name != name and any(
+            isinstance(ruleset, dict) and ruleset.get("name") == new_name for ruleset in existing
+        ):
+            return user, False, True
+
+        updated = dict(existing[index])
+        updated.update({k: v for k, v in updates.items() if v is not None})
+        updated["name"] = new_name
+        existing[index] = updated
+        user["ruleSets"] = existing
+        self.container.replace_item(user, user)
+        return user, True, False
+
     def touch_last_active(self, user_id: str) -> None:
         user = self.get_by_id(user_id)
         if not user:

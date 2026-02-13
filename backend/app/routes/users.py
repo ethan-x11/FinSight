@@ -11,6 +11,8 @@ from app.models.user import (
     UserAttributeUpdate,
     UserInDB,
     UserPublic,
+    UserRuleSet,
+    UserRuleSetUpdate,
     UserUpdate,
 )
 from app.core.security import verify_password
@@ -82,6 +84,51 @@ async def delete_user_attribute(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     if not removed:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Attribute not found")
+    return UserPublic.model_validate(record)
+
+
+@router.post("/user/me/ruleset", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
+async def create_user_ruleset(
+    ruleset: UserRuleSet,
+    current_user: UserInDB = Depends(get_current_user),
+    repo: UsersRepository = Depends(get_users_repository),
+) -> UserPublic:
+    record, created = repo.add_user_ruleset(current_user.id, ruleset.model_dump())
+    if not record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if not created:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Ruleset already exists")
+    return UserPublic.model_validate(record)
+
+
+@router.patch("/user/me/ruleset/{name}", response_model=UserPublic)
+async def update_user_ruleset(
+    name: str,
+    updates: UserRuleSetUpdate,
+    current_user: UserInDB = Depends(get_current_user),
+    repo: UsersRepository = Depends(get_users_repository),
+) -> UserPublic:
+    record, updated, conflict = repo.update_user_ruleset(current_user.id, name, updates.model_dump(exclude_unset=True))
+    if not record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if conflict:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Ruleset name already exists")
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ruleset not found")
+    return UserPublic.model_validate(record)
+
+
+@router.delete("/user/me/ruleset/{name}", response_model=UserPublic)
+async def delete_user_ruleset(
+    name: str,
+    current_user: UserInDB = Depends(get_current_user),
+    repo: UsersRepository = Depends(get_users_repository),
+) -> UserPublic:
+    record, removed = repo.delete_user_ruleset(current_user.id, name)
+    if not record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if not removed:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ruleset not found")
     return UserPublic.model_validate(record)
 
 

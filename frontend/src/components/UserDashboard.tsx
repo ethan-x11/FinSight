@@ -51,6 +51,7 @@ import {
   type KeyInsight,
   type RiskFactor,
   type SourcePointer,
+  type UserRuleSet,
   uploadDocuments,
   updateSession,
   deleteSession,
@@ -58,7 +59,10 @@ import {
   Query,
   ReasoningSteps,
   UserAttribute,
+  createUserRuleSet,
+  deleteUserRuleSet,
   updateUserAttribute,
+  updateUserRuleset,
 } from "../utils/dataHandlerAPI";
 import "katex/dist/katex.min.css";
 import { Button } from "./ui/button";
@@ -110,6 +114,14 @@ type SimpleMessage = {
 };
 
 type EditableAttribute = {
+  _id: string;
+  _isNew?: boolean;
+  _originalName?: string;
+  name: string;
+  description: string;
+};
+
+type EditableRuleSet = {
   _id: string;
   _isNew?: boolean;
   _originalName?: string;
@@ -1174,13 +1186,20 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   const [loadingDeployments, setLoadingDeployments] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [showDefaultRuleSet, setShowDefaultRuleSet] = useState(false);
   const [showDefaultAttributes, setShowDefaultAttributes] = useState(false);
   const [showSessionAttributes, setShowSessionAttributes] = useState(false);
+  const [defaultRuleSetsState, setDefaultRuleSetsState] = useState<UserRuleSet[]>([]);
   const [defaultAttributesState, setDefaultAttributesState] = useState<UserAttribute[]>([]);
+  const [ruleSetsDraft, setRuleSetsDraft] = useState<EditableRuleSet[]>([]);
   const [attributesDraft, setAttributesDraft] = useState<EditableAttribute[]>([]);
+  const [editingRuleSetId, setEditingRuleSetId] = useState<string | null>(null);
   const [editingAttributeId, setEditingAttributeId] = useState<string | null>(null);
+  const [ruleSetDraft, setRuleSetDraft] = useState({ name: "", description: "" });
   const [attributeDraft, setAttributeDraft] = useState({ name: "", description: "" });
+  const [ruleSetSavingId, setRuleSetSavingId] = useState<string | null>(null);
   const [attributeSavingId, setAttributeSavingId] = useState<string | null>(null);
+  const [ruleSetDeletingId, setRuleSetDeletingId] = useState<string | null>(null);
   const [attributeDeletingId, setAttributeDeletingId] = useState<string | null>(null);
   const [sessionAttributeDraft, setSessionAttributeDraft] = useState({ name: "", description: "" });
   const [sessionAttributeSaving, setSessionAttributeSaving] = useState(false);
@@ -1197,6 +1216,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   const currentSession = useMemo(() => sessions.find((s) => s.id === currentSessionId) || null, [sessions, currentSessionId]);
   const canChat = currentSession?.systemStatus?.overallStatus === "completed";
   const defaultAttributes = useMemo(() => defaultAttributesState, [defaultAttributesState]);
+  const defaultRuleSets = useMemo(() => defaultRuleSetsState, [defaultRuleSetsState]);
 
   useEffect(() => {
     const raw = (user.attributes ?? null) as UserAttribute[] | UserAttribute | null;
@@ -1206,6 +1226,15 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     }
     setDefaultAttributesState(Array.isArray(raw) ? raw : [raw]);
   }, [user.attributes]);
+
+  useEffect(() => {
+    const raw = (user.ruleSets ?? null) as UserRuleSet[] | UserRuleSet | null;
+    if (!raw) {
+      setDefaultRuleSetsState([]);
+      return;
+    }
+    setDefaultRuleSetsState(Array.isArray(raw) ? raw : [raw]);
+  }, [user.ruleSets]);
 
   useEffect(() => {
     setTitleDraft(currentSession?.metadata?.title || "");
@@ -1240,6 +1269,21 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     setEditingAttributeId(null);
     setAttributeDraft({ name: "", description: "" });
   }, [defaultAttributes, showDefaultAttributes]);
+
+  useEffect(() => {
+    if (!showDefaultRuleSet) return;
+    setRuleSetsDraft(
+      defaultRuleSets.map((ruleset) => ({
+        _id: crypto.randomUUID(),
+        _isNew: false,
+        _originalName: ruleset.name || "",
+        name: ruleset.name || "",
+        description: ruleset.description || "",
+      }))
+    );
+    setEditingRuleSetId(null);
+    setRuleSetDraft({ name: "", description: "" });
+  }, [defaultRuleSets, showDefaultRuleSet]);
 
   const documentEntries = useMemo(
     () =>
@@ -1627,6 +1671,117 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     }
   };
 
+  const handleAddRuleSet = () => {
+    const id = crypto.randomUUID();
+    const newRuleSet: EditableRuleSet = { _id: id, _isNew: true, name: "", description: "" };
+    setRuleSetsDraft((prev) => [newRuleSet, ...prev]);
+    setEditingRuleSetId(id);
+    setRuleSetDraft({ name: "", description: "" });
+  };
+
+  const handleStartEditRuleSet = (ruleset: EditableRuleSet) => {
+    setEditingRuleSetId(ruleset._id);
+    setRuleSetDraft({ name: ruleset.name || "", description: ruleset.description || "" });
+  };
+
+  const handleConfirmRuleSet = async (ruleset: EditableRuleSet) => {
+    const trimmedName = ruleSetDraft.name.trim();
+    const trimmedDescription = ruleSetDraft.description.trim();
+
+    if (!trimmedName) {
+      toast.error("Ruleset name is required");
+      return;
+    }
+
+    setRuleSetSavingId(ruleset._id);
+    try {
+      if (ruleset._isNew) {
+        await createUserRuleSet({
+          name: trimmedName,
+          description: trimmedDescription || undefined,
+        });
+        toast.success("Ruleset created");
+        setDefaultRuleSetsState((prev) => [
+          { name: trimmedName, description: trimmedDescription || undefined },
+          ...prev,
+        ]);
+        setRuleSetsDraft((prev) =>
+          prev.map((item) =>
+            item._id === ruleset._id
+              ? {
+                  ...item,
+                  name: trimmedName,
+                  description: trimmedDescription,
+                  _isNew: false,
+                  _originalName: trimmedName,
+                }
+              : item
+          )
+        );
+      } else {
+        const originalName = ruleset._originalName || ruleset.name;
+        if (!originalName) {
+          toast.error("Ruleset name is missing");
+          return;
+        }
+        await updateUserRuleset(originalName, {
+          name: trimmedName,
+          description: trimmedDescription || undefined,
+        });
+        toast.success("Ruleset updated");
+        setDefaultRuleSetsState((prev) =>
+          prev.map((item) =>
+            (item.name || "") === originalName
+              ? { ...item, name: trimmedName, description: trimmedDescription || undefined }
+              : item
+          )
+        );
+        setRuleSetsDraft((prev) =>
+          prev.map((item) =>
+            item._id === ruleset._id
+              ? {
+                  ...item,
+                  name: trimmedName,
+                  description: trimmedDescription,
+                  _originalName: trimmedName,
+                }
+              : item
+          )
+        );
+      }
+      setEditingRuleSetId(null);
+      setRuleSetDraft({ name: "", description: "" });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to save ruleset");
+    } finally {
+      setRuleSetSavingId(null);
+    }
+  };
+
+  const handleDeleteRuleSet = async (ruleset: EditableRuleSet) => {
+    const targetName = ruleset._originalName || ruleset.name;
+    if (!targetName) {
+      toast.error("Ruleset name is missing");
+      return;
+    }
+
+    setRuleSetDeletingId(ruleset._id);
+    try {
+      await deleteUserRuleSet(targetName);
+      toast.success("Ruleset deleted");
+      setDefaultRuleSetsState((prev) => prev.filter((item) => (item.name || "") !== targetName));
+      setRuleSetsDraft((prev) => prev.filter((item) => item._id !== ruleset._id));
+      if (editingRuleSetId === ruleset._id) {
+        setEditingRuleSetId(null);
+        setRuleSetDraft({ name: "", description: "" });
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete ruleset");
+    } finally {
+      setRuleSetDeletingId(null);
+    }
+  };
+
   const handleAddAttribute = () => {
     const id = crypto.randomUUID();
     const newAttr: EditableAttribute = { _id: id, _isNew: true, name: "", description: "" };
@@ -1823,6 +1978,9 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                 <Shield className="w-3 h-3" /> Admin
               </Badge>
             )}
+            <Button variant="ghost" size="sm" onClick={() => setShowDefaultRuleSet(true)}>
+              <List className="w-4 h-4 mr-1" /> Default RuleSet
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => setShowDefaultAttributes(true)}>
               <List className="w-4 h-4 mr-1" /> Default Attributes
             </Button>
@@ -2029,6 +2187,86 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
 
       {showProfile && <ProfileDialog open={showProfile} onClose={() => setShowProfile(false)} />}
       {showPasswordChange && <PasswordChangeDialog open={showPasswordChange} onClose={() => setShowPasswordChange(false)} />}
+      {showDefaultRuleSet && (
+        <Dialog open={showDefaultRuleSet} onOpenChange={(open) => setShowDefaultRuleSet(open)}>
+          <DialogContent className="w-lg bg-white rounded-xl p-6 shadow-xl border border-slate-200">
+            <DialogHeader>
+              <div className="flex items-center justify-between gap-3">
+                <DialogTitle className="text-slate-900 flex items-center gap-2">
+                  <List className="w-5 h-5 text-blue-600" /> Default RuleSet
+                </DialogTitle>
+                <Button variant="outline" className="mr-6" size="sm" onClick={handleAddRuleSet}>
+                  <Plus className="w-4 h-4 mr-1" /> New RuleSet
+                </Button>
+              </div>
+              <DialogDescription className="text-slate-500">
+                Rulesets already stored for your account.
+              </DialogDescription>
+            </DialogHeader>
+            {ruleSetsDraft.length === 0 ? (
+              <div className="text-sm text-slate-500">No default rulesets found.</div>
+            ) : (
+              <div className="space-y-3">
+                {ruleSetsDraft.map((ruleset) => {
+                  const isEditing = editingRuleSetId === ruleset._id;
+                  const isSaving = ruleSetSavingId === ruleset._id;
+                  const isDeleting = ruleSetDeletingId === ruleset._id;
+                  return (
+                    <div key={ruleset._id} className="rounded-lg border border-slate-200 p-3 bg-slate-50">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 space-y-2">
+                          {isEditing ? (
+                            <Input
+                              value={ruleSetDraft.name}
+                              onChange={(e) => setRuleSetDraft((prev) => ({ ...prev, name: e.target.value }))}
+                              className="h-8 text-sm"
+                              placeholder="Ruleset name"
+                            />
+                          ) : (
+                            <div className="text-sm font-semibold text-slate-800">
+                              {ruleset.name || "Unnamed ruleset"}
+                            </div>
+                          )}
+                          {isEditing ? (
+                            <textarea
+                              value={ruleSetDraft.description}
+                              onChange={(e) => setRuleSetDraft((prev) => ({ ...prev, description: e.target.value }))}
+                              className="w-full min-h-[70px] rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 shadow-inner focus:border-blue-400 focus:outline-none"
+                              placeholder="Description"
+                            />
+                          ) : (
+                            <div className="text-xs text-slate-600">
+                              {ruleset.description || "No description provided."}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => (isEditing ? handleConfirmRuleSet(ruleset) : handleStartEditRuleSet(ruleset))}
+                            disabled={isSaving || isDeleting}
+                            className="p-2 rounded-md border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 disabled:opacity-60"
+                            title={isEditing ? "Confirm" : "Edit"}
+                          >
+                            {isEditing ? <Check className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteRuleSet(ruleset)}
+                            disabled={isSaving || isDeleting}
+                            className="p-2 rounded-md border border-slate-200 bg-white text-slate-600 hover:text-red-600 hover:bg-red-50 disabled:opacity-60"
+                            title="Delete"
+                          >
+                            {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
       {showDefaultAttributes && (
         <Dialog open={showDefaultAttributes} onOpenChange={(open) => setShowDefaultAttributes(open)}>
           <DialogContent className="w-lg bg-white rounded-xl p-6 shadow-xl border border-slate-200">

@@ -15,6 +15,7 @@ class UserBase(BaseModel):
     sessionCount: int = 0
     lastActive: Optional[datetime] = None
     attributes: Optional[List[UserAttribute]] = None
+    ruleSets: Optional[List[UserRuleSet]] = None
 
 
 class UserPublic(UserBase):
@@ -36,6 +37,15 @@ class UserAttribute(BaseModel):
 
 
 class UserAttributeUpdate(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    description: Optional[str] = Field(default=None, max_length=500)
+    
+class UserRuleSet(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    description: Optional[str] = Field(default=None, max_length=500)
+
+
+class UserRuleSetUpdate(BaseModel):
     name: str = Field(min_length=1, max_length=80)
     description: Optional[str] = Field(default=None, max_length=500)
 
