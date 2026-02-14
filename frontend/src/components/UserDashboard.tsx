@@ -2367,7 +2367,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                               onClick={() => setShowSessionAttributes(true)}
                               className="flex w-full md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap bg-white text-slate-500 shadow-sm hover:text-slate-900 justify-center text-center"
                             >
-                              <TextSearch className="w-3 h-3 mr-1 inline" /> Session Attributes
+                              <TextSearch className="w-3 h-3 mr-1 inline" /> Session Attributes(Document)
                             </button>
                             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                               <AlertDialogTrigger asChild>
