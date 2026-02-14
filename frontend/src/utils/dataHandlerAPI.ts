@@ -62,16 +62,11 @@ export interface ApiUser {
 	joinDate: string;
 	sessionCount: number;
 	lastActive: string;
-	attributes?: UserAttribute[] | UserAttribute | null;
-	ruleSets?: UserRuleSet[] | UserRuleSet | null;
+	attributes?: Attribute[] | Attribute | null;
+	ruleSets?: RuleSet[] | RuleSet | null;
 }
 
-export interface UserAttribute {
-	name?: string;
-	description?: string;
-}
-
-export interface UserRuleSet {
+export interface Attribute {
 	name?: string;
 	description?: string;
 }
@@ -125,6 +120,9 @@ export interface KeyInsight {
 	value: string;
 	trend?: string;
 	confidenceScore?: number;
+	altered?: boolean;
+	alteredFields?: { field: string; oldValue?: unknown }[] | null;
+	alterationReasoning?: string | null;
 }
 
 export interface RiskFactor {
@@ -203,15 +201,13 @@ export interface AnalysisSession {
 	systemStatus: ProcessingStatus;
 	analysisOutput: AnalysisOutput[] | null;
 	chatHistory: ChatMessage[];
-	ruleSets?: SessionRuleSet[] | null;
+	ruleSets?: RuleSet[] | null;
 	resultsCount?: number;
 }
 
-export interface SessionRuleSet {
+export interface RuleSet {
 	name?: string;
 	description?: string;
-	originalDataRef?: string;
-	correctedDataRef?: string;
 }
 
 export interface UploadDocumentsResponse {
@@ -338,11 +334,11 @@ export async function updateProfile(updates: Partial<Pick<ApiUser, "name" | "ema
 	return request<ApiUser>("/user/me", { method: "PATCH", body: updates, authenticated: true });
 }
 
-export async function createUserRuleSet(ruleset: UserRuleSet): Promise<ApiUser> {
+export async function createUserRuleSet(ruleset: RuleSet): Promise<ApiUser> {
 	return request<ApiUser>("/user/me/ruleset", { method: "POST", body: ruleset, authenticated: true });
 }
 
-export async function updateUserRuleset(name: string, updates: UserRuleSet): Promise<ApiUser> {
+export async function updateUserRuleset(name: string, updates: RuleSet): Promise<ApiUser> {
 	return request<ApiUser>(`/user/me/ruleset/${encodeURIComponent(name)}`, {
 		method: "PATCH",
 		body: updates,
@@ -357,11 +353,11 @@ export async function deleteUserRuleSet(name: string): Promise<ApiUser> {
 	});
 }
 
-export async function createUserAttribute(attribute: UserAttribute): Promise<ApiUser> {
+export async function createUserAttribute(attribute: Attribute): Promise<ApiUser> {
 	return request<ApiUser>("/user/me/attribute", { method: "POST", body: attribute, authenticated: true });
 }
 
-export async function updateUserAttribute(name: string, updates: UserAttribute): Promise<ApiUser> {
+export async function updateUserAttribute(name: string, updates: Attribute): Promise<ApiUser> {
 	return request<ApiUser>(`/user/me/attribute/${encodeURIComponent(name)}`, {
 		method: "PATCH",
 		body: updates,
@@ -416,7 +412,7 @@ export async function deleteSession(sessionId: string): Promise<{ message: strin
 	});
 }
 
-export async function createSessionRuleSet(sessionId: string, ruleset: SessionRuleSet): Promise<AnalysisSession> {
+export async function createSessionRuleSet(sessionId: string, ruleset: RuleSet): Promise<AnalysisSession> {
 	return request<AnalysisSession>(`/session/${sessionId}/ruleset`, {
 		method: "POST",
 		body: ruleset,
@@ -427,7 +423,7 @@ export async function createSessionRuleSet(sessionId: string, ruleset: SessionRu
 export async function updateSessionRuleSet(
 	sessionId: string,
 	name: string,
-	updates: SessionRuleSet
+	updates: RuleSet
 ): Promise<AnalysisSession> {
 	return request<AnalysisSession>(`/session/${sessionId}/ruleset/${encodeURIComponent(name)}`, {
 		method: "PATCH",
@@ -482,21 +478,35 @@ export async function fetchInsights(sessionId: string): Promise<AnalysisOutput[]
 	return request(`/insight/${sessionId}`, { authenticated: true });
 }
 
-export async function createSessionAttributeInsight(
+export async function createSessionKeyInsight(
 	sessionId: string,
 	fileName: string,
-	attribute: UserAttribute
+	attribute: Attribute
 ): Promise<AnalysisOutput[]> {
-	return request<AnalysisOutput[]>(`/insight/${sessionId}/attribute`, {
+	return request<AnalysisOutput[]>(`/insight/${sessionId}/keyinsight`, {
 		method: "POST",
 		body: { fileName, attribute },
 		authenticated: true,
 	});
 }
 
-export async function deleteSessionAttributeInsight(sessionId: string, attributeId: string): Promise<AnalysisOutput[]> {
-	return request<AnalysisOutput[]>(`/insight/${sessionId}/attribute/${encodeURIComponent(attributeId)}`, {
+export async function deleteSessionKeyInsight(sessionId: string, keyInsightId: string): Promise<AnalysisOutput[]> {
+	return request<AnalysisOutput[]>(`/insight/${sessionId}/keyinsight/${encodeURIComponent(keyInsightId)}`, {
 		method: "DELETE",
+		authenticated: true,
+	});
+}
+
+export async function updateSessionKeyInsight(
+	sessionId: string,
+	keyInsightId: string,
+	updates: Pick<KeyInsight, "value" | "trend" | "alterationReasoning"> & {
+		triggerAutoRuleSet?: boolean;
+	}
+): Promise<AnalysisOutput[]> {
+	return request<AnalysisOutput[]>(`/insight/${sessionId}/keyinsight/${encodeURIComponent(keyInsightId)}`, {
+		method: "PATCH",
+		body: updates,
 		authenticated: true,
 	});
 }

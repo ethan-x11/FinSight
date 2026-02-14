@@ -9,8 +9,8 @@ from app.models.session import (
     AnalysisSession,
     ProcessingStatus,
     SessionCreate,
-    SessionRuleSet,
-    SessionRuleSetUpdate,
+    RuleSet,
+    RuleSetUpdate,
     SessionUpdate,
 )
 from app.models.user import UserInDB
@@ -81,7 +81,7 @@ async def update_session(
 @router.post("/session/{session_id}/ruleset", response_model=AnalysisSession, status_code=status.HTTP_201_CREATED)
 async def create_session_ruleset(
     session_id: str,
-    payload: SessionRuleSet,
+    payload: RuleSet,
     current_user: UserInDB = Depends(get_current_user),
     repo: SessionsRepository = Depends(get_sessions_repository),
 ) -> AnalysisSession:
@@ -103,7 +103,7 @@ async def create_session_ruleset(
 async def update_session_ruleset(
     session_id: str,
     name: str,
-    payload: SessionRuleSetUpdate,
+    payload: RuleSetUpdate,
     current_user: UserInDB = Depends(get_current_user),
     repo: SessionsRepository = Depends(get_sessions_repository),
 ) -> AnalysisSession:

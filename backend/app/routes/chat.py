@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.core.auth import get_current_user
 from app.repositories.sessions import SessionsRepository, get_sessions_repository
-from app.models.session import AskRequest, AskResponse, QueryPlannerResponse, SessionRuleSet
+from app.models.session import AskRequest, AskResponse, QueryPlannerResponse, RuleSet
 from app.models.user import UserInDB
 from app.services.chat_service import ChatService
 from app.services.search_service import SearchService
@@ -73,7 +73,7 @@ async def chat_flow(
         # history=session.get("chatHistory", []),
         model = payload.model,
         conversation_id=session.get("conversationId", ""),
-        rule_sets=[SessionRuleSet.model_validate(ruleSet) for ruleSet in session.get("ruleSets", [])],
+        rule_sets=[RuleSet.model_validate(ruleSet) for ruleSet in session.get("ruleSets", [])],
     )
 
     if await request.is_disconnected():

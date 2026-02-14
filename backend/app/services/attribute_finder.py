@@ -1,8 +1,7 @@
 import json
 from typing import List, Optional
 from app.utils.azure_factory import AzureFactory
-from app.models.session import Insight, SessionRuleSet
-from app.services.chat_service import ChatService
+from app.models.session import Insight, RuleSet
 from app.services.query_planner import QueryPlanner
 from app.services.search_service import SearchService
 
@@ -10,7 +9,6 @@ from app.services.search_service import SearchService
 class AttributeFinder:
     def __init__(self):
         self.azure_factory = AzureFactory()
-        self.chat_service = ChatService()
         self.search_service = SearchService()
         self.query_planner = QueryPlanner()
 
@@ -19,7 +17,7 @@ class AttributeFinder:
         name: str,
         description: str,
         index_name: str,
-        rule_sets: Optional[List[SessionRuleSet]] = None,
+        rule_sets: Optional[List[RuleSet]] = None,
     ) -> Insight:
         insight_finder_prompt = (
             "### **Role & Persona**\n"

@@ -175,9 +175,7 @@ class SessionsRepository:
         rulesets.append(
             {
                 "name": name,
-                "description": ruleset.get("description"),
-                "originalDataRef": ruleset.get("originalDataRef"),
-                "correctedDataRef": ruleset.get("correctedDataRef"),
+                "description": ruleset.get("description")
             }
         )
         session["ruleSets"] = rulesets

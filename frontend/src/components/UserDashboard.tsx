@@ -37,30 +37,30 @@ import {
 import {
   askChatQuestion,
   createUserAttribute,
-  createSessionAttributeInsight,
+  createSessionKeyInsight,
   deleteUserAttribute,
-  deleteSessionAttributeInsight,
+  deleteSessionKeyInsight,
   fetchInsights,
   fetchSession,
   fetchSessionStatus,
   fetchSessions,
   type AnalysisOutput,
   type AnalysisSession,
+  updateSessionKeyInsight,
   type ApiUser,
   type SourceDocument,
   type ChatMessage,
   type KeyInsight,
   type RiskFactor,
   type SourcePointer,
-  type SessionRuleSet,
-  type UserRuleSet,
+  type RuleSet,
   uploadDocuments,
   updateSession,
   deleteSession,
   submitFeedback,
   Query,
   ReasoningSteps,
-  UserAttribute,
+  Attribute,
   createSessionRuleSet,
   createUserRuleSet,
   updateSessionRuleSet,
@@ -559,7 +559,13 @@ const SessionStatus = ({ session }: { session: AnalysisSession }) => {
   );
 };
 
-const InsightsPanel = ({ insights }: { insights: AnalysisOutput | null }) => {
+const InsightsPanel = ({
+  insights,
+  onEditKeyInsight,
+}: {
+  insights: AnalysisOutput | null;
+  onEditKeyInsight: (insight: KeyInsight) => void;
+}) => {
   console.log("InsightsPanel render", insights);
   if (!insights) return <div className="text-sm text-slate-500">No insights available yet.</div>;
 
@@ -576,7 +582,17 @@ const InsightsPanel = ({ insights }: { insights: AnalysisOutput | null }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {keyInsights.map((item: KeyInsight) => (
             <div key={item.id} className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-              <p className="text-xs text-slate-500 uppercase font-semibold">{item.name || item.category || "Insight"}</p>
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-xs text-slate-500 uppercase font-semibold">{item.name || item.category || "Insight"}</p>
+                <button
+                  type="button"
+                  onClick={() => onEditKeyInsight(item)}
+                  className="rounded-md border border-slate-200 bg-white p-1 text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                  title="Edit insight"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              </div>
               <p className="text-md font-semibold text-slate-900 mt-1">{item.value}</p>
               {item.trend && <p className="text-xs text-slate-500">Trend: {item.trend}</p>}
               {/* {item.confidenceScore && typeof item.confidenceScore === "number" && (
@@ -680,7 +696,7 @@ const DocumentPreview = ({ document }: { document: SourceDocument | null }) => {
           rel="noreferrer"
           className="text-xs font-semibold text-blue-600 hover:text-blue-500"
         >
-              Open in new tab
+          Open in new tab
         </a>
       </div>
       <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
@@ -796,27 +812,27 @@ const ChatInterface = ({
             <ChatMessagesSkeleton />
           ) : (
             messages.map((msg) => {
-            const isUser = msg.role === "user";
-            const feedbackTargetId = msg.messageId;
-            const showFeedback = !isUser && Boolean(feedbackTargetId);
-            const alreadyRated = showFeedback && Boolean(msg.userFeedback?.thumbRating);
-            const feedbackPending = feedbackTargetId ? feedbackSubmittingId === feedbackTargetId : false;
-            const canShowReasoning = !isUser && Boolean(msg.reasoningSteps?.length) && Boolean(msg.messageId);
-            const isReasoningOpen = msg.messageId ? expandedReasoningIds[msg.messageId] : false;
-            const sources = msg.citations || [];
-            const previewSources = sources.slice(0, 3);
-            const remainingSources = sources.length - previewSources.length;
-            return (
-              <div key={msg.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-                <div
-                  className={`max-w-[92%] md:max-w-[78%] px-4 py-3 rounded-2xl border shadow-sm transition-all ${isUser
-                    ? "bg-slate-500 text-white border-blue-800 shadow-blue-200/60"
-                    : "bg-white text-slate-800 border-default"}
+              const isUser = msg.role === "user";
+              const feedbackTargetId = msg.messageId;
+              const showFeedback = !isUser && Boolean(feedbackTargetId);
+              const alreadyRated = showFeedback && Boolean(msg.userFeedback?.thumbRating);
+              const feedbackPending = feedbackTargetId ? feedbackSubmittingId === feedbackTargetId : false;
+              const canShowReasoning = !isUser && Boolean(msg.reasoningSteps?.length) && Boolean(msg.messageId);
+              const isReasoningOpen = msg.messageId ? expandedReasoningIds[msg.messageId] : false;
+              const sources = msg.citations || [];
+              const previewSources = sources.slice(0, 3);
+              const remainingSources = sources.length - previewSources.length;
+              return (
+                <div key={msg.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+                  <div
+                    className={`max-w-[92%] md:max-w-[78%] px-4 py-3 rounded-2xl border shadow-sm transition-all ${isUser
+                      ? "bg-slate-500 text-white border-blue-800 shadow-blue-200/60"
+                      : "bg-white text-slate-800 border-default"}
                   ${isUser ? "rounded-tr-none" : "rounded-tl-none"}`}
-                >
-                  <div className={`flex items-center justify-between gap-2 text-[11px] uppercase tracking-[0.08em] font-semibold ${isUser ? "text-white/80" : "text-slate-500"}`}>
-                    <div className="flex items-center gap-2">
-                      {isUser ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
+                  >
+                    <div className={`flex items-center justify-between gap-2 text-[11px] uppercase tracking-[0.08em] font-semibold ${isUser ? "text-white/80" : "text-slate-500"}`}>
+                      <div className="flex items-center gap-2">
+                        {isUser ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
                         <span>
                           {isUser ? "You" : "Assistant"}
                           {!isUser && msg.model ? (
@@ -825,128 +841,128 @@ const ChatInterface = ({
                             </span>
                           ) : null}
                         </span>
-                    </div>
-                    {canShowReasoning && msg.messageId && (
-                      <button
-                        type="button"
-                        onClick={() => toggleReasoning(msg.messageId!)}
-                        className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold transition-colors ${isReasoningOpen
-                          ? "border-blue-200 bg-blue-50 text-blue-700"
-                          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
-                      >
-                        {isReasoningOpen ? "Hide Reasoning" : "Show Reasoning Steps"}
-                      </button>
-                    )}
-                  </div>
-
-                  {canShowReasoning && isReasoningOpen && (
-                    <div className="mt-3 mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Reasoning steps</p>
-                      <div className="mt-2 space-y-2">
-                        {msg.reasoningSteps?.map((step, idx) => {
-                          const isLast = idx === (msg.reasoningSteps?.length || 0) - 1;
-                          return (
-                            <div key={`${step.title}-${idx}`} className="relative pl-6">
-                              {!isLast && (
-                                <span className="absolute left-[5px] top-5 h-[calc(90%+4px)] w-px bg-slate-200 overflow-hidden">
-                                  <span className="absolute inset-0 bg-slate-400 opacity-70 animate-pulse" />
-                                </span>
-                              )}
-                              <span className="absolute left-0 top-2.5 h-3 w-3 rounded-full bg-slate-500 shadow-[0_0_0_3px_rgba(59,130,246,0.2)] animate-pulse" />
-                              <div className="rounded-md bg-white border border-slate-200 px-3 py-2">
-                                <p className="text-xs font-semibold text-slate-700">{step.title}</p>
-                                <p className="text-xs text-slate-600 mt-1">{step.description}</p>
-                              </div>
-                            </div>
-                          );
-                        })}
                       </div>
+                      {canShowReasoning && msg.messageId && (
+                        <button
+                          type="button"
+                          onClick={() => toggleReasoning(msg.messageId!)}
+                          className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold transition-colors ${isReasoningOpen
+                            ? "border-blue-200 bg-blue-50 text-blue-700"
+                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
+                        >
+                          {isReasoningOpen ? "Hide Reasoning" : "Show Reasoning Steps"}
+                        </button>
+                      )}
                     </div>
-                  )}
 
-                  <div
-                    className={`text-sm leading-relaxed mt-1 [&>*]:mb-2 [&>*:last-child]:mb-0 [&>ul]:list-disc [&>ul]:ml-5 [&>ol]:list-decimal [&>ol]:ml-5 ${isUser ? "text-white" : "text-slate-800"}`}
-                  >
-                    <MarkdownMessage text={msg.text || ""} linkedCitations={msg.linkedCitations} />
-                  </div>
+                    {canShowReasoning && isReasoningOpen && (
+                      <div className="mt-3 mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Reasoning steps</p>
+                        <div className="mt-2 space-y-2">
+                          {msg.reasoningSteps?.map((step, idx) => {
+                            const isLast = idx === (msg.reasoningSteps?.length || 0) - 1;
+                            return (
+                              <div key={`${step.title}-${idx}`} className="relative pl-6">
+                                {!isLast && (
+                                  <span className="absolute left-[5px] top-5 h-[calc(90%+4px)] w-px bg-slate-200 overflow-hidden">
+                                    <span className="absolute inset-0 bg-slate-400 opacity-70 animate-pulse" />
+                                  </span>
+                                )}
+                                <span className="absolute left-0 top-2.5 h-3 w-3 rounded-full bg-slate-500 shadow-[0_0_0_3px_rgba(59,130,246,0.2)] animate-pulse" />
+                                <div className="rounded-md bg-white border border-slate-200 px-3 py-2">
+                                  <p className="text-xs font-semibold text-slate-700">{step.title}</p>
+                                  <p className="text-xs text-slate-600 mt-1">{step.description}</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
 
-                  {sources.length > 0 && (
-                    <div className="mt-2 space-y-2 group">
-                      <div className="flex flex-wrap gap-1.5 items-center">
-                        <span>Sources:</span>
-                        {previewSources.map((src, i) => (
-                          <a
-                            key={`${src.name}-${i}`}
-                            href={src.url || "#"}
-                            target="_blank"
-                            rel="noreferrer"
-                            className={`text-[11px] font-semibold px-2 py-1 rounded-full border ${isUser ? "bg-white/15 text-white border-white/30" : "bg-blue-50 text-blue-700 border-blue-200"}`}
-                          >
-                            {src.name}
-                          </a>
-                        ))}
-                        {remainingSources > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => openSourcesModal(sources, isUser ? "User Sources" : "Assistant Sources")}
-                            className={`text-[11px] font-semibold px-2 py-1 rounded-full border transition-colors ${isUser ? "bg-white/10 text-white border-white/30 hover:bg-white/15" : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"}`}
-                          >
-                            +{remainingSources} more
-                          </button>
+                    <div
+                      className={`text-sm leading-relaxed mt-1 [&>*]:mb-2 [&>*:last-child]:mb-0 [&>ul]:list-disc [&>ul]:ml-5 [&>ol]:list-decimal [&>ol]:ml-5 ${isUser ? "text-white" : "text-slate-800"}`}
+                    >
+                      <MarkdownMessage text={msg.text || ""} linkedCitations={msg.linkedCitations} />
+                    </div>
+
+                    {sources.length > 0 && (
+                      <div className="mt-2 space-y-2 group">
+                        <div className="flex flex-wrap gap-1.5 items-center">
+                          <span>Sources:</span>
+                          {previewSources.map((src, i) => (
+                            <a
+                              key={`${src.name}-${i}`}
+                              href={src.url || "#"}
+                              target="_blank"
+                              rel="noreferrer"
+                              className={`text-[11px] font-semibold px-2 py-1 rounded-full border ${isUser ? "bg-white/15 text-white border-white/30" : "bg-blue-50 text-blue-700 border-blue-200"}`}
+                            >
+                              {src.name}
+                            </a>
+                          ))}
+                          {remainingSources > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => openSourcesModal(sources, isUser ? "User Sources" : "Assistant Sources")}
+                              className={`text-[11px] font-semibold px-2 py-1 rounded-full border transition-colors ${isUser ? "bg-white/10 text-white border-white/30 hover:bg-white/15" : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"}`}
+                            >
+                              +{remainingSources} more
+                            </button>
+                          )}
+                        </div>
+                        {msg.queryPlan && msg.queryPlan.length > 0 && (
+                          <div className="flex items-center gap-2">
+                            <QueryPlanButton queries={msg.queryPlan} />
+                          </div>
                         )}
                       </div>
-                      {msg.queryPlan && msg.queryPlan.length > 0 && (
+                    )}
+                    {showFeedback && feedbackTargetId && (
+                      <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-500">
                         <div className="flex items-center gap-2">
-                          <QueryPlanButton queries={msg.queryPlan} />
+                          <span>Was this helpful?</span>
+                          <button
+                            type="button"
+                            className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 transition-colors ${alreadyRated && msg.userFeedback?.thumbRating === "up"
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                              } ${feedbackPending ? "opacity-60" : ""}`}
+                            disabled={alreadyRated || feedbackPending}
+                            onClick={async () => {
+                              setFeedbackSubmittingId(feedbackTargetId);
+                              try {
+                                await onSendFeedback(feedbackTargetId, "up");
+                              } finally {
+                                setFeedbackSubmittingId(null);
+                              }
+                            }}
+                          >
+                            {feedbackPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ThumbsUp className="w-3.5 h-3.5" />}
+                            <span className="text-[11px] font-semibold">Yes</span>
+                          </button>
+                          <button
+                            type="button"
+                            className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 transition-colors ${alreadyRated && msg.userFeedback?.thumbRating === "down"
+                              ? "border-amber-200 bg-amber-50 text-amber-700"
+                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                              } ${feedbackPending ? "opacity-60" : ""}`}
+                            disabled={alreadyRated || feedbackPending}
+                            onClick={() => openFeedbackModal(feedbackTargetId)}
+                          >
+                            <ThumbsDown className="w-3.5 h-3.5" />
+                            <span className="text-[11px] font-semibold">No</span>
+                          </button>
                         </div>
-                      )}
-                    </div>
-                  )}
-                  {showFeedback && feedbackTargetId && (
-                    <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-500">
-                      <div className="flex items-center gap-2">
-                        <span>Was this helpful?</span>
-                        <button
-                          type="button"
-                          className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 transition-colors ${alreadyRated && msg.userFeedback?.thumbRating === "up"
-                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                            } ${feedbackPending ? "opacity-60" : ""}`}
-                          disabled={alreadyRated || feedbackPending}
-                          onClick={async () => {
-                            setFeedbackSubmittingId(feedbackTargetId);
-                            try {
-                              await onSendFeedback(feedbackTargetId, "up");
-                            } finally {
-                              setFeedbackSubmittingId(null);
-                            }
-                          }}
-                        >
-                          {feedbackPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ThumbsUp className="w-3.5 h-3.5" />}
-                          <span className="text-[11px] font-semibold">Yes</span>
-                        </button>
-                        <button
-                          type="button"
-                          className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 transition-colors ${alreadyRated && msg.userFeedback?.thumbRating === "down"
-                            ? "border-amber-200 bg-amber-50 text-amber-700"
-                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                            } ${feedbackPending ? "opacity-60" : ""}`}
-                          disabled={alreadyRated || feedbackPending}
-                          onClick={() => openFeedbackModal(feedbackTargetId)}
-                        >
-                          <ThumbsDown className="w-3.5 h-3.5" />
-                          <span className="text-[11px] font-semibold">No</span>
-                        </button>
+                        {msg.userFeedback?.thumbRating && (
+                          <span className="text-[11px] font-semibold text-gray-600">Thanks for the feedback</span>
+                        )}
                       </div>
-                      {msg.userFeedback?.thumbRating && (
-                        <span className="text-[11px] font-semibold text-gray-600">Thanks for the feedback</span>
-                      )}
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          }))}
+              );
+            }))}
           {isTyping && (
             <div className="flex justify-start">
               <div className="bg-white border border-default px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex items-center space-x-2">
@@ -1199,8 +1215,8 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   const [showDefaultAttributes, setShowDefaultAttributes] = useState(false);
   const [showSessionRuleSets, setShowSessionRuleSets] = useState(false);
   const [showSessionAttributes, setShowSessionAttributes] = useState(false);
-  const [defaultRuleSetsState, setDefaultRuleSetsState] = useState<UserRuleSet[]>([]);
-  const [defaultAttributesState, setDefaultAttributesState] = useState<UserAttribute[]>([]);
+  const [defaultRuleSetsState, setDefaultRuleSetsState] = useState<RuleSet[]>([]);
+  const [defaultAttributesState, setDefaultAttributesState] = useState<Attribute[]>([]);
   const [ruleSetsDraft, setRuleSetsDraft] = useState<EditableRuleSet[]>([]);
   const [attributesDraft, setAttributesDraft] = useState<EditableAttribute[]>([]);
   const [editingRuleSetId, setEditingRuleSetId] = useState<string | null>(null);
@@ -1218,6 +1234,11 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   const [sessionRuleSetSavingId, setSessionRuleSetSavingId] = useState<string | null>(null);
   const [sessionRuleSetDeletingId, setSessionRuleSetDeletingId] = useState<string | null>(null);
   const [showSessionRuleSetForm, setShowSessionRuleSetForm] = useState(false);
+  const [showKeyInsightEditor, setShowKeyInsightEditor] = useState(false);
+  const [editingKeyInsight, setEditingKeyInsight] = useState<KeyInsight | null>(null);
+  const [keyInsightDraft, setKeyInsightDraft] = useState({ value: "", trend: "", alterationReasoning: "" });
+  const [keyInsightSaving, setKeyInsightSaving] = useState(false);
+  const [keyInsightAutoRuleSet, setKeyInsightAutoRuleSet] = useState(false);
   const [sessionAttributeDraft, setSessionAttributeDraft] = useState({ name: "", description: "" });
   const [sessionAttributeSaving, setSessionAttributeSaving] = useState(false);
   const [sessionAttributeDeletingId, setSessionAttributeDeletingId] = useState<string | null>(null);
@@ -1236,7 +1257,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   const defaultRuleSets = useMemo(() => defaultRuleSetsState, [defaultRuleSetsState]);
 
   useEffect(() => {
-    const raw = (user.attributes ?? null) as UserAttribute[] | UserAttribute | null;
+    const raw = (user.attributes ?? null) as Attribute[] | Attribute | null;
     if (!raw) {
       setDefaultAttributesState([]);
       return;
@@ -1245,7 +1266,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   }, [user.attributes]);
 
   useEffect(() => {
-    const raw = (user.ruleSets ?? null) as UserRuleSet[] | UserRuleSet | null;
+    const raw = (user.ruleSets ?? null) as RuleSet[] | RuleSet | null;
     if (!raw) {
       setDefaultRuleSetsState([]);
       return;
@@ -1324,7 +1345,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     return output?.keyInsights || [];
   }, [insights, activeDocId]);
 
-  const sessionRuleSets = useMemo<SessionRuleSet[]>(() => currentSession?.ruleSets || [], [currentSession]);
+  const sessionRuleSets = useMemo<RuleSet[]>(() => currentSession?.ruleSets || [], [currentSession]);
 
   useEffect(() => {
     if (!showSessionRuleSets) return;
@@ -1743,12 +1764,12 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
           prev.map((item) =>
             item._id === ruleset._id
               ? {
-                  ...item,
-                  name: trimmedName,
-                  description: trimmedDescription,
-                  _isNew: false,
-                  _originalName: trimmedName,
-                }
+                ...item,
+                name: trimmedName,
+                description: trimmedDescription,
+                _isNew: false,
+                _originalName: trimmedName,
+              }
               : item
           )
         );
@@ -1774,11 +1795,11 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
           prev.map((item) =>
             item._id === ruleset._id
               ? {
-                  ...item,
-                  name: trimmedName,
-                  description: trimmedDescription,
-                  _originalName: trimmedName,
-                }
+                ...item,
+                name: trimmedName,
+                description: trimmedDescription,
+                _originalName: trimmedName,
+              }
               : item
           )
         );
@@ -1854,12 +1875,12 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
           prev.map((item) =>
             item._id === attr._id
               ? {
-                  ...item,
-                  name: trimmedName,
-                  description: trimmedDescription,
-                  _isNew: false,
-                  _originalName: trimmedName,
-                }
+                ...item,
+                name: trimmedName,
+                description: trimmedDescription,
+                _isNew: false,
+                _originalName: trimmedName,
+              }
               : item
           )
         );
@@ -1885,11 +1906,11 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
           prev.map((item) =>
             item._id === attr._id
               ? {
-                  ...item,
-                  name: trimmedName,
-                  description: trimmedDescription,
-                  _originalName: trimmedName,
-                }
+                ...item,
+                name: trimmedName,
+                description: trimmedDescription,
+                _originalName: trimmedName,
+              }
               : item
           )
         );
@@ -1941,7 +1962,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
 
     setSessionAttributeSaving(true);
     try {
-      const updated = await createSessionAttributeInsight(currentSessionId, activeDocId, {
+      const updated = await createSessionKeyInsight(currentSessionId, activeDocId, {
         name: trimmedName,
         description: trimmedDescription || undefined,
       });
@@ -1960,7 +1981,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     if (!currentSessionId) return;
     setSessionAttributeDeletingId(insightId);
     try {
-      const updated = await deleteSessionAttributeInsight(currentSessionId, insightId);
+      const updated = await deleteSessionKeyInsight(currentSessionId, insightId);
       setInsights(updated || null);
       setRefreshedInsightsSessions((prev) => ({ ...prev, [currentSessionId]: true }));
       toast.success("Attribute deleted");
@@ -2082,6 +2103,74 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
       toast.error(err?.message || "Failed to delete ruleset");
     } finally {
       setSessionRuleSetDeletingId(null);
+    }
+  };
+
+  const openKeyInsightEditor = (insight: KeyInsight) => {
+    setEditingKeyInsight(insight);
+    setKeyInsightDraft({
+      value: insight.value || "",
+      trend: insight.trend || "",
+      alterationReasoning: insight.alterationReasoning || "",
+    });
+    setKeyInsightAutoRuleSet(false);
+    setShowKeyInsightEditor(true);
+  };
+
+  const closeKeyInsightEditor = () => {
+    setShowKeyInsightEditor(false);
+    setEditingKeyInsight(null);
+    setKeyInsightDraft({ value: "", trend: "", alterationReasoning: "" });
+    setKeyInsightSaving(false);
+    setKeyInsightAutoRuleSet(false);
+  };
+
+  const handleUpdateKeyInsight = async () => {
+    if (!currentSessionId || !editingKeyInsight) return;
+    const trimmedValue = keyInsightDraft.value.trim();
+    const trimmedTrend = keyInsightDraft.trend.trim();
+    const trimmedReasoning = keyInsightDraft.alterationReasoning.trim();
+    const originalValue = (editingKeyInsight.value || "").trim();
+    const originalTrend = (editingKeyInsight.trend || "").trim();
+    const hasChanges = trimmedValue !== originalValue || trimmedTrend !== originalTrend;
+
+    if (!trimmedValue) {
+      toast.error("Value is required");
+      return;
+    }
+
+    if (!hasChanges) {
+      toast.info("No changes to save");
+      return;
+    }
+
+    if (!trimmedReasoning) {
+      toast.error("Alteration reasoning is required");
+      return;
+    }
+
+    setKeyInsightSaving(true);
+    try {
+      const updated = await updateSessionKeyInsight(currentSessionId, editingKeyInsight.id, {
+        value: trimmedValue,
+        trend: trimmedTrend || undefined,
+        alterationReasoning: trimmedReasoning,
+        triggerAutoRuleSet: keyInsightAutoRuleSet,
+      });
+      setInsights(updated || null);
+      setRefreshedInsightsSessions((prev) => ({ ...prev, [currentSessionId]: true }));
+
+      if (keyInsightAutoRuleSet) {
+        const refreshedSession = await fetchSession(currentSessionId);
+        setSessions((prev) => prev.map((session) => (session.id === refreshedSession.id ? refreshedSession : session)));
+      }
+
+      toast.success("Insight updated");
+      closeKeyInsightEditor();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update insight");
+    } finally {
+      setKeyInsightSaving(false);
     }
   };
 
@@ -2242,7 +2331,10 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                                   <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
                                     <FileText className="w-4 h-4 text-blue-600" /> Insights &amp; Data
                                   </h3>
-                                  <InsightsPanel insights={insights?.find(insight => insight.fileName === activeDocId) ?? null} />
+                                  <InsightsPanel
+                                    insights={insights?.find(insight => insight.fileName === activeDocId) ?? null}
+                                    onEditKeyInsight={openKeyInsightEditor}
+                                  />
                                 </div>
                                 <InsightsNotesPanel notes={(insights?.find(insight => insight.fileName === activeDocId) ?? null)?.notes ?? null} />
                               </div>
@@ -2743,6 +2835,112 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                   ))}
                 </div>
               )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+      {showKeyInsightEditor && editingKeyInsight && (
+        <Dialog open={showKeyInsightEditor} onOpenChange={(open) => (!open ? closeKeyInsightEditor() : null)}>
+          <DialogContent className="w-lg bg-white rounded-xl p-6 shadow-xl border border-slate-200">
+            <DialogHeader>
+              <div className="flex items-center justify-between gap-3">
+                <DialogTitle className="text-slate-900 flex items-center gap-2">
+                  <Pencil className="w-5 h-5 text-blue-600" /> Edit Insight
+                </DialogTitle>
+              </div>
+              <DialogDescription className="text-slate-500">
+                Update the value and trend for this insight.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
+                <div className="flex items-center gap-2 text-xs text-slate-600">
+                  <Badge variant="outline" className={editingKeyInsight.altered ? "border-amber-200 bg-amber-50 text-amber-700" : "border-slate-200 text-slate-600"}>
+                    {editingKeyInsight.altered ? "Altered" : "Not Altered"}
+                  </Badge>
+                  {editingKeyInsight.altered && (
+                    <div className="flex flex-col items-start">
+                      <span>
+                        Fields: {(editingKeyInsight.alteredFields || []).length > 0
+                          ? (editingKeyInsight.alteredFields || [])
+                            .map((item) => {
+                              const label = item?.field || "";
+                              if (!label) return null;
+                              if (item?.oldValue === undefined) return label;
+                              return `${label} (was ${String(item.oldValue)})`;
+                            })
+                            .filter(Boolean)
+                            .join(", ")
+                          : "—"}
+                      </span>
+                      <span className="text-xs text-slate-600">
+                        Reasoning: {editingKeyInsight.alterationReasoning || "—"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Input
+                  value={keyInsightDraft.value}
+                  onChange={(e) => setKeyInsightDraft((prev) => ({ ...prev, value: e.target.value }))}
+                  className="h-9 text-sm"
+                  placeholder="Value"
+                />
+                <Input
+                  value={keyInsightDraft.trend}
+                  onChange={(e) => setKeyInsightDraft((prev) => ({ ...prev, trend: e.target.value }))}
+                  className="h-9 text-sm"
+                  placeholder="Trend"
+                />
+                {(keyInsightDraft.value.trim() !== (editingKeyInsight.value || "").trim() ||
+                  keyInsightDraft.trend.trim() !== (editingKeyInsight.trend || "").trim()) && (
+                    <textarea
+                      value={keyInsightDraft.alterationReasoning}
+                      onChange={(e) => setKeyInsightDraft((prev) => ({ ...prev, alterationReasoning: e.target.value }))}
+                      className="w-full min-h-[90px] rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 shadow-inner focus:border-blue-400 focus:outline-none"
+                      placeholder="Alteration reasoning (required)"
+                    />
+                  )}
+                {(keyInsightDraft.value.trim() !== (editingKeyInsight.value || "").trim() ||
+                  keyInsightDraft.trend.trim() !== (editingKeyInsight.trend || "").trim()) && (
+                    <div className="flex items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2">
+                      <span className="text-[11px] font-semibold text-slate-600">
+                        Auto Create Rule based on Changes
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setKeyInsightAutoRuleSet((prev) => !prev)}
+                        className={`rounded-full border px-2 py-1 text-[10px] font-semibold transition-colors ${keyInsightAutoRuleSet
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                          : "border-slate-200 bg-slate-50 text-slate-600"
+                          }`}
+                        aria-pressed={keyInsightAutoRuleSet}
+                      >
+                        {keyInsightAutoRuleSet ? "On" : "Off"}
+                      </button>
+                    </div>
+                  )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleUpdateKeyInsight}
+                  disabled={
+                    keyInsightSaving ||
+                    !keyInsightDraft.value.trim() ||
+                    (keyInsightDraft.value.trim() === (editingKeyInsight.value || "").trim() &&
+                      keyInsightDraft.trend.trim() === (editingKeyInsight.trend || "").trim()) ||
+                    !keyInsightDraft.alterationReasoning.trim()
+                  }
+                >
+                  {keyInsightSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Check className="w-4 h-4 mr-1" />}
+                  Save Changes
+                </Button>
+                <Button variant="ghost" onClick={closeKeyInsightEditor} disabled={keyInsightSaving}>
+                  Cancel
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

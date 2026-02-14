@@ -9,7 +9,7 @@ from openai.types.chat import ChatCompletionMessageParam
 from app.core.config import get_settings
 from app.utils.azure_factory import AzureFactory
 from app.utils.citation_utils import CitationUtils
-from app.models.session import ChatResponse, ChatResponseRaw, ReasoningSteps, SessionRuleSet
+from app.models.session import ChatResponse, ChatResponseRaw, ReasoningSteps, RuleSet
 
 
 class ChatService:
@@ -25,7 +25,7 @@ class ChatService:
         memory_store_name: Optional[str] = None,
         conversation_id: Optional[str] = None,
         agent_name: Optional[str] = None,
-        rule_sets: Optional[List[SessionRuleSet]] = None
+        rule_sets: Optional[List[RuleSet]] = None
     ) -> ChatResponse:
         context_str = "\n".join(
             [

@@ -1,12 +1,12 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
-from app.models.session import AnalysisOutput, Insight, KeyInsight, SessionRuleSet
+from app.models.session import AnalysisOutput, Insight, KeyInsight, RuleSet
 from app.services.chat_service import ChatService
 from app.services.search_service import SearchService
 from app.services.query_planner import QueryPlanner
 from app.services.attribute_finder import AttributeFinder
-from app.models.user import UserAttribute
+from app.models.user import Attribute
 
 
 class AnalysisService:
@@ -20,8 +20,8 @@ class AnalysisService:
         self,
         file_name: str,
         index_name: str,
-        attributes: Optional[List[UserAttribute]] = None,
-        rule_sets: Optional[List[SessionRuleSet]] = None,
+        attributes: Optional[List[Attribute]] = None,
+        rule_sets: Optional[List[RuleSet]] = None,
     ) -> AnalysisOutput:
         prompt = (
             "Generate key insights and risk factors based on the analyzed document."

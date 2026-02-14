@@ -18,8 +18,7 @@ from app.utils.chunking import semantic_chunk_text
 from app.core.config import get_settings
 import re
 
-from app.models.user import UserAttribute
-from app.models.session import SessionRuleSet
+from app.models.session import RuleSet, Attribute
 
 logger = logging.getLogger(__name__)
 
@@ -160,7 +159,7 @@ class IngestionService:
         content_type: str | None,
         blob_url: str | None = None,
         blob_name: str | None = None,
-        attributes: Optional[List[UserAttribute]] = None,
+        attributes: Optional[List[Attribute]] = None,
         file_index: Optional[str] = "",
         
     ) -> None:
@@ -373,7 +372,7 @@ class IngestionService:
             # if doc_result.get("tables"):
             
             
-            rule_sets: List[SessionRuleSet] = [SessionRuleSet.model_validate(ruleSet) for ruleSet in session.get("ruleSets", [])]
+            rule_sets: List[RuleSet] = [RuleSet.model_validate(ruleSet) for ruleSet in session.get("ruleSets", [])]
 
             insights = self.analysis_service.generate_insights(file_name=filename, index_name=index_name, attributes=attributes, rule_sets=rule_sets)
 

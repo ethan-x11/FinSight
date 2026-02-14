@@ -1,13 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Literal, Optional
+from typing import Any, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Annotated
-
-from app.models.user import UserAttribute
-
 
 
 ProcessStage = Annotated[str, Field(pattern=r"^(pending|processing.*|completed|failed|cancelling|cancelled)$")]
@@ -125,6 +122,38 @@ class KeyInsight(BaseModel):
     trend: Optional[str] = None
     confidenceScore: Optional[float] = Field(default=0.0, ge=0.0, le=1.0)
     citation: Optional[str] = None
+    altered: bool = False
+    alteredFields: Optional[List[AlteredField]] = None
+    alterationReasoning: Optional[str] = None
+
+class AlteredField(BaseModel):
+    field: str
+    oldValue: Any
+
+class KeyInsightUpdate(BaseModel):
+    value: Optional[str] = None
+    trend: Optional[str] = None
+    alterationReasoning: str = Field(min_length=5, max_length=1000)
+    triggerAutoRuleSet: Optional[bool] = None
+
+    
+class Attribute(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    description: str = Field(default="", max_length=500)
+
+
+class AttributeUpdate(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    description: Optional[str] = Field(default=None, max_length=500)
+    
+class RuleSet(BaseModel):
+    name: str
+    description: str
+    model_config = ConfigDict(extra='forbid')
+
+class RuleSetUpdate(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    description: Optional[str] = Field(default=None, max_length=500)
 
 class RiskFactor(BaseModel):
     severity: Literal["Low", "Medium", "High"]
@@ -160,30 +189,16 @@ class AnalysisSession(BaseModel):
     analysisOutput: Optional[List[AnalysisOutput]] = Field(default_factory=list)
     chatHistory: List[ChatMessage] = Field(default_factory=list)
     conversationId: Optional[str] = None
-    ruleSets: Optional[List[SessionRuleSet]] = Field(default_factory=list)
+    ruleSets: Optional[List[RuleSet]] = Field(default_factory=list)
 
-
-class SessionRuleSet(BaseModel):
-    name: str
-    description: str
-    originalDataRef: Optional[str] = None
-    correctedDataRef: Optional[str] = None
-
-
-class SessionRuleSetUpdate(BaseModel):
-    name: str
-    description: str
-    originalDataRef: Optional[str] = None
-    correctedDataRef: Optional[str] = None
     
-
 class SessionCreate(BaseModel):
     id: Optional[str] = None
     userId: str
     metadata: SessionMetadata
     sourceDocument: List[SourceDocument]
     conversationId: Optional[str] = None
-    ruleSets: Optional[List[SessionRuleSet]] = Field(default_factory=list)
+    ruleSets: Optional[List[RuleSet]] = Field(default_factory=list)
 
 
 class SessionUpdate(BaseModel):
@@ -193,7 +208,7 @@ class SessionUpdate(BaseModel):
     systemStatus: Optional[ProcessingStatus] = None
     analysisOutput: Optional[AnalysisOutput] = None
     chatHistory: Optional[List[ChatMessage]] = None
-    ruleSets: Optional[List[SessionRuleSet]] = Field(default_factory=list)
+    ruleSets: Optional[List[RuleSet]] = Field(default_factory=list)
 
 
 class Query(BaseModel):
@@ -203,12 +218,10 @@ class Query(BaseModel):
 class QueryPlannerResponse(BaseModel):
     queries: List[Query] = Field(default_factory=list)
     model_config = ConfigDict(extra='forbid')
-    
-class RuleSetResponse(BaseModel):
-    name: str
-    description: str
-    model_config = ConfigDict(extra='forbid')
+
+
 
 class AttributeInsightRequest(BaseModel):
     fileName: str
-    attribute: UserAttribute
+    attribute: Attribute
+    

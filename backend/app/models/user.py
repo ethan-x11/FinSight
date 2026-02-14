@@ -5,6 +5,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
+from app.models.session import Attribute, RuleSet
+
 
 class UserBase(BaseModel):
     id: str
@@ -14,8 +16,8 @@ class UserBase(BaseModel):
     joinDate: Optional[datetime] = None
     sessionCount: int = 0
     lastActive: Optional[datetime] = None
-    attributes: Optional[List[UserAttribute]] = None
-    ruleSets: Optional[List[UserRuleSet]] = None
+    attributes: Optional[List[Attribute]] = None
+    ruleSets: Optional[List[RuleSet]] = None
 
 
 class UserPublic(UserBase):
@@ -29,25 +31,6 @@ class UserInDB(UserBase):
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[EmailStr] = None
-
-
-class UserAttribute(BaseModel):
-    name: str = Field(min_length=1, max_length=80)
-    description: str = Field(default="", max_length=500)
-
-
-class UserAttributeUpdate(BaseModel):
-    name: str = Field(min_length=1, max_length=80)
-    description: Optional[str] = Field(default=None, max_length=500)
-    
-class UserRuleSet(BaseModel):
-    name: str = Field(min_length=1, max_length=80)
-    description: Optional[str] = Field(default=None, max_length=500)
-
-
-class UserRuleSetUpdate(BaseModel):
-    name: str = Field(min_length=1, max_length=80)
-    description: Optional[str] = Field(default=None, max_length=500)
 
 
 class PasswordChangeRequest(BaseModel):

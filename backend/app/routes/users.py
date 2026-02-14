@@ -7,14 +7,11 @@ from app.core.auth import get_current_admin, get_current_user
 from app.repositories.users import UsersRepository, get_users_repository
 from app.models.user import (
     PasswordChangeRequest,
-    UserAttribute,
-    UserAttributeUpdate,
     UserInDB,
     UserPublic,
-    UserRuleSet,
-    UserRuleSetUpdate,
     UserUpdate,
 )
+from app.models.session import RuleSet, RuleSetUpdate, Attribute, AttributeUpdate
 from app.core.security import verify_password
 
 router = APIRouter(tags=["users"], dependencies=[Depends(get_current_user)])
@@ -44,7 +41,7 @@ async def update_profile(
 
 @router.post("/user/me/attribute", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 async def create_user_attribute(
-    attribute: UserAttribute,
+    attribute: Attribute,
     current_user: UserInDB = Depends(get_current_user),
     repo: UsersRepository = Depends(get_users_repository),
 ) -> UserPublic:
@@ -59,7 +56,7 @@ async def create_user_attribute(
 @router.patch("/user/me/attribute/{name}", response_model=UserPublic)
 async def update_user_attribute(
     name: str,
-    updates: UserAttributeUpdate,
+    updates: AttributeUpdate,
     current_user: UserInDB = Depends(get_current_user),
     repo: UsersRepository = Depends(get_users_repository),
 ) -> UserPublic:
@@ -89,7 +86,7 @@ async def delete_user_attribute(
 
 @router.post("/user/me/ruleset", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 async def create_user_ruleset(
-    ruleset: UserRuleSet,
+    ruleset: RuleSet,
     current_user: UserInDB = Depends(get_current_user),
     repo: UsersRepository = Depends(get_users_repository),
 ) -> UserPublic:
@@ -104,7 +101,7 @@ async def create_user_ruleset(
 @router.patch("/user/me/ruleset/{name}", response_model=UserPublic)
 async def update_user_ruleset(
     name: str,
-    updates: UserRuleSetUpdate,
+    updates: RuleSetUpdate,
     current_user: UserInDB = Depends(get_current_user),
     repo: UsersRepository = Depends(get_users_repository),
 ) -> UserPublic:
