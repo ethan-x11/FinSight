@@ -32,21 +32,29 @@ class RuleSetGenerator:
             "    * **Good Rule:** \"When extracting Annual Revenue, always use 'Net Sales' figures from the Consolidated Statement "
             "of Operations rather than preliminary summary tables.\"\n\n"
 
-            "3.  **Review Existing Rulesets:**\n"
-            "    * If \"Existing Rulesets\" are provided in the prompt, review them to ensure you are not creating an exact duplicate.\n"
-            "    * If an existing rule partially covers the issue, generate a new rule that specifically addresses the nuanced gap "
-            "revealed by the user's correction.\n\n"
+            "3.  **Review Existing Rulesets (Strict Anti-Duplication):**\n"
+            "    * If \"Existing Rulesets\" are provided in the prompt, you MUST evaluate them against your proposed rule.\n"
+            "    * If an existing rule already addresses the core logic of the user's correction (even if phrased slightly differently), "
+            "**DO NOT** create a new rule.\n"
+            "    * Only generate a new rule if the correction introduces a genuinely new edge case or gap not covered by the current rules.\n\n"
 
             "4.  **Drafting the Output:**\n"
             "    * **`name`**: Create a short, highly descriptive, and punchy title for the rule (max 5-7 words).\n"
             "    * **`description`**: Write a clear, command-oriented directive that another AI can easily follow during data extraction.\n\n"
 
             "### **Output Format**\n"
-            "Your output must be a **strictly valid JSON object** representing a single `RuleSet`. It must contain exactly these two keys:\n\n"
+            "Your output must be a **strictly valid JSON object**.\n\n"
+            
+            "**Scenario A: A New Rule is Needed**\n"
+            "Output an object with exactly these two keys:\n"
             "   * `\"name\"`: (str) The identifier/title for the rule.\n"
             "   * `\"description\"`: (str) The generalized system instruction.\n\n"
+            
+            "**Scenario B: The Rule Already Exists**\n"
+            "If an existing rule covers the alteration, you MUST output an empty JSON object:\n"
+            "{}\n\n"
 
-            "**Example JSON Structure:**\n"
+            "**Example JSON Structure (New Rule Needed):**\n"
             "```json\n"
             "{\n"
             "  \"name\": \"Non-GAAP EBITDA Standardization\",\n"
@@ -54,16 +62,20 @@ class RuleSetGenerator:
             "}\n"
             "```\n\n"
 
+            "**Example JSON Structure (Rule Already Exists):**\n"
+            "```json\n"
+            "{}\n"
+            "```\n\n"
+
             "**FINAL REMINDER:** Output ONLY the JSON object. Do not add any conversational text before or after the JSON. "
             "**STRICT:** Do not use MARKDOWN outside the JSON. Do not add ````json` tags around your final output."
         )
         
         data = f"Original Data: {original_data}\nAltered Data: {altered_data}"
-        print("Generating rule set for Key Insight:", data)
         prompt = f"Data: {data}"
         
         if rule_sets:
-            prompt += "\n\n### **nExisting Rulesets:**\n"
+            prompt += "\n\n### **Existing Rulesets:**\n"
             for rule in rule_sets:
                 prompt += f"- **{rule.name}**: {rule.description}\n"
 

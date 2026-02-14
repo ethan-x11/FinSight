@@ -213,10 +213,19 @@ async def update_key_insight(
     found_insight["alteredFields"] = list(merged.values())
     found_insight["alterationReasoning"] = payload.alterationReasoning
 
-    sessions_repo.update_analysis(session_id=session_id, analysis_output=analysis)
+    for output in analysis:
+        key_insights = output.get("keyInsights") or []
+        for index, insight in enumerate(key_insights):
+            if insight.get("id") == keyinsight_id:
+                key_insights[index] = found_insight
+                output["keyInsights"] = key_insights
+                break
+
+    session["analysisOutput"] = analysis
+    session["timestamp"] = datetime.now(timezone.utc).isoformat()
+    sessions_repo.upsert_session(session)
 
     if payload.triggerAutoRuleSet:
-        print("Auto Rule Set Triggered:", payload.triggerAutoRuleSet)
         ruleset_generator = RuleSetGenerator()
         data = KeyInsight.model_validate(found_insight)
         original_data = data.model_dump(
@@ -231,9 +240,9 @@ async def update_key_insight(
                 for ruleSet in session.get("ruleSets", [])
             ],
         )
-        print("Generated Rule Set:", generated_ruleset)
-        rule_sets = session.get("ruleSets") or []
-        rule_sets.append(generated_ruleset.model_dump())
-        sessions_repo.add_session_ruleset(session_id, generated_ruleset.model_dump())
+        if generated_ruleset.name and generated_ruleset.description:
+            rule_sets = session.get("ruleSets") or []
+            rule_sets.append(generated_ruleset.model_dump())
+            sessions_repo.add_session_ruleset(session_id, generated_ruleset.model_dump())
 
     return [AnalysisOutput.model_validate(item) for item in analysis]
