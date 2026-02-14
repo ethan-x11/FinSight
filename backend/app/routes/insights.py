@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from app.core.auth import get_current_user
 from app.repositories.sessions import SessionsRepository, get_sessions_repository
-from app.models.session import AnalysisOutput, KeyInsight, AttributeInsightRequest
+from app.models.session import AnalysisOutput, KeyInsight, AttributeInsightRequest, SessionRuleSet
 from app.models.user import UserAttribute, UserInDB
 from app.services.attribute_finder import AttributeFinder
 
@@ -63,6 +63,8 @@ async def generate_attribute_insight(
         name=payload.attribute.name,
         description=payload.attribute.description,
         index_name=index_name,
+        rule_sets= [SessionRuleSet.model_validate(ruleSet) for ruleSet in session.get("ruleSets", [])]
+
     )
 
     analysis = session.get("analysisOutput") or []

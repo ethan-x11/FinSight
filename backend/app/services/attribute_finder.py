@@ -94,8 +94,6 @@ class AttributeFinder:
             for rule in rule_sets:
                 user_content += f"- **{rule.name}**: {rule.description}\n"
 
-        print("User Content for Insight Finder:", user_content)
-        
         response = self.azure_factory.run_chat(
             user_message=user_content,
             system_message=insight_finder_prompt,
