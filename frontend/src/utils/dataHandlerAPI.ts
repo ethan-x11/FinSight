@@ -479,7 +479,7 @@ export async function askChatQuestion(
 }
 
 export async function fetchInsights(sessionId: string): Promise<AnalysisOutput[]> {
-	return request(`/insights/${sessionId}`, { authenticated: true });
+	return request(`/insight/${sessionId}`, { authenticated: true });
 }
 
 export async function createSessionAttributeInsight(
@@ -487,15 +487,15 @@ export async function createSessionAttributeInsight(
 	fileName: string,
 	attribute: UserAttribute
 ): Promise<AnalysisOutput[]> {
-	return request<AnalysisOutput[]>(`/insights/${sessionId}`, {
+	return request<AnalysisOutput[]>(`/insight/${sessionId}/attribute`, {
 		method: "POST",
 		body: { fileName, attribute },
 		authenticated: true,
 	});
 }
 
-export async function deleteSessionKeyInsight(sessionId: string, insightId: string): Promise<AnalysisOutput[]> {
-	return request<AnalysisOutput[]>(`/insights/${sessionId}/keyinsight/${encodeURIComponent(insightId)}`, {
+export async function deleteSessionAttributeInsight(sessionId: string, attributeId: string): Promise<AnalysisOutput[]> {
+	return request<AnalysisOutput[]>(`/insight/${sessionId}/attribute/${encodeURIComponent(attributeId)}`, {
 		method: "DELETE",
 		authenticated: true,
 	});

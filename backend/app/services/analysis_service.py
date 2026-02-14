@@ -21,7 +21,7 @@ class AnalysisService:
         file_name: str,
         index_name: str,
         attributes: Optional[List[UserAttribute]] = None,
-        rule_sets: Optional[List[SessionRuleSet]] = None
+        rule_sets: Optional[List[SessionRuleSet]] = None,
     ) -> AnalysisOutput:
         prompt = (
             "Generate key insights and risk factors based on the analyzed document."
@@ -49,6 +49,7 @@ class AnalysisService:
                     name=attr.name,
                     description=attr.description,
                     index_name=index_name,
+                    rule_sets=rule_sets
                 )
                 key_insights.append(
                     KeyInsight(

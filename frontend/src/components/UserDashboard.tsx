@@ -39,7 +39,7 @@ import {
   createUserAttribute,
   createSessionAttributeInsight,
   deleteUserAttribute,
-  deleteSessionKeyInsight,
+  deleteSessionAttributeInsight,
   fetchInsights,
   fetchSession,
   fetchSessionStatus,
@@ -1960,7 +1960,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     if (!currentSessionId) return;
     setSessionAttributeDeletingId(insightId);
     try {
-      const updated = await deleteSessionKeyInsight(currentSessionId, insightId);
+      const updated = await deleteSessionAttributeInsight(currentSessionId, insightId);
       setInsights(updated || null);
       setRefreshedInsightsSessions((prev) => ({ ...prev, [currentSessionId]: true }));
       toast.success("Attribute deleted");

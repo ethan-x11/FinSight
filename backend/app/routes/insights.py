@@ -17,7 +17,7 @@ router = APIRouter(tags=["insights"], dependencies=[Depends(get_current_user)])
 
 
 
-@router.get("/insights/{session_id}", response_model=List[AnalysisOutput])
+@router.get("/insight/{session_id}", response_model=List[AnalysisOutput])
 async def get_insights(
     session_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -37,7 +37,7 @@ async def get_insights(
     return [AnalysisOutput.model_validate(item) for item in analysis]
 
 
-@router.post("/insights/{session_id}", response_model=List[AnalysisOutput])
+@router.post("/insight/{session_id}/attribute", response_model=List[AnalysisOutput])
 async def generate_attribute_insight(
     session_id: str,
     payload: AttributeInsightRequest,
@@ -99,10 +99,10 @@ async def generate_attribute_insight(
     return [AnalysisOutput.model_validate(item) for item in analysis]
 
 
-@router.delete("/insights/{session_id}/keyinsight/{insight_id}", response_model=List[AnalysisOutput])
+@router.delete("/insight/{session_id}/attribute/{attribute_id}", response_model=List[AnalysisOutput])
 async def delete_key_insight(
     session_id: str,
-    insight_id: str,
+    attribute_id: str,
     current_user: UserInDB = Depends(get_current_user),
     sessions_repo: SessionsRepository = Depends(get_sessions_repository),
 ) -> List[AnalysisOutput]:
@@ -119,7 +119,7 @@ async def delete_key_insight(
     removed = False
     for output in analysis:
         key_insights = output.get("keyInsights") or []
-        filtered = [item for item in key_insights if item.get("id") != insight_id]
+        filtered = [item for item in key_insights if item.get("id") != attribute_id]
         if len(filtered) != len(key_insights):
             output["keyInsights"] = filtered
             removed = True
