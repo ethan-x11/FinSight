@@ -1087,7 +1087,7 @@ const ChatInterface = ({
       )}
       {sourcesModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-3xl rounded-xl bg-white shadow-xl">
+          <div className="w-full max-w-3xl max-h-[80vh] rounded-xl bg-white shadow-xl overflow-hidden flex flex-col">
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
               <div>
                 <p className="text-sm font-semibold text-slate-800">{sourcesModalTitle || "Sources"}</p>
@@ -1097,7 +1097,7 @@ const ChatInterface = ({
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="px-4 py-4">
+            <div className="px-4 py-4 overflow-y-auto min-h-0">
               {sourcesModalItems.length === 0 ? (
                 <div className="text-sm text-slate-500">No sources available.</div>
               ) : (

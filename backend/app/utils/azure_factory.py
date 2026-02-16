@@ -94,7 +94,7 @@ class AzureFactory:
         request_kwargs: Dict[str, Any] = {
             "model": model or self.chat_model,
             "messages": cast(Iterable[ChatCompletionMessageParam], messages),
-            "reasoning_effort": "high",
+            # "reasoning_effort": "high",
         }
 
         if response_format is not None:
