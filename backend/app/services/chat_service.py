@@ -25,7 +25,8 @@ class ChatService:
         memory_store_name: Optional[str] = None,
         conversation_id: Optional[str] = None,
         agent_name: Optional[str] = None,
-        rule_sets: Optional[List[RuleSet]] = None
+        rule_sets: Optional[List[RuleSet]] = None,
+        use_agent: Optional[bool] = True,
     ) -> ChatResponse:
         context_str = "\n".join(
             [
@@ -119,34 +120,43 @@ class ChatService:
             for rule in rule_sets:
                 user_content += f"- **{rule.name}**: {rule.description}\n"
 
-        memory_store = self.azure_factory.create_or_retrieve_memory_store(
-            name=memory_store_name, model=model
-        )
-        
-        agent = self.azure_factory.create_or_retrieve_agent(
-            instructions=system_prompt,
-            name=agent_name,
-            response_format=ChatResponseRaw,
-            memory_store_name=memory_store,
-            memory_scope="session_id",
-            model=model,
-        )
-        
-        conversation_id = self.azure_factory.create_or_retrieve_conversation(conversation_id)
-        
         response: dict[str, Any] = {}
         
-        try:
-            response = self.azure_factory.run_agent(
-                agent_name=agent,
-                prompt=user_content,
-                conversation_id=conversation_id,
+        if use_agent:
+            memory_store = self.azure_factory.create_or_retrieve_memory_store(
+                name=memory_store_name, model=model
             )
-        except Exception as e:
-            print(f"Error running Agent.\n Failback to direct chat completion with AzureOpenAI.\n Refer to debug_agent_error.log for details.")
-            with open("debug_agent_error.log", "w", encoding="utf-8") as f:
-                f.write(f"Error: {str(e)}\n")
+            
+            agent = self.azure_factory.create_or_retrieve_agent(
+                instructions=system_prompt,
+                name=agent_name,
+                response_format=ChatResponseRaw,
+                memory_store_name=memory_store,
+                memory_scope="session_id",
+                model=model,
+            )
+            
+            conversation_id = self.azure_factory.create_or_retrieve_conversation(conversation_id)
+            
+            try:
+                response = self.azure_factory.run_agent(
+                    agent_name=agent,
+                    prompt=user_content,
+                    conversation_id=conversation_id,
+                )
+            except Exception as e:
+                print(f"Error running Agent.\n Failback to direct chat completion with AzureOpenAI.\n Refer to debug_agent_error.log for details.")
+                with open("debug_agent_error.log", "w", encoding="utf-8") as f:
+                    f.write(f"Error: {str(e)}\n")
 
+                response = self.azure_factory.run_chat(
+                    user_message=user_content,
+                    system_message=system_prompt,
+                    history=history,
+                    response_format=ChatResponseRaw,
+                    model=model,
+                )
+        else:
             response = self.azure_factory.run_chat(
                 user_message=user_content,
                 system_message=system_prompt,

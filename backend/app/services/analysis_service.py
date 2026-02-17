@@ -7,6 +7,8 @@ from app.services.search_service import SearchService
 from app.services.query_planner import QueryPlanner
 from app.services.attribute_finder import AttributeFinder
 from app.models.user import Attribute
+from app.services.confidence_score import ConfidenceScore
+from tqdm import tqdm
 
 
 class AnalysisService:
@@ -15,6 +17,7 @@ class AnalysisService:
         self.search_service = SearchService()
         self.query_planner = QueryPlanner()
         self.attribute_finder = AttributeFinder()
+        self.confidence_score = ConfidenceScore()
 
     def generate_insights(
         self,
@@ -23,6 +26,7 @@ class AnalysisService:
         attributes: Optional[List[Attribute]] = None,
         rule_sets: Optional[List[RuleSet]] = None,
     ) -> AnalysisOutput:
+        print("Starting insight generation process for file: ", file_name)
         prompt = (
             "Generate key insights and risk factors based on the analyzed document."
         )
@@ -36,7 +40,8 @@ class AnalysisService:
         insights = self.chat_service.generate_answer(
             question=prompt,
             context_docs=results,
-            rule_sets=rule_sets
+            rule_sets=rule_sets,
+            use_agent=False,
         )
 
         # print("Generated Insights:", insights)
@@ -44,23 +49,32 @@ class AnalysisService:
         key_insights: List[KeyInsight] = []
 
         if attributes:
-            for attr in attributes:
+            for attr in tqdm(attributes, desc="Generating attribute insights", unit="attr"):
                 attribute_value = self.attribute_finder.find_attribute(
                     name=attr.name,
                     description=attr.description,
                     index_name=index_name,
-                    rule_sets=rule_sets
+                    rule_sets=rule_sets,
                 )
                 key_insights.append(
                     KeyInsight(
                         id=uuid4().hex,
-                        name=attribute_value.name,
+                        name=attr.name,
                         description=attr.description,
                         value=attribute_value.value,
                         trend=attribute_value.trend,
                         citation=attribute_value.citation,
+                        confidenceScore=self.confidence_score.get_confidence_score(
+                            prompt=f"{attr.name}: {attr.description}",
+                            response=attribute_value.value,
+                            context=attribute_value.citation,
+                        ),
                     )
                 )
+                
+        # with open("insights_debug.json", "w") as f:
+        #     import json
+        #     json.dump(key_insights, f, default=lambda o: o.__dict__, indent=4)
 
         return AnalysisOutput(
             fileName=file_name,

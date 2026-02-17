@@ -595,9 +595,9 @@ const InsightsPanel = ({
               </div>
               <p className="text-md font-semibold text-slate-900 mt-1">{item.value}</p>
               {item.trend && <p className="text-xs text-slate-500">Trend: {item.trend}</p>}
-              {/* {item.confidenceScore && typeof item.confidenceScore === "number" && (
+              {item.confidenceScore && typeof item.confidenceScore === "number" && (
                 <div className="text-xs text-slate-500 mt-1">Confidence: {(item.confidenceScore * 100).toFixed(0)}%</div>
-              )} */}
+              )}
             </div>
           ))}
         </div>
@@ -1564,12 +1564,15 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
 
   const handleCheckStatus = async () => {
     if (!currentSessionId) return;
+    setLoadingStatus(true);
     try {
       const status = await fetchSessionStatus(currentSessionId);
       setSessions((prev) => prev.map((s) => (s.id === currentSessionId ? { ...s, systemStatus: status } : s)));
       toast.success("Status updated");
     } catch (err: any) {
       toast.error(err?.message || "Failed to refresh status");
+    } finally {
+      setLoadingStatus(false);
     }
   };
 
@@ -2353,9 +2356,10 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                           <div className="flex flex-col gap-2">
                             <button
                               onClick={handleCheckStatus}
-                              className="flex w-full md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap bg-white text-slate-500 shadow-sm hover:text-slate-900 justify-center text-center"
+                              disabled={loadingStatus}
+                              className="flex w-full md:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap bg-white text-slate-500 shadow-sm hover:text-slate-900 justify-center text-center disabled:opacity-60 disabled:cursor-not-allowed"
                             >
-                              <RefreshCcw className="w-3 h-3 mr-1 inline" /> Refresh Status
+                              <RefreshCcw className={`w-3 h-3 mr-1 inline ${loadingStatus ? "animate-spin" : ""}`} /> Refresh Status
                             </button>
                             <button
                               onClick={() => setShowSessionRuleSets(true)}

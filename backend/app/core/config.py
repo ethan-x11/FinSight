@@ -72,6 +72,7 @@ class Settings(BaseSettings):
     azure_openai_api_version: str = Field(default="", validation_alias="AZURE_OPENAI_API_VERSION")
     azure_openai_chat_deployment: str = Field(default="", validation_alias="AZURE_OPENAI_CHAT_DEPLOYMENT_NAME")
     azure_openai_text_deployment: str = Field(default="", validation_alias="AZURE_OPENAI_TEXT_DEPLOYMENT_NAME")
+    azure_openai_eval_deployment: str = Field(default="", validation_alias="AZURE_OPENAI_EVAL_DEPLOYMENT_NAME")
     azure_openai_embedding_deployment: str = Field(default="", validation_alias="AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME")
     azure_openai_embed_dims: int = Field(default=1536, validation_alias="AZURE_OPENAI_EMBED_DIMS")
     

@@ -12,7 +12,9 @@ azure-storage-blob
 azure-ai-documentintelligence
 azure-search-documents
 azure-ai-projects --pre
+azure-ai-evaluation
 openai
 langchain-text-splitters
 python-multipart
 httpx
+tqdm
