@@ -595,9 +595,9 @@ const InsightsPanel = ({
               </div>
               <p className="text-md font-semibold text-slate-900 mt-1">{item.value}</p>
               {item.trend && <p className="text-xs text-slate-500">Trend: {item.trend}</p>}
-              {item.confidenceScore && typeof item.confidenceScore === "number" && (
+              {(item.confidenceScore && typeof item.confidenceScore === "number") ? (
                 <div className="text-xs text-slate-500 mt-1">Confidence: {(item.confidenceScore * 100).toFixed(0)}%</div>
-              )}
+              ):""}
             </div>
           ))}
         </div>

@@ -1,3 +1,4 @@
+import asyncio
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
@@ -50,7 +51,7 @@ class AnalysisService:
 
         if attributes:
             for attr in tqdm(attributes, desc="Generating attribute insights", unit="attr"):
-                attribute_value = self.attribute_finder.find_attribute(
+                attribute_value, raw_context = self.attribute_finder.find_attribute(
                     name=attr.name,
                     description=attr.description,
                     index_name=index_name,
@@ -64,11 +65,11 @@ class AnalysisService:
                         value=attribute_value.value,
                         trend=attribute_value.trend,
                         citation=attribute_value.citation,
-                        confidenceScore=self.confidence_score.get_confidence_score(
+                        confidenceScore=asyncio.run(self.confidence_score.get_confidence_score(
                             prompt=f"{attr.name}: {attr.description}",
                             response=attribute_value.value,
-                            context=attribute_value.citation,
-                        ),
+                            context=raw_context,
+                        )),
                     )
                 )
                 

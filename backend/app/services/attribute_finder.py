@@ -18,7 +18,7 @@ class AttributeFinder:
         description: str,
         index_name: str,
         rule_sets: Optional[List[RuleSet]] = None,
-    ) -> Insight:
+    ) -> tuple[Insight, str]:
         insight_finder_prompt = (
             "### **Role & Persona**\n"
             "You are a specialized **Financial Insight Extractor**. Your goal is to analyze financial text "
@@ -100,7 +100,7 @@ class AttributeFinder:
 
         return Insight.model_validate(
             json.loads(response.get("response", "")) if response else {"queries": []}
-        )
+        ), context_str
 
 
 if __name__ == "__main__":

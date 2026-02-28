@@ -1,6 +1,6 @@
 import json
 import time
-from openai import AzureOpenAI
+from openai import AzureOpenAI, AsyncAzureOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 from openai.types.responses import (
     ResponseFormatTextJSONSchemaConfig,
@@ -32,6 +32,11 @@ class AzureFactory:
         if not settings.azure_openai_endpoint or not settings.azure_openai_api_key:
             raise RuntimeError("Azure OpenAI configuration missing")
         self.client = AzureOpenAI(
+            api_key=settings.azure_openai_api_key,
+            api_version=settings.azure_openai_api_version,
+            azure_endpoint=settings.azure_openai_endpoint,
+        )
+        self.async_client = AsyncAzureOpenAI(
             api_key=settings.azure_openai_api_key,
             api_version=settings.azure_openai_api_version,
             azure_endpoint=settings.azure_openai_endpoint,
