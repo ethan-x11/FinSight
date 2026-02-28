@@ -667,10 +667,10 @@ const InsightsNotesPanel = ({ notes }: { notes?: string | null }) => {
       <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
         <FileText className="w-4 h-4 text-blue-600" /> Auto Analysis Notes
       </div>
-      <div className="text-sm leading-relaxed text-slate-700 [&>*]:mb-2 [&>*:last-child]:mb-0 [&>ul]:list-disc [&>ul]:ml-5 [&>ol]:list-decimal [&>ol]:ml-5">
-        {/* <Markdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]}>
-          {notes}
-        </Markdown> */}
+      <div
+        className="text-sm leading-relaxed text-slate-700 break-words overflow-x-auto [&>*]:mb-2 [&>*:last-child]:mb-0 [&>ul]:list-disc [&>ul]:ml-5 [&>ol]:list-decimal [&>ol]:ml-5"
+        style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
+      >
         <MarkdownMessage text={notes || ""} />
       </div>
     </div>
