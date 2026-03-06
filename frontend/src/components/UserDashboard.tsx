@@ -579,11 +579,20 @@ const InsightsPanel = ({
         <div className="text-sm text-slate-500">No key attribute extracted from the documents.</div>
       )}
       {keyInsights.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="flex flex-col gap-2 w-full">
           {keyInsights.map((item: KeyInsight) => (
-            <div key={item.id} className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-xs text-slate-500 uppercase font-semibold">{item.name || item.category || "Insight"}</p>
+            <div key={item.id} className="w-full bg-white rounded-lg border border-slate-200 px-3 py-2 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 space-y-0.5">
+                  <p className="text-sm text-slate-800">
+                    <span className="font-semibold text-slate-600">{item.name || item.category || "Insight"}:</span>{" "}
+                    <span className="font-semibold text-slate-900">{item.value || "—"}</span>
+                  </p>
+                  {item.trend && <p className="text-xs text-slate-500">Trend: {item.trend}</p>}
+                  {(item.confidenceScore && typeof item.confidenceScore === "number") ? (
+                    <div className="text-xs text-slate-500 mt-1">Confidence: {(item.confidenceScore * 100).toFixed(0)}%</div>
+                  ) : ""}
+                </div>
                 <button
                   type="button"
                   onClick={() => onEditKeyInsight(item)}
@@ -593,11 +602,6 @@ const InsightsPanel = ({
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <p className="text-md font-semibold text-slate-900 mt-1">{item.value}</p>
-              {item.trend && <p className="text-xs text-slate-500">Trend: {item.trend}</p>}
-              {(item.confidenceScore && typeof item.confidenceScore === "number") ? (
-                <div className="text-xs text-slate-500 mt-1">Confidence: {(item.confidenceScore * 100).toFixed(0)}%</div>
-              ):""}
             </div>
           ))}
         </div>
@@ -889,14 +893,14 @@ const ChatInterface = ({
                     {sources.length > 0 && (
                       <div className="mt-2 space-y-2 group">
                         <div className="flex flex-wrap gap-1.5 items-center">
-                          <span>Sources:</span>
+                          <span className="text-xs font-semibold text-slate-500">Sources:</span>
                           {previewSources.map((src, i) => (
                             <a
                               key={`${src.name}-${i}`}
                               href={src.url || "#"}
                               target="_blank"
                               rel="noreferrer"
-                              className={`text-[11px] font-semibold px-2 py-1 rounded-full border ${isUser ? "bg-white/15 text-white border-white/30" : "bg-blue-50 text-blue-700 border-blue-200"}`}
+                              className={`text-xs font-semibold px-2 py-1 rounded-full border ${isUser ? "bg-white/15 text-white border-white/30" : "bg-blue-50 text-blue-700 border-blue-200"}`}
                             >
                               {src.name}
                             </a>

@@ -54,6 +54,7 @@ class ChatService:
             "    * **Format:** Use brackets at the end of the sentence. "
             "Pattern: `[PDF Name, Page Number, Chunk Number, content_snapshot]`\n"
             "    * **Example:** `Net income rose by 12% [10-K_2023.pdf, Page 12, Chunk 3, \"starting text of the chunk...\"]`\n\n"
+            "    * **Example for multi citation:** `Net income rose by 12% [10-K_2023.pdf, Page 12, Chunk 3, \"starting text of the chunk...\"][10-K_2023.pdf, Page 16, Chunk 17, \"starting text of the chunk...\"]`\n\n"
 
             "3.  **Response Formatting (Inside JSON):**\n"
             "    * **Financials:** Always format currency and large numbers clearly (e.g., \"$4.5 billion\" or \"$4,500M\", "

@@ -169,7 +169,7 @@ class AzureFactory:
         print("Retrieving Agent: ", name)
         for agent in existing_agents:
             if agent.name == name:
-                if agent.versions.latest.definition.get("model","") == model or model is None :       
+                if (agent.versions.latest.definition.get("model","") == model or model is None) and agent.versions.latest.definition.get("instructions") == instructions:       
                     return agent.name
 
         tools = []
@@ -334,4 +334,4 @@ if __name__ == "__main__":
     # print("Agent Response 2:", response2)
 
     agent = azure_factory.find_agent_by_name(session_id)
-    print("Found Agent:", agent.versions.latest.definition.model) #type: ignore
+    print("Found Agent:", agent.versions.latest.definition) #type: ignore
