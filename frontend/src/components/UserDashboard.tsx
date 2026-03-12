@@ -32,8 +32,11 @@ import {
   Search,
   MessageCircleOff,
   List,
-  TextSearch
+  TextSearch,
+  Download,
 } from "lucide-react";
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
 import {
   askChatQuestion,
   createUserAttribute,
@@ -1219,6 +1222,7 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
   const [showDefaultAttributes, setShowDefaultAttributes] = useState(false);
   const [showSessionRuleSets, setShowSessionRuleSets] = useState(false);
   const [showSessionAttributes, setShowSessionAttributes] = useState(false);
+  const [showDownloadFormats, setShowDownloadFormats] = useState(false);
   const [defaultRuleSetsState, setDefaultRuleSetsState] = useState<RuleSet[]>([]);
   const [defaultAttributesState, setDefaultAttributesState] = useState<Attribute[]>([]);
   const [ruleSetsDraft, setRuleSetsDraft] = useState<EditableRuleSet[]>([]);
@@ -1347,6 +1351,11 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     if (!activeDocId) return [];
     const output = insights?.find((item) => item.fileName === activeDocId) ?? null;
     return output?.keyInsights || [];
+  }, [insights, activeDocId]);
+
+  const activeInsightOutput = useMemo(() => {
+    if (!activeDocId) return null;
+    return insights?.find((item) => item.fileName === activeDocId) ?? null;
   }, [insights, activeDocId]);
 
   const sessionRuleSets = useMemo<RuleSet[]>(() => currentSession?.ruleSets || [], [currentSession]);
@@ -2181,6 +2190,84 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
     }
   };
 
+  const sanitizeFileName = (input: string) => {
+    const sanitized = input.replace(/[\\/:*?"<>|]+/g, "-").trim();
+    return sanitized || "insights-export";
+  };
+
+  const getExportContext = () => {
+    if (!activeDocId || !activeInsightOutput) {
+      toast.error("No insights available for the selected document");
+      return null;
+    }
+
+    const rows = activeInsightOutput.keyInsights;
+    if (rows && rows.length === 0) {
+      toast.error("No insight data to export");
+      return null;
+    }
+
+    const docName = documentEntries.find((doc) => doc.id === activeDocId)?.name || activeDocId;
+    const baseName = sanitizeFileName(`${currentSession?.metadata?.title || "session"}-${docName}`);
+    return { rows, docName, baseName };
+  };
+
+  const handleDownloadXlsx = () => {
+    const context = getExportContext();
+    if (!context) return;
+
+    const worksheet = XLSX.utils.json_to_sheet(context.rows || []);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Insights");
+    XLSX.writeFile(workbook, `${context.baseName}-insights.xlsx`);
+
+    setShowDownloadFormats(false);
+    toast.success("Insights downloaded as XLSX");
+  };
+
+  const handleDownloadPdf = () => {
+    const context = getExportContext();
+    if (!context) return;
+
+    const pdf = new jsPDF({ unit: "pt", format: "a4" });
+    const margin = 40;
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const maxTextWidth = pdf.internal.pageSize.getWidth() - margin * 2;
+    let y = margin;
+
+    const drawWrapped = (text: string, fontSize = 10) => {
+      pdf.setFontSize(fontSize);
+      const lines = pdf.splitTextToSize(text, maxTextWidth) as string[];
+      if (y + lines.length * (fontSize + 3) > pageHeight - margin) {
+        pdf.addPage();
+        y = margin;
+      }
+      pdf.text(lines, margin, y);
+      y += lines.length * (fontSize + 3) + 4;
+    };
+
+    drawWrapped("Insights & Data Export", 14);
+    drawWrapped(`Session: ${currentSession?.metadata?.title || "Session"}`);
+    drawWrapped(`Document: ${context.docName}`);
+    drawWrapped(`Exported At: ${new Date().toLocaleString()}`);
+
+    y += 4;
+    context.rows && context.rows.forEach((row, index) => {
+      drawWrapped(`${index + 1}. Id: ${row.id}`, 11);
+      if (row.name) drawWrapped(`Name: ${row.name}`);
+      if (row.description) drawWrapped(`Description: ${row.description}`);
+      if (row.value) drawWrapped(`Value: ${row.value}`);
+      if (row.trend) drawWrapped(`Trend: ${row.trend}`);
+      if (row.confidenceScore !== undefined) drawWrapped(`Confidence Score: ${row.confidenceScore}`);
+      y += 2;
+    });
+
+    pdf.save(`${context.baseName}-insights.pdf`);
+
+    setShowDownloadFormats(false);
+    toast.success("Insights downloaded as PDF");
+  };
+
   return (
     <div className="flex h-screen bg-white font-sans text-slate-900 selection:bg-blue-100">
       <Sidebar
@@ -2335,15 +2422,26 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
                             ) : (
                               <div className="space-y-4">
                                 <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-                                  <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                                    <FileText className="w-4 h-4 text-blue-600" /> Insights &amp; Data
-                                  </h3>
+                                  <div className="mb-3 flex items-center justify-between gap-3">
+                                    <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+                                      <FileText className="w-4 h-4 text-blue-600" /> Insights &amp; Data
+                                    </h3>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => setShowDownloadFormats(true)}
+                                      disabled={!activeInsightOutput}
+                                      className="h-8"
+                                    >
+                                      <Download className="w-4 h-4" /> 
+                                    </Button>
+                                  </div>
                                   <InsightsPanel
-                                    insights={insights?.find(insight => insight.fileName === activeDocId) ?? null}
+                                    insights={activeInsightOutput}
                                     onEditKeyInsight={openKeyInsightEditor}
                                   />
                                 </div>
-                                <InsightsNotesPanel notes={(insights?.find(insight => insight.fileName === activeDocId) ?? null)?.notes ?? null} />
+                                <InsightsNotesPanel notes={activeInsightOutput?.notes ?? null} />
                               </div>
                             )
                           ) : (
@@ -2847,6 +2945,26 @@ export default function UserDashboard({ user, onLogout, onGoHome }: UserDashboar
           </DialogContent>
         </Dialog>
       )}
+      <Dialog open={showDownloadFormats} onOpenChange={setShowDownloadFormats}>
+        <DialogContent className="w-md bg-white rounded-xl p-6 shadow-xl border border-slate-200">
+          <DialogHeader>
+            <DialogTitle className="text-slate-900 flex items-center gap-2">
+              <Download className="w-5 h-5 text-blue-600" /> Download Formats
+            </DialogTitle>
+            <DialogDescription className="text-slate-500">
+              Choose the export format for the selected document insights.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-2 flex flex-col sm:flex-row gap-3">
+            <Button variant="outline" onClick={handleDownloadXlsx} className="flex-1 bg-slate-100 hover:bg-slate-400">
+              XLSX
+            </Button>
+            <Button variant="outline" onClick={handleDownloadPdf} className="flex-1 bg-slate-100 hover:bg-slate-400">
+              PDF
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       {showKeyInsightEditor && editingKeyInsight && (
         <Dialog open={showKeyInsightEditor} onOpenChange={(open) => (!open ? closeKeyInsightEditor() : null)}>
           <DialogContent className="w-lg bg-white rounded-xl p-6 shadow-xl border border-slate-200">

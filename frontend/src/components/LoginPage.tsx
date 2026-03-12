@@ -60,7 +60,7 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
   };
 
   const handleTestLogin = async () => {
-    const testUserId = "test";
+    const testUserId = "testuser";
     const testPassword = "Test@123";
     setUserId(testUserId);
     setPassword(testPassword);
