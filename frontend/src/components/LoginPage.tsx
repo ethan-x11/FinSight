@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { BarChart3, Sparkles } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { login, signup, forgotPassword, type ApiUser } from "../utils/dataHandlerAPI";
 import { toast } from "sonner";
 import { APP_BRAND_NAME } from "../config/appConfig";
@@ -22,19 +22,14 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState<"login" | "signup" | null>(null);
 
-  const handleLogin = async () => {
-    if (!userId || !password) {
-      toast.error("Please enter both User ID and Password");
-      return;
-    }
-
+  const performLogin = async (loginUserId: string, loginPassword: string) => {
     if (isSubmitting) {
       return;
     }
 
     setIsSubmitting("login");
     try {
-      const resp = await login({ userId, password });
+      const resp = await login({ userId: loginUserId, password: loginPassword });
       toast.success(`Welcome back, ${resp.user.name}!`);
       // Persist userId so other parts of the app can reference it
       try {
@@ -44,7 +39,7 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
       }
       onLogin(resp.user);
     } catch (err: any) {
-      const errstatus = err?.response?.status ?? err?.status
+      const errstatus = err?.response?.status ?? err?.status;
       if (errstatus === 401 || "401") {
         toast.error("Invalid credentials. Please try again.");
       } else {
@@ -53,6 +48,23 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
     } finally {
       setIsSubmitting(null);
     }
+  };
+
+  const handleLogin = async () => {
+    if (!userId || !password) {
+      toast.error("Please enter both User ID and Password");
+      return;
+    }
+
+    await performLogin(userId, password);
+  };
+
+  const handleTestLogin = async () => {
+    const testUserId = "test";
+    const testPassword = "Test@123";
+    setUserId(testUserId);
+    setPassword(testPassword);
+    await performLogin(testUserId, testPassword);
   };
 
   const handleKeyPress = (e: KeyboardEvent) => {
@@ -301,6 +313,14 @@ export function LoginPage({ onLogin, onBackToHome }: LoginPageProps) {
           </CardFooter>
         </Card>
       )}
+
+      <Button
+        onClick={handleTestLogin}
+        className="absolute bottom-6 right-6 z-20 bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg"
+        disabled={isSubmitting !== null}
+      >
+        {isSubmitting === "login" ? "Logging in..." : "Test Login"}
+      </Button>
     </div>
   );
 }

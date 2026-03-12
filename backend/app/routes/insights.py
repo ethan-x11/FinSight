@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timezone
 from typing import List
 from uuid import uuid4
@@ -19,6 +20,7 @@ from app.models.session import (
 from app.models.user import UserInDB
 from app.services.attribute_finder import AttributeFinder
 from app.services.ruleset_generator import RuleSetGenerator
+from app.services.confidence_score import ConfidenceScore
 
 router = APIRouter(tags=["insights"], dependencies=[Depends(get_current_user)])
 
@@ -69,7 +71,7 @@ async def generate_attribute_insight(
             status_code=400, detail="Index name not available for this file"
         )
 
-    insight = AttributeFinder().find_attribute(
+    insight, raw_context = AttributeFinder().find_attribute(
         name=payload.attribute.name,
         description=payload.attribute.description,
         index_name=index_name,
@@ -91,7 +93,14 @@ async def generate_attribute_insight(
         analysis.append(file_output)
         is_new_output = True
 
+    confidence_score = ConfidenceScore()
+
     key_insights = file_output.get("keyInsights") or []
+    confidence_value = await confidence_score.get_confidence_score(
+        prompt=f"{insight.name}: {payload.attribute.description}",
+        response=insight.value,
+        context=raw_context,
+    )
     key_insights.append(
         KeyInsight(
             id=uuid4().hex,
@@ -100,6 +109,7 @@ async def generate_attribute_insight(
             value=insight.value,
             trend=insight.trend,
             citation=insight.citation,
+            confidenceScore=confidence_value,
         ).model_dump()
     )
     file_output["keyInsights"] = key_insights
@@ -243,6 +253,8 @@ async def update_key_insight(
         if generated_ruleset.name and generated_ruleset.description:
             rule_sets = session.get("ruleSets") or []
             rule_sets.append(generated_ruleset.model_dump())
-            sessions_repo.add_session_ruleset(session_id, generated_ruleset.model_dump())
+            sessions_repo.add_session_ruleset(
+                session_id, generated_ruleset.model_dump()
+            )
 
     return [AnalysisOutput.model_validate(item) for item in analysis]

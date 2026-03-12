@@ -532,7 +532,7 @@ const SessionStatus = ({ session }: { session: AnalysisSession }) => {
   }, [session]);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-3">
+    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-1">
       <div className="flex items-center justify-between text-sm">
         <div className="flex items-center gap-2 text-slate-700">
           <FileSearch className="w-4 h-4 text-blue-600" />
@@ -544,7 +544,7 @@ const SessionStatus = ({ session }: { session: AnalysisSession }) => {
       <div className="space-y-2 text-xs text-slate-600">
         {STATUS_STEPS.map((step) => (
           <div key={step.key} className="flex items-center gap-2">
-            {session.systemStatus?.steps?.[step.key] ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Loader2 className="w-4 h-4 text-slate-300" />}
+            {session.systemStatus?.steps?.[step.key] ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Loader2 className="w-4 h-4 text-slate-300 animate-spin" />}
             <span>{step.label}</span>
           </div>
         ))}
