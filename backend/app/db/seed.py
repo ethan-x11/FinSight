@@ -14,6 +14,7 @@ from app.db.cosmos import ensure_containers, get_container
 def seed_initial_data() -> None:
     ensure_containers()
     seed_admin_user()
+    seed_test_user()
     seed_providers()
     seed_models()
 
@@ -32,6 +33,26 @@ def seed_admin_user() -> None:
                 "email": settings.admin_email,
                 "password": hash_password(settings.admin_password),
                 "isAdmin": True,
+                "joinDate": now,
+                "sessionCount": 0,
+                "lastActive": now,
+            }
+        )
+        
+def seed_test_user() -> None:
+    settings = get_settings()
+    container = get_container(settings.users_container)
+    try:
+        container.read_item(settings.test_user_id, partition_key=settings.test_user_id)
+    except CosmosResourceNotFoundError:
+        now = datetime.now(timezone.utc).isoformat()
+        container.create_item(
+            {
+                "id": settings.test_user_id,
+                "name": settings.test_name,
+                "email": settings.test_email,
+                "password": hash_password(settings.test_password),
+                "isAdmin": False,
                 "joinDate": now,
                 "sessionCount": 0,
                 "lastActive": now,

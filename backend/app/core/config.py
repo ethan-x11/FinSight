@@ -47,6 +47,12 @@ class Settings(BaseSettings):
     admin_email: str = Field(default="admin@example.com", validation_alias="ADMIN_EMAIL")
     admin_password: str = Field(default="ChangeMe!123", validation_alias="ADMIN_PASSWORD")
 
+    # Test user bootstrap
+    test_user_id: str = Field(default="testuser", validation_alias="TEST_USER_ID")
+    test_name: str = Field(default="Test User", validation_alias="TEST_NAME")
+    test_email: str = Field(default="testuser@example.com", validation_alias="TEST_EMAIL")
+    test_password: str = Field(default="Test@123", validation_alias="TEST_PASSWORD")
+
     # Blob storage
     storage_connection_string: str = Field(default="", validation_alias="AZURE_STORAGE_CONNECTION_STRING")
     blob_container_name: str = Field(default="financial-pdfs", validation_alias="BLOB_CONTAINER_NAME")
